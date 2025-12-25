@@ -1,9 +1,5 @@
 import { MongoClient, Db } from 'mongodb';
 
-// MongoDB 连接
-let client: MongoClient | null = null;
-let db: Db | null = null;
-
 // 获取 MongoDB 连接 URI
 function getMongoURI(): string {
   const uri = process.env.MONGODB_URI;
@@ -13,27 +9,44 @@ function getMongoURI(): string {
   return uri;
 }
 
+// 使用 globalThis 缓存连接，确保在 Next.js 热重载和无服务器环境中正确复用
+const globalForMongo = globalThis as unknown as {
+  mongoClient: MongoClient | undefined;
+  mongoDb: Db | undefined;
+  mongoClientPromise: Promise<MongoClient> | undefined;
+};
+
 // 获取数据库实例
 export async function getDatabase(): Promise<Db> {
-  if (db) {
-    return db;
+  // 如果已有数据库实例，直接返回
+  if (globalForMongo.mongoDb) {
+    return globalForMongo.mongoDb;
   }
 
   try {
     const uri = getMongoURI();
-    client = new MongoClient(uri);
-    await client.connect();
-    
-    // 从 URI 中提取数据库名，或使用默认名称
     const dbName = process.env.MONGODB_DB_NAME || 'kerkerker';
-    db = client.db(dbName);
+    
+    // 如果没有 client promise，创建一个
+    if (!globalForMongo.mongoClientPromise) {
+      const client = new MongoClient(uri);
+      globalForMongo.mongoClientPromise = client.connect();
+    }
+    
+    // 等待连接完成
+    globalForMongo.mongoClient = await globalForMongo.mongoClientPromise;
+    globalForMongo.mongoDb = globalForMongo.mongoClient.db(dbName);
     
     // 初始化数据库集合和索引
-    await initializeDatabase(db);
+    await initializeDatabase(globalForMongo.mongoDb);
     
     console.log('✅ MongoDB 连接成功');
-    return db;
+    return globalForMongo.mongoDb;
   } catch (error) {
+    // 连接失败时清理状态，允许重试
+    globalForMongo.mongoClientPromise = undefined;
+    globalForMongo.mongoClient = undefined;
+    globalForMongo.mongoDb = undefined;
     console.error('❌ MongoDB 连接失败:', error);
     throw error;
   }
@@ -71,10 +84,11 @@ async function initializeDatabase(db: Db) {
 
 // 关闭数据库连接
 export async function closeDatabase() {
-  if (client) {
-    await client.close();
-    client = null;
-    db = null;
+  if (globalForMongo.mongoClient) {
+    await globalForMongo.mongoClient.close();
+    globalForMongo.mongoClient = undefined;
+    globalForMongo.mongoDb = undefined;
+    globalForMongo.mongoClientPromise = undefined;
     console.log('✅ MongoDB 连接已关闭');
   }
 }
