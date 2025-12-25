@@ -485,9 +485,12 @@ SCRIPT
 ***REMOVED*** ==================== 部署服务 ====================
 deploy_services() {
     print_step "部署服务"
-    
-    cd "$INSTALL_DIR"
-    
+
+    ***REMOVED*** 确保在安装目录中
+    if [ -d "$INSTALL_DIR" ]; then
+        cd "$INSTALL_DIR" || { print_error "无法进入安装目录"; exit 1; }
+    fi
+
     ***REMOVED*** 拉取镜像
     print_info "拉取 Docker 镜像..."
     if $COMPOSE_CMD pull; then
@@ -496,7 +499,7 @@ deploy_services() {
         print_error "镜像拉取失败"
         exit 1
     fi
-    
+
     ***REMOVED*** 启动服务
     print_info "启动服务..."
     if $COMPOSE_CMD up -d; then
@@ -505,18 +508,18 @@ deploy_services() {
         print_error "服务启动失败"
         exit 1
     fi
-    
+
     ***REMOVED*** 等待服务就绪
     print_info "等待服务就绪..."
     sleep 15
-    
+
     ***REMOVED*** 健康检查
     if command_exists curl; then
         print_info "执行健康检查..."
         _retries=10
         _success=0
         _i=1
-        
+
         while [ "$_i" -le "$_retries" ]; do
             if curl -sf "http://localhost:${APP_PORT}/api/health" > /dev/null 2>&1; then
                 _success=1
@@ -527,7 +530,7 @@ deploy_services() {
             _i=$((_i + 1))
         done
         echo ""
-        
+
         if [ "$_success" = "1" ]; then
             print_success "健康检查通过"
         else
