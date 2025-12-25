@@ -4,13 +4,7 @@ import { useState } from "react";
 import { VodSource } from "@/types/drama";
 import { Modal } from "@/components/Modal";
 import type { VodSourcesTabProps } from "./types";
-import {
-  decryptConfig,
-  parseEncryptedString,
-  fetchAndDecryptSubscription,
-  isSubscriptionUrl,
-  type ConfigPayload,
-} from "@/lib/crypto";
+import { isSubscriptionUrl } from "@/lib/utils";
 
 export function VodSourcesTab({
   sources,
@@ -51,7 +45,7 @@ export function VodSourcesTab({
     setDecryptError("");
   };
 
-  // 解密预览
+  // 解密预览 - 使用服务器端 API（支持 HTTP 环境）
   const handleDecryptPreview = async () => {
     if (!importPassword || !importData) {
       setDecryptError("请输入密码和加密数据");
@@ -63,16 +57,24 @@ export function VodSourcesTab({
     setImportPreview(null);
 
     try {
-      let payload: ConfigPayload;
+      // 使用服务器端 API 进行解密（不依赖 Web Crypto API）
+      const response = await fetch("/api/decrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          isSubscriptionUrl(importData)
+            ? { password: importPassword, subscriptionUrl: importData }
+            : { password: importPassword, encryptedData: importData }
+        ),
+      });
 
-      if (isSubscriptionUrl(importData)) {
-        // 从 URL 获取并解密
-        payload = await fetchAndDecryptSubscription(importData, importPassword);
-      } else {
-        // 解析加密字符串并解密
-        const encryptedPackage = parseEncryptedString(importData);
-        payload = await decryptConfig(encryptedPackage, importPassword);
+      const result = await response.json();
+
+      if (result.code !== 200) {
+        throw new Error(result.message || "解密失败");
       }
+
+      const payload = result.data;
 
       if (payload.vodSources && payload.vodSources.length > 0) {
         setImportPreview(payload.vodSources);

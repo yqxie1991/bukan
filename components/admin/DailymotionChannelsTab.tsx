@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Star, Download, X, Lock } from "lucide-react";
 import type { DailymotionChannelConfig } from "@/types/dailymotion-config";
-import {
-  decryptConfig,
-  parseEncryptedString,
-  fetchAndDecryptSubscription,
-  isSubscriptionUrl,
-  type ConfigPayload,
-} from "@/lib/crypto";
+import { isSubscriptionUrl } from "@/lib/utils";
 
 interface Props {
   channels: DailymotionChannelConfig[];
@@ -65,7 +59,7 @@ export function DailymotionChannelsTab({
     setDecryptError("");
   };
 
-  // 解密预览
+  // 解密预览 - 使用服务器端 API（支持 HTTP 环境）
   const handleDecryptPreview = async () => {
     if (!importPassword || !importData) {
       setDecryptError("请输入密码和加密数据");
@@ -77,14 +71,24 @@ export function DailymotionChannelsTab({
     setImportPreview(null);
 
     try {
-      let payload: ConfigPayload;
+      // 使用服务器端 API 进行解密（不依赖 Web Crypto API）
+      const response = await fetch("/api/decrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          isSubscriptionUrl(importData)
+            ? { password: importPassword, subscriptionUrl: importData }
+            : { password: importPassword, encryptedData: importData }
+        ),
+      });
 
-      if (isSubscriptionUrl(importData)) {
-        payload = await fetchAndDecryptSubscription(importData, importPassword);
-      } else {
-        const encryptedPackage = parseEncryptedString(importData);
-        payload = await decryptConfig(encryptedPackage, importPassword);
+      const result = await response.json();
+
+      if (result.code !== 200) {
+        throw new Error(result.message || "解密失败");
       }
+
+      const payload = result.data;
 
       if (
         payload.dailymotionChannels &&
@@ -108,10 +112,33 @@ export function DailymotionChannelsTab({
     }
 
     try {
+      // 先从服务器获取最新的数据库数据，避免使用可能包含未保存默认配置的客户端状态
+      const freshResponse = await fetch("/api/dailymotion-config");
+      const freshResult = await freshResponse.json();
+
+      // 获取数据库中实际存在的用户名列表
+      // 注意：如果数据库为空，服务器会返回一个虚拟的 default 频道，需要完全排除这种情况
+      const serverChannels =
+        freshResult.code === 200 && freshResult.data?.channels
+          ? freshResult.data.channels
+          : [];
+
+      // 检查是否是虚拟默认配置（数据库实际为空）
+      const isVirtualDefaultOnly =
+        serverChannels.length === 1 && serverChannels[0].id === "default";
+
+      const existingUsernames = new Set<string>(
+        isVirtualDefaultOnly
+          ? [] // 数据库为空，没有真实的已存在用户名
+          : serverChannels.map((c: { username: string }) => c.username)
+      );
+
+      let addedCount = 0;
+
       // 依次添加频道
       for (const preset of importPreview) {
-        const exists = channels.some((c) => c.username === preset.username);
-        if (exists) continue;
+        // 检查是否已存在于数据库或本次导入中已添加
+        if (existingUsernames.has(preset.username)) continue;
 
         const response = await fetch("/api/dailymotion-config", {
           method: "POST",
@@ -125,11 +152,14 @@ export function DailymotionChannelsTab({
         const result = await response.json();
         if (result.code === 200) {
           onChannelsChange(result.data.channels, result.data.defaultChannelId);
+          // 记录已添加的用户名，避免重复
+          existingUsernames.add(preset.username);
+          addedCount++;
         }
       }
 
       onShowToast({
-        message: `已成功导入频道配置`,
+        message: `已成功导入 ${addedCount} 个频道配置`,
         type: "success",
       });
       resetEncryptedImportModal();

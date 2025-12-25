@@ -26,3 +26,15 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
     }
   };
 }
+
+/**
+ * 判断输入是 URL 还是加密字符串
+ */
+export function isSubscriptionUrl(input: string): boolean {
+  try {
+    const url = new URL(input);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

@@ -4,7 +4,6 @@ import type { DailymotionConfigData, DailymotionChannelConfig } from '@/types/da
 
 // 缓存键
 const CACHE_KEY_CONFIG = 'dailymotion:config';
-const CACHE_KEY_DEFAULT_CHANNEL = 'dailymotion:default_channel';
 const CACHE_TTL = 3600; // 1小时
 
 // 创建缓存实例
@@ -48,97 +47,127 @@ function docsToConfig(
 
 // 获取所有频道配置（带缓存）
 export async function getDailymotionConfigFromDB(): Promise<DailymotionConfigData> {
-  // 尝试从缓存获取
-  const cached = await cache.get<DailymotionConfigData>(CACHE_KEY_CONFIG);
-  if (cached) {
-    console.log('✅ 从缓存获取 Dailymotion 配置');
-    return cached;
+  try {
+    // 尝试从缓存获取
+    const cached = await cache.get<DailymotionConfigData>(CACHE_KEY_CONFIG);
+    if (cached) {
+      console.log('✅ 从缓存获取 Dailymotion 配置');
+      return cached;
+    }
+
+    // 从数据库获取
+    const db = await getDatabase();
+    const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
+
+    // 获取所有频道
+    const channels = await channelsCollection.find().sort({ createdAt: 1 }).toArray();
+
+    // 获取配置
+    const configDoc = await configCollection.findOne({ id: 1 });
+
+    // 如果没有任何频道，返回默认配置（但不写入数据库）
+    // 这样避免在 MongoDB 查询出问题时覆盖真实数据
+    if (channels.length === 0) {
+      console.log('⚠️ 数据库中没有 Dailymotion 频道，返回默认配置（未写入数据库）');
+      const defaultConfig: DailymotionConfigData = {
+        channels: [
+          {
+            id: 'default',
+            username: 'kchow125',
+            displayName: 'KChow125',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        defaultChannelId: 'default',
+      };
+
+      return defaultConfig;
+    }
+
+    const config = docsToConfig(channels, configDoc);
+
+    // 缓存结果
+    await cache.set(CACHE_KEY_CONFIG, config);
+
+    console.log('✅ 从数据库获取 Dailymotion 配置');
+    return config;
+  } catch (error) {
+    console.error('❌ 获取 Dailymotion 配置失败:', error);
+    throw error;
   }
-
-  // 从数据库获取
-  const db = await getDatabase();
-  const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
-  const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
-
-  // 获取所有频道
-  const channels = await channelsCollection.find().sort({ createdAt: 1 }).toArray();
-
-  // 获取配置
-  const configDoc = await configCollection.findOne({ id: 1 });
-
-  // 如果没有任何频道，返回默认配置
-  if (channels.length === 0) {
-    const defaultConfig: DailymotionConfigData = {
-      channels: [
-        {
-          id: 'default',
-          username: 'kchow125',
-          displayName: 'KChow125',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-      defaultChannelId: 'default',
-    };
-
-    // 保存默认配置到数据库
-    await saveDailymotionConfigToDB(defaultConfig);
-
-    return defaultConfig;
-  }
-
-  const config = docsToConfig(channels, configDoc);
-
-  // 缓存结果
-  await cache.set(CACHE_KEY_CONFIG, config);
-
-  console.log('✅ 从数据库获取 Dailymotion 配置');
-  return config;
 }
 
-// 保存完整配置到数据库
+// 保存完整配置到数据库（使用 bulkWrite 提高原子性）
 export async function saveDailymotionConfigToDB(config: DailymotionConfigData): Promise<void> {
-  const db = await getDatabase();
-  const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
-  const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
-  const now = new Date().toISOString();
+  try {
+    const db = await getDatabase();
+    const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
+    const now = new Date().toISOString();
 
-  // 删除所有现有频道
-  await channelsCollection.deleteMany({});
+    // 获取现有频道ID列表
+    const existingChannels = await channelsCollection.find({}, { projection: { id: 1 } }).toArray();
+    const existingIds = new Set(existingChannels.map(c => c.id));
+    const newIds = new Set(config.channels.map(c => c.id));
 
-  // 插入新频道
-  if (config.channels.length > 0) {
-    const channelDocs: DailymotionChannelDoc[] = config.channels.map((channel) => ({
-      id: channel.id,
-      username: channel.username,
-      displayName: channel.displayName,
-      avatarUrl: channel.avatarUrl,
-      isActive: channel.isActive,
-      createdAt: channel.createdAt,
-      updatedAt: now,
-    }));
+    // 使用 bulkWrite 批量操作（更安全）
+    const operations = [];
 
-    await channelsCollection.insertMany(channelDocs);
-  }
+    // 删除不在新配置中的频道
+    for (const existingId of existingIds) {
+      if (!newIds.has(existingId)) {
+        operations.push({ deleteOne: { filter: { id: existingId } } });
+      }
+    }
 
-  // 更新配置文档
-  await configCollection.updateOne(
-    { id: 1 },
-    {
-      $set: {
-        id: 1,
-        defaultChannelId: config.defaultChannelId,
-        updatedAt: now,
+    // 更新或插入新频道
+    for (const channel of config.channels) {
+      operations.push({
+        updateOne: {
+          filter: { id: channel.id },
+          update: {
+            $set: {
+              id: channel.id,
+              username: channel.username,
+              displayName: channel.displayName,
+              avatarUrl: channel.avatarUrl,
+              isActive: channel.isActive,
+              createdAt: channel.createdAt,
+              updatedAt: now,
+            },
+          },
+          upsert: true,
+        },
+      });
+    }
+
+    if (operations.length > 0) {
+      await channelsCollection.bulkWrite(operations);
+    }
+
+    // 更新配置文档
+    await configCollection.updateOne(
+      { id: 1 },
+      {
+        $set: {
+          id: 1,
+          defaultChannelId: config.defaultChannelId,
+          updatedAt: now,
+        },
       },
-    },
-    { upsert: true }
-  );
+      { upsert: true }
+    );
 
-  // 清除缓存
-  await cache.del(CACHE_KEY_CONFIG);
-  await cache.del(CACHE_KEY_DEFAULT_CHANNEL);
+    // 清除缓存
+    await cache.del(CACHE_KEY_CONFIG);
 
-  console.log('✅ Dailymotion 配置已保存到数据库');
+    console.log('✅ Dailymotion 配置已保存到数据库');
+  } catch (error) {
+    console.error('❌ 保存 Dailymotion 配置失败:', error);
+    throw error;
+  }
 }
 
 // 添加频道
@@ -147,52 +176,59 @@ export async function addDailymotionChannelToDB(
   displayName: string,
   avatarUrl?: string
 ): Promise<DailymotionChannelConfig> {
-  const db = await getDatabase();
-  const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
-  const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
-  const now = new Date().toISOString();
+  try {
+    const db = await getDatabase();
+    const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
+    const now = new Date().toISOString();
 
-  const newChannel: DailymotionChannelDoc = {
-    id: `channel_${Date.now()}`,
-    username,
-    displayName,
-    avatarUrl,
-    isActive: true,
-    createdAt: now,
-    updatedAt: now,
-  };
+    const newChannel: DailymotionChannelDoc = {
+      id: `channel_${Date.now()}`,
+      username,
+      displayName,
+      avatarUrl,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-  await channelsCollection.insertOne(newChannel);
+    await channelsCollection.insertOne(newChannel);
 
-  // 如果是第一个频道，设置为默认
-  const count = await channelsCollection.countDocuments();
-  if (count === 1) {
-    await configCollection.updateOne(
-      { id: 1 },
-      {
-        $set: {
-          id: 1,
-          defaultChannelId: newChannel.id,
-          updatedAt: now,
-        },
-      },
-      { upsert: true }
-    );
+    // 检查是否需要设置默认频道
+    const existingConfig = await configCollection.findOne({ id: 1 });
+    if (!existingConfig) {
+      // 配置不存在，创建新配置
+      await configCollection.insertOne({
+        id: 1,
+        defaultChannelId: newChannel.id,
+        updatedAt: now,
+      });
+    } else if (!existingConfig.defaultChannelId) {
+      // 配置存在但没有默认频道，设置当前频道为默认
+      await configCollection.updateOne(
+        { id: 1 },
+        { $set: { defaultChannelId: newChannel.id, updatedAt: now } }
+      );
+    }
+    // 如果已有默认频道，则不做任何操作
+
+    // 清除缓存
+    await cache.del(CACHE_KEY_CONFIG);
+
+    console.log(`✅ 添加 Dailymotion 频道: ${displayName}`);
+
+    return {
+      id: newChannel.id,
+      username: newChannel.username,
+      displayName: newChannel.displayName,
+      avatarUrl: newChannel.avatarUrl,
+      isActive: newChannel.isActive,
+      createdAt: newChannel.createdAt,
+    };
+  } catch (error) {
+    console.error(`❌ 添加 Dailymotion 频道失败: ${displayName}`, error);
+    throw error;
   }
-
-  // 清除缓存
-  await cache.del(CACHE_KEY_CONFIG);
-
-  console.log(`✅ 添加 Dailymotion 频道: ${displayName}`);
-
-  return {
-    id: newChannel.id,
-    username: newChannel.username,
-    displayName: newChannel.displayName,
-    avatarUrl: newChannel.avatarUrl,
-    isActive: newChannel.isActive,
-    createdAt: newChannel.createdAt,
-  };
 }
 
 // 更新频道
@@ -200,81 +236,107 @@ export async function updateDailymotionChannelInDB(
   id: string,
   updates: Partial<Omit<DailymotionChannelConfig, 'id' | 'createdAt'>>
 ): Promise<void> {
-  const db = await getDatabase();
-  const collection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
-  const now = new Date().toISOString();
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const now = new Date().toISOString();
 
-  await collection.updateOne(
-    { id },
-    {
-      $set: {
-        ...updates,
-        updatedAt: now,
-      },
+    const result = await collection.updateOne(
+      { id },
+      {
+        $set: {
+          ...updates,
+          updatedAt: now,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      throw new Error(`频道不存在: ${id}`);
     }
-  );
 
-  // 清除缓存
-  await cache.del(CACHE_KEY_CONFIG);
+    // 清除缓存
+    await cache.del(CACHE_KEY_CONFIG);
 
-  console.log(`✅ 更新 Dailymotion 频道: ${id}`);
+    console.log(`✅ 更新 Dailymotion 频道: ${id}`);
+  } catch (error) {
+    console.error(`❌ 更新 Dailymotion 频道失败: ${id}`, error);
+    throw error;
+  }
 }
 
 // 删除频道
 export async function deleteDailymotionChannelFromDB(id: string): Promise<void> {
-  const db = await getDatabase();
-  const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
-  const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
+  try {
+    const db = await getDatabase();
+    const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
 
-  await channelsCollection.deleteOne({ id });
+    const result = await channelsCollection.deleteOne({ id });
 
-  // 如果删除的是默认频道，选择第一个作为新的默认频道
-  const config = await configCollection.findOne({ id: 1 });
-  if (config?.defaultChannelId === id) {
-    const firstChannel = await channelsCollection.findOne({}, { sort: { createdAt: 1 } });
-    if (firstChannel) {
+    if (result.deletedCount === 0) {
+      throw new Error(`频道不存在: ${id}`);
+    }
+
+    // 如果删除的是默认频道，选择第一个作为新的默认频道
+    const config = await configCollection.findOne({ id: 1 });
+    if (config?.defaultChannelId === id) {
+      const firstChannel = await channelsCollection.findOne({}, { sort: { createdAt: 1 } });
       await configCollection.updateOne(
         { id: 1 },
         {
           $set: {
-            defaultChannelId: firstChannel.id,
+            defaultChannelId: firstChannel?.id ?? undefined,
             updatedAt: new Date().toISOString(),
           },
         }
       );
     }
+
+    // 清除缓存
+    await cache.del(CACHE_KEY_CONFIG);
+
+    console.log(`✅ 删除 Dailymotion 频道: ${id}`);
+  } catch (error) {
+    console.error(`❌ 删除 Dailymotion 频道失败: ${id}`, error);
+    throw error;
   }
-
-  // 清除缓存
-  await cache.del(CACHE_KEY_CONFIG);
-  await cache.del(CACHE_KEY_DEFAULT_CHANNEL);
-
-  console.log(`✅ 删除 Dailymotion 频道: ${id}`);
 }
 
 // 设置默认频道
 export async function setDefaultDailymotionChannelInDB(channelId: string): Promise<void> {
-  const db = await getDatabase();
-  const collection = db.collection<DailymotionConfigDoc>('dailymotion_config');
-  const now = new Date().toISOString();
+  try {
+    const db = await getDatabase();
+    const channelsCollection = db.collection<DailymotionChannelDoc>('dailymotion_channels');
+    const configCollection = db.collection<DailymotionConfigDoc>('dailymotion_config');
+    const now = new Date().toISOString();
 
-  await collection.updateOne(
-    { id: 1 },
-    {
-      $set: {
-        id: 1,
-        defaultChannelId: channelId,
-        updatedAt: now,
+    // 验证频道是否存在
+    const channel = await channelsCollection.findOne({ id: channelId });
+    if (!channel) {
+      throw new Error(`频道不存在: ${channelId}`);
+    }
+
+    await configCollection.updateOne(
+      { id: 1 },
+      {
+        $set: {
+          id: 1,
+          defaultChannelId: channelId,
+          updatedAt: now,
+        },
       },
-    },
-    { upsert: true }
-  );
+      { upsert: true }
+    );
 
-  // 清除缓存
-  await cache.del(CACHE_KEY_CONFIG);
-  await cache.del(CACHE_KEY_DEFAULT_CHANNEL);
+    // 清除缓存
+    await cache.del(CACHE_KEY_CONFIG);
 
-  console.log(`✅ 设置默认 Dailymotion 频道: ${channelId}`);
+    console.log(`✅ 设置默认 Dailymotion 频道: ${channelId}`);
+  } catch (error) {
+    console.error(`❌ 设置默认 Dailymotion 频道失败: ${channelId}`, error);
+    throw error;
+  }
 }
 
 // 清除所有 Dailymotion 相关缓存
