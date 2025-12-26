@@ -1,6 +1,7 @@
 // 播放器配置管理API
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/db';
+import { COLLECTIONS } from '@/lib/constants/db';
 
 export interface PlayerConfig {
   mode: 'iframe' | 'local' | 'auto'; // 播放器模式
@@ -102,7 +103,7 @@ const DEFAULT_CONFIG: PlayerConfig = {
 export async function GET() {
   try {
     const db = await getDatabase();
-    const configCollection = db.collection<PlayerConfigDocument>('player_config');
+    const configCollection = db.collection<PlayerConfigDocument>(COLLECTIONS.PLAYER_CONFIG);
 
     // 从数据库获取配置
     const configDoc = await configCollection.findOne({ _id: 'player_config' });
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    const configCollection = db.collection<PlayerConfigDocument>('player_config');
+    const configCollection = db.collection<PlayerConfigDocument>(COLLECTIONS.PLAYER_CONFIG);
 
     // 获取现有配置
     const existingConfigDoc = await configCollection.findOne({ _id: 'player_config' });
