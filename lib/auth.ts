@@ -1,8 +1,12 @@
 import { cookies } from 'next/headers';
 
-// 默认管理员密码（实际使用中应该从环境变量读取）
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'bukan';
+// Session cookie 名称
 const SESSION_COOKIE_NAME = 'admin_session';
+
+// 获取管理员密码（运行时动态读取环境变量，避免构建时被内联）
+function getAdminPassword(): string {
+  return process.env.ADMIN_PASSWORD || 'bukan';
+}
 
 // 创建会话
 export async function createSession(): Promise<void> {
@@ -32,5 +36,5 @@ export async function validateSession(): Promise<boolean> {
 
 // 验证密码
 export function validatePassword(password: string): boolean {
-  return password === ADMIN_PASSWORD;
+  return password === getAdminPassword();
 }

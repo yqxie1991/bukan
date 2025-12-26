@@ -74,6 +74,8 @@ else
 fi
 
 ***REMOVED*** ==================== 配置 ====================
+SCRIPT_VERSION="1.1.0"
+SCRIPT_DATE="2025-12-26"
 DOCKER_IMAGE="unilei/kerkerker"
 DEFAULT_VERSION="latest"
 DEFAULT_PORT="3000"
@@ -93,6 +95,7 @@ print_banner() {
     echo "║                                                           ║"
     echo "║   短剧/影视管理平台                                       ║"
     echo "║                                                           ║"
+    print_color "║   版本: ${SCRIPT_VERSION}  更新: ${SCRIPT_DATE}                          ║\n"
     echo "╚═══════════════════════════════════════════════════════════╝"
     print_color "${NC}\n"
     ***REMOVED*** 显示系统信息
@@ -128,7 +131,7 @@ read_input() {
     _is_password="$3"
     _value=""
     
-    if [ -n "$_default" ]; then
+    if [ -n "$_default" ] && [ "$_is_password" != "true" ]; then
         _prompt="${_prompt} [${_default}]"
     fi
     
@@ -176,6 +179,19 @@ validate_port() {
 ***REMOVED*** 检查命令是否存在
 command_exists() {
     command -v "$1" > /dev/null 2>&1
+}
+
+***REMOVED*** 检查端口是否可用 (POSIX 兼容)
+check_port_available() {
+    _port="$1"
+    if command_exists ss; then
+        ss -tuln 2>/dev/null | grep -q ":$_port " && return 1
+    elif command_exists netstat; then
+        netstat -tuln 2>/dev/null | grep -q ":$_port " && return 1
+    elif command_exists lsof; then
+        lsof -i ":$_port" > /dev/null 2>&1 && return 1
+    fi
+    return 0
 }
 
 ***REMOVED*** ==================== Docker 安装辅助 ====================
@@ -278,6 +294,42 @@ check_dependencies() {
     print_success "Docker 运行正常"
 }
 
+***REMOVED*** ==================== 检测已存在安装 ====================
+check_existing_installation() {
+    if [ -f "$INSTALL_DIR/.env" ] && [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
+        print_warning "检测到已存在的安装: $INSTALL_DIR"
+        echo ""
+        echo "   1) 升级 - 保留现有配置，只更新镜像和脚本"
+        echo "   2) 重装 - 备份后重新配置"
+        echo "   3) 取消"
+        echo ""
+        _choice=$(read_input "请选择操作" "1")
+        case "$_choice" in
+            1)
+                UPGRADE_MODE=true
+                ***REMOVED*** 加载现有配置
+                set -a
+                . "$INSTALL_DIR/.env"
+                set +a
+                print_info "将保留现有配置进行升级"
+                ;;
+            2)
+                ***REMOVED*** 备份现有配置
+                _backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
+                mv "$INSTALL_DIR" "$_backup_dir"
+                print_info "已备份到: $_backup_dir"
+                UPGRADE_MODE=false
+                ;;
+            *)
+                print_info "已取消"
+                exit 0
+                ;;
+        esac
+    else
+        UPGRADE_MODE=false
+    fi
+}
+
 ***REMOVED*** ==================== 交互式配置 ====================
 interactive_config() {
     print_step "配置部署参数"
@@ -291,10 +343,20 @@ interactive_config() {
     ***REMOVED*** 应用端口
     while true; do
         APP_PORT=$(read_input "应用端口" "$DEFAULT_PORT")
-        if validate_port "$APP_PORT"; then
+        if ! validate_port "$APP_PORT"; then
+            print_error "无效的端口号，请输入 1-65535 之间的数字"
+            continue
+        fi
+        if ! check_port_available "$APP_PORT"; then
+            print_warning "端口 $APP_PORT 已被占用"
+            _use_anyway=$(read_input "是否继续使用此端口? (y/n)" "n")
+            case "$_use_anyway" in
+                [Yy]) break ;;
+                *) continue ;;
+            esac
+        else
             break
         fi
-        print_error "无效的端口号，请输入 1-65535 之间的数字"
     done
     
     ***REMOVED*** 镜像版本
@@ -364,7 +426,8 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD}
 ***REMOVED*** 生产环境: https://your-douban-api.example.com
 NEXT_PUBLIC_DOUBAN_API_URL=
 EOF
-    print_success "创建 .env 配置文件"
+    chmod 600 .env
+    print_success "创建 .env 配置文件（权限: 600）"
     
     ***REMOVED*** 创建 docker-compose.yml
     cat > docker-compose.yml << 'EOF'
@@ -420,36 +483,55 @@ EOF
     
     ***REMOVED*** 创建管理脚本
     cat > kerkerker.sh << 'SCRIPT'
-***REMOVED***!/bin/bash
+***REMOVED***!/bin/sh
 
 ***REMOVED*** Kerkerker 管理脚本
+***REMOVED*** 版本: 1.1.0
+
 cd "$(dirname "$0")"
+
+***REMOVED*** 检测 Docker Compose 命令
+if command -v docker-compose > /dev/null 2>&1; then
+    COMPOSE="docker-compose"
+elif docker compose version > /dev/null 2>&1; then
+    COMPOSE="docker compose"
+else
+    echo "❌ Docker Compose 未安装"
+    exit 1
+fi
+
+***REMOVED*** 加载环境变量
+if [ -f .env ]; then
+    set -a
+    . ./.env
+    set +a
+fi
 
 case "$1" in
     start)
         echo "🚀 启动服务..."
-        docker compose up -d
+        $COMPOSE up -d
         ;;
     stop)
         echo "🛑 停止服务..."
-        docker compose down
+        $COMPOSE down
         ;;
     restart)
-        echo "🔄 重启服务..."
-        docker compose restart app
+        echo "🔄 重启服务（重新应用环境变量）..."
+        $COMPOSE up -d --force-recreate app
         echo "✅ 重启完成"
         ;;
     logs)
-        docker compose logs -f ${2:-app}
+        $COMPOSE logs -f "${2:-app}"
         ;;
     status)
-        docker compose ps
+        $COMPOSE ps
         ;;
     update)
         echo "📥 更新镜像..."
-        docker compose pull app
-        echo "🔄 重启服务..."
-        docker compose up -d
+        $COMPOSE pull app
+        echo "🔄 重启服务（使用新镜像并重新应用环境变量）..."
+        $COMPOSE up -d --force-recreate app
         echo "🧹 清理旧镜像..."
         docker image prune -f
         echo "✅ 更新完成"
@@ -458,23 +540,71 @@ case "$1" in
         echo "📦 备份数据..."
         BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
         mkdir -p "$BACKUP_DIR"
-        docker compose exec -T mongodb mongodump --archive > "$BACKUP_DIR/mongodb.archive"
-        cp .env "$BACKUP_DIR/.env"
-        echo "✅ 备份完成: $BACKUP_DIR"
+        if $COMPOSE exec -T mongodb mongodump --archive > "$BACKUP_DIR/mongodb.archive" 2>/dev/null; then
+            cp .env "$BACKUP_DIR/.env"
+            echo "✅ 备份完成: $BACKUP_DIR"
+        else
+            rm -rf "$BACKUP_DIR"
+            echo "❌ 备份失败，请确保 MongoDB 服务正在运行"
+            exit 1
+        fi
+        ;;
+    restore)
+        if [ -z "$2" ]; then
+            echo "用法: ./kerkerker.sh restore <备份目录>"
+            echo "示例: ./kerkerker.sh restore ./backups/20251226_120000"
+            echo ""
+            echo "可用备份:"
+            ls -d ./backups/*/ 2>/dev/null || echo "   无备份"
+            exit 1
+        fi
+        if [ ! -f "$2/mongodb.archive" ]; then
+            echo "❌ 无效的备份目录: $2"
+            exit 1
+        fi
+        echo "📦 恢复数据..."
+        cat "$2/mongodb.archive" | $COMPOSE exec -T mongodb mongorestore --archive --drop
+        echo "✅ 恢复完成"
+        ;;
+    uninstall)
+        echo "⚠️  警告：此操作将删除所有容器、数据卷和配置文件！"
+        echo ""
+        printf "请输入 'yes' 确认卸载: "
+        read _confirm
+        if [ "$_confirm" = "yes" ]; then
+            echo "🛑 停止并删除容器..."
+            $COMPOSE down -v
+            echo "🗑️  删除配置文件..."
+            rm -f docker-compose.yml .env kerkerker.sh
+            echo "✅ 卸载完成，数据卷已删除"
+            echo "   注意: backups 目录已保留"
+        else
+            echo "❌ 已取消卸载"
+        fi
+        ;;
+    env)
+        echo "📋 当前环境变量:"
+        echo "   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-未设置}"
+        echo "   APP_PORT: ${APP_PORT:-3000}"
+        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-latest}"
+        echo "   NEXT_PUBLIC_DOUBAN_API_URL: ${NEXT_PUBLIC_DOUBAN_API_URL:-未设置}"
         ;;
     *)
-        echo "Kerkerker 管理脚本"
+        echo "Kerkerker 管理脚本 v1.1.0"
         echo ""
         echo "用法: ./kerkerker.sh <命令>"
         echo ""
         echo "命令:"
-        echo "  start    启动服务"
-        echo "  stop     停止服务"
-        echo "  restart  重启服务"
-        echo "  logs     查看日志 (可选参数: app/mongodb)"
-        echo "  status   查看状态"
-        echo "  update   更新到最新版本"
-        echo "  backup   备份数据"
+        echo "  start     启动服务"
+        echo "  stop      停止服务"
+        echo "  restart   重启服务（重新应用 .env 配置）"
+        echo "  logs      查看日志 (可选参数: app/mongodb)"
+        echo "  status    查看状态"
+        echo "  update    更新到最新版本"
+        echo "  backup    备份数据"
+        echo "  restore   恢复数据 (参数: 备份目录)"
+        echo "  uninstall 卸载服务"
+        echo "  env       查看当前环境变量"
         ;;
 esac
 SCRIPT
@@ -586,13 +716,160 @@ show_completion() {
     echo ""
 }
 
+***REMOVED*** ==================== 更新管理脚本 ====================
+update_management_script() {
+    print_step "更新管理脚本"
+    cd "$INSTALL_DIR"
+    
+    ***REMOVED*** 重新生成 kerkerker.sh（保留配置）
+    cat > kerkerker.sh << 'SCRIPT'
+***REMOVED***!/bin/sh
+
+***REMOVED*** Kerkerker 管理脚本
+***REMOVED*** 版本: 1.1.0
+
+cd "$(dirname "$0")"
+
+***REMOVED*** 检测 Docker Compose 命令
+if command -v docker-compose > /dev/null 2>&1; then
+    COMPOSE="docker-compose"
+elif docker compose version > /dev/null 2>&1; then
+    COMPOSE="docker compose"
+else
+    echo "❌ Docker Compose 未安装"
+    exit 1
+fi
+
+***REMOVED*** 加载环境变量
+if [ -f .env ]; then
+    set -a
+    . ./.env
+    set +a
+fi
+
+case "$1" in
+    start)
+        echo "🚀 启动服务..."
+        $COMPOSE up -d
+        ;;
+    stop)
+        echo "🛑 停止服务..."
+        $COMPOSE down
+        ;;
+    restart)
+        echo "🔄 重启服务（重新应用环境变量）..."
+        $COMPOSE up -d --force-recreate app
+        echo "✅ 重启完成"
+        ;;
+    logs)
+        $COMPOSE logs -f "${2:-app}"
+        ;;
+    status)
+        $COMPOSE ps
+        ;;
+    update)
+        echo "📥 更新镜像..."
+        $COMPOSE pull app
+        echo "🔄 重启服务（使用新镜像并重新应用环境变量）..."
+        $COMPOSE up -d --force-recreate app
+        echo "🧹 清理旧镜像..."
+        docker image prune -f
+        echo "✅ 更新完成"
+        ;;
+    backup)
+        echo "📦 备份数据..."
+        BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
+        mkdir -p "$BACKUP_DIR"
+        if $COMPOSE exec -T mongodb mongodump --archive > "$BACKUP_DIR/mongodb.archive" 2>/dev/null; then
+            cp .env "$BACKUP_DIR/.env"
+            echo "✅ 备份完成: $BACKUP_DIR"
+        else
+            rm -rf "$BACKUP_DIR"
+            echo "❌ 备份失败，请确保 MongoDB 服务正在运行"
+            exit 1
+        fi
+        ;;
+    restore)
+        if [ -z "$2" ]; then
+            echo "用法: ./kerkerker.sh restore <备份目录>"
+            echo "示例: ./kerkerker.sh restore ./backups/20251226_120000"
+            echo ""
+            echo "可用备份:"
+            ls -d ./backups/*/ 2>/dev/null || echo "   无备份"
+            exit 1
+        fi
+        if [ ! -f "$2/mongodb.archive" ]; then
+            echo "❌ 无效的备份目录: $2"
+            exit 1
+        fi
+        echo "📦 恢复数据..."
+        cat "$2/mongodb.archive" | $COMPOSE exec -T mongodb mongorestore --archive --drop
+        echo "✅ 恢复完成"
+        ;;
+    uninstall)
+        echo "⚠️  警告：此操作将删除所有容器、数据卷和配置文件！"
+        echo ""
+        printf "请输入 'yes' 确认卸载: "
+        read _confirm
+        if [ "$_confirm" = "yes" ]; then
+            echo "🛑 停止并删除容器..."
+            $COMPOSE down -v
+            echo "🗑️  删除配置文件..."
+            rm -f docker-compose.yml .env kerkerker.sh
+            echo "✅ 卸载完成，数据卷已删除"
+            echo "   注意: backups 目录已保留"
+        else
+            echo "❌ 已取消卸载"
+        fi
+        ;;
+    env)
+        echo "📋 当前环境变量:"
+        echo "   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-未设置}"
+        echo "   APP_PORT: ${APP_PORT:-3000}"
+        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-latest}"
+        echo "   NEXT_PUBLIC_DOUBAN_API_URL: ${NEXT_PUBLIC_DOUBAN_API_URL:-未设置}"
+        ;;
+    *)
+        echo "Kerkerker 管理脚本 v1.1.0"
+        echo ""
+        echo "用法: ./kerkerker.sh <命令>"
+        echo ""
+        echo "命令:"
+        echo "  start     启动服务"
+        echo "  stop      停止服务"
+        echo "  restart   重启服务（重新应用 .env 配置）"
+        echo "  logs      查看日志 (可选参数: app/mongodb)"
+        echo "  status    查看状态"
+        echo "  update    更新到最新版本"
+        echo "  backup    备份数据"
+        echo "  restore   恢复数据 (参数: 备份目录)"
+        echo "  uninstall 卸载服务"
+        echo "  env       查看当前环境变量"
+        ;;
+esac
+SCRIPT
+    chmod +x kerkerker.sh
+    print_success "更新管理脚本 kerkerker.sh"
+}
+
 ***REMOVED*** ==================== 主程序 ====================
 main() {
     print_banner
     check_dependencies
-    interactive_config
-    create_config_files
-    deploy_services
+    check_existing_installation
+    
+    if [ "$UPGRADE_MODE" = "true" ]; then
+        ***REMOVED*** 升级模式：保留配置，只更新镜像和脚本
+        print_step "升级模式"
+        update_management_script
+        deploy_services
+    else
+        ***REMOVED*** 新安装模式
+        interactive_config
+        create_config_files
+        deploy_services
+    fi
+    
     show_completion
 }
 
