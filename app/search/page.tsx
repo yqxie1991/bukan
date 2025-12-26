@@ -9,62 +9,13 @@ import {
   useRef,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Drama } from "@/types/drama";
-import { VodSource } from "@/types/drama";
+import { Drama, VodSource } from "@/types/drama";
 import DoubanCard from "@/components/DoubanCard";
+import { useVodSources } from "@/hooks/useVodSources";
+import { mutate } from "swr";
 
-// 缓存键
-const SEARCH_CACHE_KEY = "search_results_cache";
-
-// 缓存数据结构
-interface SearchCache {
-  keyword: string;
-  results: (Drama & { source: VodSource })[];
-  stats: { total: number; bySource: Record<string, number> };
-  sources: VodSource[];
-  timestamp: number;
-}
-
-// 安全存储缓存
-function saveSearchCache(data: SearchCache): void {
-  try {
-    const json = JSON.stringify(data);
-    // 超过 5MB 不缓存
-    if (json.length > 5 * 1024 * 1024) {
-      console.log("搜索结果超过 5MB，跳过缓存");
-      return;
-    }
-    sessionStorage.setItem(SEARCH_CACHE_KEY, json);
-    console.log(`💾 搜索结果已缓存: ${data.results.length} 条`);
-  } catch (e) {
-    // 存储失败，静默降级
-    console.warn("缓存存储失败:", e);
-  }
-}
-
-// 读取缓存
-function loadSearchCache(keyword: string): SearchCache | null {
-  try {
-    const cached = sessionStorage.getItem(SEARCH_CACHE_KEY);
-    if (!cached) return null;
-
-    const data: SearchCache = JSON.parse(cached);
-
-    // 检查关键词是否匹配
-    if (data.keyword !== keyword) return null;
-
-    // 检查缓存是否过期（30分钟）
-    if (Date.now() - data.timestamp > 30 * 60 * 1000) {
-      sessionStorage.removeItem(SEARCH_CACHE_KEY);
-      return null;
-    }
-
-    console.log(`📦 使用缓存的搜索结果: ${data.results.length} 条`);
-    return data;
-  } catch {
-    return null;
-  }
-}
+// SWR 缓存键前缀
+const SWR_SEARCH_KEY_PREFIX = "search-results-";
 
 function SearchSkeleton() {
   return (
@@ -93,7 +44,9 @@ function SearchContent() {
   >([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [allSources, setAllSources] = useState<VodSource[]>([]);
+
+  // 使用 SWR 缓存的视频源配置
+  const { sources: allSources } = useVodSources();
   const [currentSource, setCurrentSource] = useState<VodSource | null>(null);
   const [searchStats, setSearchStats] = useState<{
     total: number;
@@ -165,16 +118,9 @@ function SearchContent() {
                 const data = JSON.parse(line.slice(6));
 
                 if (data.type === "init") {
-                  // 初始化：设置总源数和源列表
+                  // 初始化：设置总源数（源列表来自 useVodSources hook）
                   console.log(`📡 开始搜索 ${data.totalSources} 个视频源`);
                   setSearchProgress({ completed: 0, total: data.totalSources });
-                  setAllSources(
-                    data.sources.map((s: { key: string; name: string }) => ({
-                      key: s.key,
-                      name: s.name,
-                      api: "", // API URL 不需要在前端
-                    }))
-                  );
                 } else if (data.type === "result") {
                   // 收到单个源的结果 - 立即追加显示
                   console.log(
@@ -199,19 +145,18 @@ function SearchContent() {
                 } else if (data.type === "done") {
                   console.log("📊 所有视频源搜索完成");
 
-                  // 搜索完成后缓存结果
+                  // 搜索完成后，使用 SWR mutate 缓存结果
                   setSearchResults((currentResults) => {
                     setSearchStats((currentStats) => {
-                      setAllSources((currentSources) => {
-                        saveSearchCache({
-                          keyword,
+                      // 缓存到 SWR
+                      mutate(
+                        `${SWR_SEARCH_KEY_PREFIX}${keyword}`,
+                        {
                           results: currentResults,
                           stats: currentStats,
-                          sources: currentSources,
-                          timestamp: Date.now(),
-                        });
-                        return currentSources;
-                      });
+                        },
+                        false
+                      );
                       return currentStats;
                     });
                     return currentResults;
@@ -234,50 +179,13 @@ function SearchContent() {
         setLoading(false);
       }
     },
-    [startTransition, allSources.length]
+    [startTransition]
   );
-
-  // 从数据库加载视频源配置
-  useEffect(() => {
-    const loadSources = async () => {
-      try {
-        const response = await fetch("/api/vod-sources");
-        const result = await response.json();
-
-        if (result.code === 200 && result.data) {
-          setAllSources(result.data.sources || []);
-          setCurrentSource(result.data.selected || null);
-        }
-      } catch (error) {
-        console.error("加载视频源配置失败:", error);
-      }
-    };
-
-    loadSources();
-  }, []);
 
   // 当搜索关键词变化时执行搜索
   useEffect(() => {
     if (queryKeyword && searchingRef.current !== queryKeyword) {
       searchingRef.current = queryKeyword;
-
-      // 先检查缓存
-      const cached = loadSearchCache(queryKeyword);
-      if (cached) {
-        // 使用缓存结果
-        setSearchResults(cached.results);
-        setSearchStats(cached.stats);
-        setAllSources(cached.sources);
-        setSearchProgress({
-          completed: cached.sources.length,
-          total: cached.sources.length,
-        });
-        setSearched(true);
-        setLoading(false);
-        return;
-      }
-
-      // 无缓存，执行搜索
       performSearch(queryKeyword);
     }
   }, [queryKeyword, performSearch]);

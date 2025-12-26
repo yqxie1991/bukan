@@ -21,6 +21,7 @@ import {
 import DoubanCard from "@/components/DoubanCard";
 import { DoubanMovie } from "@/types/douban";
 import { useMovieMatch } from "@/hooks/useMovieMatch";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Toast } from "@/components/Toast";
 import {
   getMoviesCategories,
@@ -260,6 +261,9 @@ export default function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 滚动位置恢复（等待加载完成后恢复）
+  useScrollRestoration(`browse-${pageType}`, { delay: 100, enabled: !loading });
 
   // 分页状态
   const [page, setPage] = useState(1);

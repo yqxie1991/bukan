@@ -1,5 +1,7 @@
 import { getDatabase } from './db';
 import { VodSource } from '@/types/drama';
+import { COLLECTIONS } from './constants/db';
+import type { AnyBulkWriteOperation } from 'mongodb';
 
 export interface VodSourceDoc {
   _id?: string;
@@ -16,8 +18,16 @@ export interface VodSourceDoc {
   type: 'json';           // 仅支持 JSON
   enabled: boolean;
   sort_order: number;
-  created_at: number;
-  updated_at: number;
+  created_at: string;     // ISO 字符串格式
+  updated_at: string;     // ISO 字符串格式
+}
+
+// VOD 源选择配置类型
+export interface VodSourceSelection {
+  _id?: string;
+  id: number;
+  selected_key?: string;
+  updated_at: string;
 }
 
 // 将数据库文档转换为 VodSource 类型
@@ -40,7 +50,7 @@ function docToVodSource(doc: VodSourceDoc): VodSource {
 // 获取所有启用的视频源（按 priority 排序，数值越小优先级越高）
 export async function getVodSourcesFromDB(): Promise<VodSource[]> {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
   
   const docs = await collection
     .find({ enabled: true })
@@ -53,7 +63,7 @@ export async function getVodSourcesFromDB(): Promise<VodSource[]> {
 // 获取所有视频源（包括禁用的，按 priority 排序）
 export async function getAllVodSourcesFromDB(): Promise<VodSourceDoc[]> {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
   
   const docs = await collection
     .find()
@@ -66,10 +76,10 @@ export async function getAllVodSourcesFromDB(): Promise<VodSourceDoc[]> {
 // 添加或更新视频源
 export async function saveVodSourceToDB(source: VodSource & { enabled?: boolean; sortOrder?: number }) {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
-  const now = Math.floor(Date.now() / 1000);
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
+  const now = new Date().toISOString();
   
-  const doc: VodSourceDoc = {
+  const doc: Omit<VodSourceDoc, '_id' | 'created_at'> & { created_at?: string } = {
     key: source.key,
     name: source.name,
     api: source.api,
@@ -83,7 +93,6 @@ export async function saveVodSourceToDB(source: VodSource & { enabled?: boolean;
     type: source.type,
     enabled: source.enabled !== undefined ? source.enabled : true,
     sort_order: source.sortOrder || 0,
-    created_at: now,
     updated_at: now,
   };
   
@@ -97,16 +106,13 @@ export async function saveVodSourceToDB(source: VodSource & { enabled?: boolean;
   );
 }
 
-// 批量保存视频源
+// 批量保存视频源（原子操作）
 export async function saveVodSourcesToDB(sources: VodSource[]) {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
+  const now = new Date().toISOString();
   
-  // 先清空现有数据
-  await collection.deleteMany({});
-  
-  // 插入新数据
-  const now = Math.floor(Date.now() / 1000);
+  // 构建文档列表
   const docs: VodSourceDoc[] = sources.map((source, index) => ({
     key: source.key,
     name: source.name,
@@ -125,23 +131,30 @@ export async function saveVodSourcesToDB(sources: VodSource[]) {
     updated_at: now,
   }));
   
-  if (docs.length > 0) {
-    await collection.insertMany(docs);
+  // 使用 bulkWrite 顺序执行（ordered: true）
+  // 注意：失败时停止后续操作，但已执行操作不会回滚
+  const operations: AnyBulkWriteOperation<VodSourceDoc>[] = [
+    { deleteMany: { filter: {} } },
+    ...docs.map(doc => ({ insertOne: { document: doc } }))
+  ];
+  
+  if (operations.length > 1) {
+    await collection.bulkWrite(operations, { ordered: true });
   }
 }
 
 // 删除视频源
 export async function deleteVodSourceFromDB(key: string) {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
   await collection.deleteOne({ key });
 }
 
 // 启用/禁用视频源
 export async function toggleVodSourceEnabled(key: string, enabled: boolean) {
   const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>('vod_sources');
-  const now = Math.floor(Date.now() / 1000);
+  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
+  const now = new Date().toISOString();
   
   await collection.updateOne(
     { key },
@@ -152,11 +165,11 @@ export async function toggleVodSourceEnabled(key: string, enabled: boolean) {
 // 获取选中的视频源
 export async function getSelectedVodSourceFromDB(): Promise<VodSource | null> {
   const db = await getDatabase();
-  const selectionCollection = db.collection('vod_source_selection');
-  const vodSourcesCollection = db.collection<VodSourceDoc>('vod_sources');
+  const selectionCollection = db.collection<VodSourceSelection>(COLLECTIONS.VOD_SOURCE_SELECTION);
+  const vodSourcesCollection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
   
   // 获取选中的 key
-  const selection = await selectionCollection.findOne({ id: 1 }) as { selected_key?: string } | null;
+  const selection = await selectionCollection.findOne({ id: 1 });
   
   if (selection?.selected_key) {
     const doc = await vodSourcesCollection.findOne({ 
@@ -181,8 +194,8 @@ export async function getSelectedVodSourceFromDB(): Promise<VodSource | null> {
 // 保存选中的视频源
 export async function saveSelectedVodSourceToDB(key: string) {
   const db = await getDatabase();
-  const collection = db.collection('vod_source_selection');
-  const now = Math.floor(Date.now() / 1000);
+  const collection = db.collection<VodSourceSelection>(COLLECTIONS.VOD_SOURCE_SELECTION);
+  const now = new Date().toISOString();
   
   await collection.updateOne(
     { id: 1 },

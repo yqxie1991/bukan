@@ -1,7 +1,12 @@
-import { useState, useEffect, useCallback, startTransition } from "react";
-import type { DoubanMovie } from "@/types/douban";
-import type { CategoryData, HeroData, HeroMovie } from "@/types/home";
-import { getHeroMovies, getNewContent } from "@/lib/douban-service";
+import useSWR from 'swr';
+import { useMemo } from 'react';
+import type { DoubanMovie } from '@/types/douban';
+import type { CategoryData, HeroData, HeroMovie } from '@/types/home';
+import { getHeroMovies, getNewContent } from '@/lib/douban-service';
+
+// SWR 缓存键
+const SWR_KEY_HERO = 'home-hero';
+const SWR_KEY_CATEGORIES = 'home-categories';
 
 interface UseHomeDataReturn {
   categories: CategoryData[];
@@ -14,82 +19,84 @@ interface UseHomeDataReturn {
 
 /**
  * 管理首页数据加载
- * 采用串行加载策略，优先加载用户最先看到的内容
- * 直接调用 Go 微服务，无代理层
+ * 使用 SWR 实现缓存，页面返回时不会重复加载
  */
 export function useHomeData(): UseHomeDataReturn {
-  const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [heroMovies, setHeroMovies] = useState<DoubanMovie[]>([]);
-  const [heroDataList, setHeroDataList] = useState<HeroData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Hero Banner 数据
+  const {
+    data: heroData,
+    error: heroError,
+    isLoading: heroLoading,
+    mutate: mutateHero,
+  } = useSWR(SWR_KEY_HERO, getHeroMovies);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // 1️⃣ 优先加载 Hero Banner（用户第一眼看到）
-      const heroes = await getHeroMovies();
+  // 分类数据
+  const {
+    data: categoryData,
+    error: categoryError,
+    isLoading: categoryLoading,
+    mutate: mutateCategories,
+  } = useSWR(SWR_KEY_CATEGORIES, getNewContent);
 
-      if (heroes && Array.isArray(heroes)) {
-        const heroMoviesList: HeroMovie[] = heroes.map((hero) => ({
-          id: hero.id,
-          title: hero.title,
-          cover: hero.cover || "",
-          url: hero.url || "",
-          rate: hero.rate || "",
-          episode_info: hero.episode_info || "",
-          cover_x: 0,
-          cover_y: 0,
-          playable: false,
-          is_new: false,
-        }));
-
-        const heroDataArray: HeroData[] = heroes.map((hero) => ({
-          poster_horizontal: hero.poster_horizontal,
-          poster_vertical: hero.poster_vertical,
-          description: hero.description,
-          genres: hero.genres,
-        }));
-
-        setHeroMovies(heroMoviesList);
-        setHeroDataList(heroDataArray);
-        
-        // Hero 加载完成后，立即结束 loading 状态，让用户可以交互
-        setLoading(false);
-      }
-
-      // 2️⃣ 加载分类数据（用户滚动后看到）
-      const newData = await getNewContent();
-      if (newData && Array.isArray(newData)) {
-        // 转换数据格式以匹配 CategoryData 类型
-        const convertedCategories: CategoryData[] = newData.map(cat => ({
-          name: cat.name,
-          data: cat.data.map(item => ({
-            id: item.id,
-            title: item.title,
-            rate: item.rate,
-            cover: item.cover,
-            url: item.url,
-            episode_info: item.episode_info,
-          }))
-        }));
-        // 使用 startTransition 让 UI 更新不阻塞交互
-        startTransition(() => {
-          setCategories(convertedCategories);
-        });
-      }
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "数据加载失败，请稍后重试");
-      setLoading(false);
+  // 转换 Hero 数据格式
+  const { heroMovies, heroDataList } = useMemo(() => {
+    if (!heroData || !Array.isArray(heroData)) {
+      return { heroMovies: [], heroDataList: [] };
     }
-  }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const heroMoviesList: HeroMovie[] = heroData.map((hero) => ({
+      id: hero.id,
+      title: hero.title,
+      cover: hero.cover || '',
+      url: hero.url || '',
+      rate: hero.rate || '',
+      episode_info: hero.episode_info || '',
+      cover_x: 0,
+      cover_y: 0,
+      playable: false,
+      is_new: false,
+    }));
+
+    const heroDataArray: HeroData[] = heroData.map((hero) => ({
+      poster_horizontal: hero.poster_horizontal,
+      poster_vertical: hero.poster_vertical,
+      description: hero.description,
+      genres: hero.genres,
+    }));
+
+    return { heroMovies: heroMoviesList, heroDataList: heroDataArray };
+  }, [heroData]);
+
+  // 转换分类数据格式
+  const categories = useMemo(() => {
+    if (!categoryData || !Array.isArray(categoryData)) {
+      return [];
+    }
+
+    return categoryData.map((cat) => ({
+      name: cat.name,
+      data: cat.data.map((item) => ({
+        id: item.id,
+        title: item.title,
+        rate: item.rate,
+        cover: item.cover,
+        url: item.url,
+        episode_info: item.episode_info,
+      })),
+    }));
+  }, [categoryData]);
+
+  // 刷新所有数据
+  const refetch = async () => {
+    await Promise.all([mutateHero(), mutateCategories()]);
+  };
+
+  // 合并错误信息
+  const error = heroError?.message || categoryError?.message || null;
+
+  // 仅在 Hero 加载中时显示 loading
+  // 分类数据可以后台加载
+  const loading = heroLoading && !heroData;
 
   return {
     categories,
@@ -97,6 +104,6 @@ export function useHomeData(): UseHomeDataReturn {
     heroDataList,
     loading,
     error,
-    refetch: fetchData,
+    refetch,
   };
 }

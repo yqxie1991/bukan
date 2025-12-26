@@ -1,4 +1,18 @@
 import { MongoClient, Db } from 'mongodb';
+import { COLLECTIONS } from './constants/db';
+
+// MongoDB 连接池配置
+const MONGO_OPTIONS = {
+  maxPoolSize: 10,          // 最大连接数
+  minPoolSize: 2,           // 最小连接数
+  maxIdleTimeMS: 30000,     // 空闲连接超时 30s
+  connectTimeoutMS: 10000,  // 连接超时 10s
+  retryWrites: true,        // 启用写重试
+  retryReads: true,         // 启用读重试
+};
+
+// 健康检查间隔（毫秒）
+const HEALTH_CHECK_INTERVAL = 30000;
 
 // 获取 MongoDB 连接 URI
 function getMongoURI(): string {
@@ -14,13 +28,60 @@ const globalForMongo = globalThis as unknown as {
   mongoClient: MongoClient | undefined;
   mongoDb: Db | undefined;
   mongoClientPromise: Promise<MongoClient> | undefined;
+  lastHealthCheck: number;
+  initialized: boolean;
 };
+
+// 初始化全局状态
+if (globalForMongo.lastHealthCheck === undefined) {
+  globalForMongo.lastHealthCheck = 0;
+}
+if (globalForMongo.initialized === undefined) {
+  globalForMongo.initialized = false;
+}
+
+// 检查连接健康状态（带间隔优化）
+async function isConnectionHealthy(): Promise<boolean> {
+  // 30秒内跳过重复检查
+  const now = Date.now();
+  if (now - globalForMongo.lastHealthCheck < HEALTH_CHECK_INTERVAL) {
+    return !!globalForMongo.mongoClient;
+  }
+
+  if (!globalForMongo.mongoClient) return false;
+  try {
+    await globalForMongo.mongoClient.db().admin().ping();
+    globalForMongo.lastHealthCheck = now;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 清理失效连接
+function clearConnection() {
+  globalForMongo.mongoClientPromise = undefined;
+  globalForMongo.mongoClient = undefined;
+  globalForMongo.mongoDb = undefined;
+  globalForMongo.lastHealthCheck = 0;
+  globalForMongo.initialized = false;
+}
+
+// 获取 MongoClient 实例（用于事务操作）
+export function getMongoClient(): MongoClient | undefined {
+  return globalForMongo.mongoClient;
+}
 
 // 获取数据库实例
 export async function getDatabase(): Promise<Db> {
-  // 如果已有数据库实例，直接返回
+  // 如果已有数据库实例，验证连接健康状态
   if (globalForMongo.mongoDb) {
-    return globalForMongo.mongoDb;
+    if (await isConnectionHealthy()) {
+      return globalForMongo.mongoDb;
+    }
+    // 连接失效，清理并重连
+    console.log('⚠️ MongoDB 连接失效，正在重新连接...');
+    clearConnection();
   }
 
   try {
@@ -29,7 +90,7 @@ export async function getDatabase(): Promise<Db> {
     
     // 如果没有 client promise，创建一个
     if (!globalForMongo.mongoClientPromise) {
-      const client = new MongoClient(uri);
+      const client = new MongoClient(uri, MONGO_OPTIONS);
       globalForMongo.mongoClientPromise = client.connect();
     }
     
@@ -37,44 +98,46 @@ export async function getDatabase(): Promise<Db> {
     globalForMongo.mongoClient = await globalForMongo.mongoClientPromise;
     globalForMongo.mongoDb = globalForMongo.mongoClient.db(dbName);
     
-    // 初始化数据库集合和索引
+    // 初始化数据库集合和索引（仅首次）
     await initializeDatabase(globalForMongo.mongoDb);
     
     console.log('✅ MongoDB 连接成功');
     return globalForMongo.mongoDb;
   } catch (error) {
     // 连接失败时清理状态，允许重试
-    globalForMongo.mongoClientPromise = undefined;
-    globalForMongo.mongoClient = undefined;
-    globalForMongo.mongoDb = undefined;
+    clearConnection();
     console.error('❌ MongoDB 连接失败:', error);
     throw error;
   }
 }
 
-// 初始化数据库集合和索引
+// 初始化数据库集合和索引（仅首次执行）
 async function initializeDatabase(db: Db) {
+  // 跳过重复初始化
+  if (globalForMongo.initialized) return;
+
   try {
     // 创建 vod_sources 集合的索引
-    const vodSourcesCollection = db.collection('vod_sources');
+    const vodSourcesCollection = db.collection(COLLECTIONS.VOD_SOURCES);
     await vodSourcesCollection.createIndex({ key: 1 }, { unique: true });
     await vodSourcesCollection.createIndex({ enabled: 1 });
     await vodSourcesCollection.createIndex({ sort_order: 1 });
 
     // 创建 vod_source_selection 集合的索引
-    const selectionCollection = db.collection('vod_source_selection');
+    const selectionCollection = db.collection(COLLECTIONS.VOD_SOURCE_SELECTION);
     await selectionCollection.createIndex({ id: 1 }, { unique: true });
 
     // 创建 dailymotion_channels 集合的索引
-    const dailymotionChannelsCollection = db.collection('dailymotion_channels');
+    const dailymotionChannelsCollection = db.collection(COLLECTIONS.DAILYMOTION_CHANNELS);
     await dailymotionChannelsCollection.createIndex({ id: 1 }, { unique: true });
     await dailymotionChannelsCollection.createIndex({ username: 1 });
     await dailymotionChannelsCollection.createIndex({ isActive: 1 });
 
     // 创建 dailymotion_config 集合的索引
-    const dailymotionConfigCollection = db.collection('dailymotion_config');
+    const dailymotionConfigCollection = db.collection(COLLECTIONS.DAILYMOTION_CONFIG);
     await dailymotionConfigCollection.createIndex({ id: 1 }, { unique: true });
 
+    globalForMongo.initialized = true;
     console.log('✅ MongoDB 数据库初始化完成');
   } catch (error) {
     console.error('⚠️ 数据库初始化警告:', error);
@@ -86,9 +149,7 @@ async function initializeDatabase(db: Db) {
 export async function closeDatabase() {
   if (globalForMongo.mongoClient) {
     await globalForMongo.mongoClient.close();
-    globalForMongo.mongoClient = undefined;
-    globalForMongo.mongoDb = undefined;
-    globalForMongo.mongoClientPromise = undefined;
+    clearConnection();
     console.log('✅ MongoDB 连接已关闭');
   }
 }

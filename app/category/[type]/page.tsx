@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -16,10 +15,10 @@ import {
   BookOpen,
 } from "lucide-react";
 import DoubanCard from "@/components/DoubanCard";
-import { DoubanMovie } from "@/types/douban";
 import { useMovieMatch } from "@/hooks/useMovieMatch";
+import { useCategoryData } from "@/hooks/useCategoryData";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Toast } from "@/components/Toast";
-import { getCategoryData, getTop250, Subject } from "@/lib/douban-service";
 
 // URL 路径到分类配置的映射
 const CATEGORY_CONFIG: Record<
@@ -128,17 +127,12 @@ export default function CategoryPage() {
   const params = useParams();
   const categoryType = params.type as string;
 
-  // 使用影片点击 hook（与首页一致，点击后跳转详情页）
+  // 使用影片点击 hook
   const { handleMovieClick, toast, setToast } = useMovieMatch();
 
-  const [movies, setMovies] = useState<DoubanMovie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const ITEMS_PER_PAGE = 20;
+  // 使用 SWR 缓存的分类数据 hook
+  const { movies, loading, loadingMore, error, hasMore, loadMore, refetch } =
+    useCategoryData(categoryType);
 
   const config = CATEGORY_CONFIG[categoryType] || {
     name: "影视列表",
@@ -149,87 +143,11 @@ export default function CategoryPage() {
     bgColor2: "bg-gray-500/10",
   };
 
-  // 转换数据格式 - Subject 转 DoubanMovie
-  const convertToDoubanMovie = (item: Subject): DoubanMovie => ({
-    id: item.id,
-    title: item.title,
-    cover: item.cover || "",
-    url: item.url || "",
-    rate: item.rate || "",
-    episode_info: item.episode_info || "",
-    cover_x: 0,
-    cover_y: 0,
-    playable: false,
-    is_new: false,
+  // 滚动位置恢复（等待加载完成后恢复）
+  useScrollRestoration(`category-${categoryType}`, {
+    delay: 100,
+    enabled: !loading,
   });
-
-  // 初始加载
-  const fetchCategoryData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setPage(1);
-    setHasMore(true);
-    try {
-      // Top250 使用专门的 API
-      if (categoryType === "top250") {
-        const result = await getTop250();
-        if (result?.subjects) {
-          const convertedMovies = result.subjects.map(convertToDoubanMovie);
-          setMovies(convertedMovies);
-          setHasMore(false); // Top250 不需要分页
-        }
-      } else {
-        // 使用分页 API
-        const result = await getCategoryData(categoryType, 1, ITEMS_PER_PAGE);
-        if (result?.subjects) {
-          const convertedMovies = result.subjects.map(convertToDoubanMovie);
-          setMovies(convertedMovies);
-          setHasMore(result.pagination?.hasMore ?? false);
-        }
-      }
-    } catch (err) {
-      console.error("获取数据失败:", err);
-      setError(err instanceof Error ? err.message : "数据加载失败，请稍后重试");
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryType]);
-
-  // 加载更多
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || categoryType === "top250") return;
-
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const result = await getCategoryData(
-        categoryType,
-        nextPage,
-        ITEMS_PER_PAGE
-      );
-      if (result?.subjects) {
-        const newMovies = result.subjects.map(convertToDoubanMovie);
-
-        // 过滤重复的影片
-        const existingIds = new Set(movies.map((m) => m.id));
-        const uniqueNewMovies = newMovies.filter(
-          (m: DoubanMovie) => !existingIds.has(m.id)
-        );
-
-        setMovies((prev) => [...prev, ...uniqueNewMovies]);
-        setPage(nextPage);
-        setHasMore(result.pagination?.hasMore ?? false);
-      }
-    } catch (err) {
-      console.error("加载更多失败:", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [categoryType, page, hasMore, loadingMore, movies]);
-
-  useEffect(() => {
-    fetchCategoryData();
-  }, [fetchCategoryData]);
 
   const goBack = () => {
     router.push("/");
@@ -306,7 +224,7 @@ export default function CategoryPage() {
             <div className="text-center">
               <p className="text-red-500 mb-4">{error}</p>
               <button
-                onClick={fetchCategoryData}
+                onClick={refetch}
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20"
               >
                 重新加载
@@ -344,7 +262,7 @@ export default function CategoryPage() {
 
             {/* 加载更多区域 */}
             {hasMore && categoryType !== "top250" && (
-              <div ref={loadMoreRef} className="flex justify-center mt-12">
+              <div className="flex justify-center mt-12">
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
