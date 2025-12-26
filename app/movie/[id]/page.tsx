@@ -89,6 +89,16 @@ export default function MovieDetailPage() {
   const [movieDetail, setMovieDetail] = useState<MovieDetail | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(true);
 
+  // 智能返回：如果有历史记录则返回，否则跳转首页
+  const goBack = useCallback(() => {
+    // window.history.length > 2 表示有可返回的历史（1是初始页面，2是当前页面）
+    if (window.history.length > 2) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  }, [router]);
+
   // 获取电影详情：优先缓存快速显示，API 补充详细信息
   useEffect(() => {
     // 1. 立即从缓存加载数据（快速显示）
@@ -365,15 +375,15 @@ export default function MovieDetailPage() {
       <nav className="sticky top-0 left-0 right-0 z-50 bg-[***REMOVED***0a0a0a]/95 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-black/50">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
+            <button
+              onClick={goBack}
               className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors group"
             >
               <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-            </Link>
+            </button>
             <h1
               className="text-xl font-bold tracking-tight cursor-pointer hidden sm:block"
-              onClick={() => router.push("/")}
+              onClick={goBack}
             >
               <span className="text-red-600">壳儿</span>
               <span className="text-white ml-1">详情</span>

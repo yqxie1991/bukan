@@ -10,6 +10,7 @@ import { Toast } from "@/components/Toast";
 import { useScrollState } from "@/hooks/useScrollState";
 import { useHomeData } from "@/hooks/useHomeData";
 import { useMovieMatch } from "@/hooks/useMovieMatch";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 
 // Components
 import { Navbar } from "@/components/home/Navbar";
@@ -31,22 +32,20 @@ export default function HomePage() {
 
   // 使用自定义 hooks
   const scrolled = useScrollState(50);
-  const { categories, heroMovies, heroDataList, loading, error, refetch } = useHomeData();
+  const { categories, heroMovies, heroDataList, loading, error, refetch } =
+    useHomeData();
   const { matchingMovie, handleMovieClick, toast, setToast } = useMovieMatch();
+
+  // 滚动位置恢复（导航返回时保持位置）
+  useScrollRestoration("home", { delay: 100 });
 
   return (
     <div className="min-h-screen bg-black">
       {/* 导航栏 */}
-      <Navbar 
-        scrolled={scrolled} 
-        onSearchOpen={() => setShowSearch(true)} 
-      />
+      <Navbar scrolled={scrolled} onSearchOpen={() => setShowSearch(true)} />
 
       {/* 搜索弹窗 */}
-      <SearchModal
-        isOpen={showSearch}
-        onClose={() => setShowSearch(false)}
-      />
+      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
       {/* 加载状态 */}
       {loading ? (
@@ -69,38 +68,40 @@ export default function HomePage() {
           {/* 分类列表区域 */}
           <div className="relative z-20 mt-6 sm:-mt-4 md:-mt-4 lg:-mt-4 space-y-10 md:space-y-12 lg:space-y-16 pb-16">
             {/* 渲染所有新 API 返回的分类 */}
-            {categories.length > 0 ? (
-              categories.map((category, index) => {
-                // 转换数据格式为 DoubanMovie
-                const movies: DoubanMovie[] = category.data.map(
-                  (item: NewApiMovie) => ({
-                    id: item.id,
-                    title: item.title,
-                    cover: item.cover || "",
-                    url: item.url || "",
-                    rate: item.rate || "",
-                    episode_info: (item.episode_info as string) || "",
-                    cover_x: (item.cover_x as number) || 0,
-                    cover_y: (item.cover_y as number) || 0,
-                    playable: (item.playable as boolean) || false,
-                    is_new: (item.is_new as boolean) || false,
-                  })
-                );
+            {categories.length > 0
+              ? categories.map((category, index) => {
+                  // 转换数据格式为 DoubanMovie
+                  const movies: DoubanMovie[] = category.data.map(
+                    (item: NewApiMovie) => ({
+                      id: item.id,
+                      title: item.title,
+                      cover: item.cover || "",
+                      url: item.url || "",
+                      rate: item.rate || "",
+                      episode_info: (item.episode_info as string) || "",
+                      cover_x: (item.cover_x as number) || 0,
+                      cover_y: (item.cover_y as number) || 0,
+                      playable: (item.playable as boolean) || false,
+                      is_new: (item.is_new as boolean) || false,
+                    })
+                  );
 
-                return (
-                  <CategoryRow
-                    key={index}
-                    title={category.name}
-                    icon={getCategoryIcon(category.name)}
-                    movies={movies}
-                    onMovieClick={handleMovieClick}
-                    onViewMore={() =>
-                      router.push(`/category/${getCategoryPath(category.name)}`)
-                    }
-                  />
-                );
-              })
-            ) : null}
+                  return (
+                    <CategoryRow
+                      key={index}
+                      title={category.name}
+                      icon={getCategoryIcon(category.name)}
+                      movies={movies}
+                      onMovieClick={handleMovieClick}
+                      onViewMore={() =>
+                        router.push(
+                          `/category/${getCategoryPath(category.name)}`
+                        )
+                      }
+                    />
+                  );
+                })
+              : null}
           </div>
         </>
       )}
