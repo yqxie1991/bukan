@@ -163,10 +163,38 @@ export default function PlayPage() {
         setCurrentVodSource(source);
 
         // 获取详情 - 查找当前源对应的 vod_name（用于代理搜索）
+        // 优先从 availableSources 查找，如果为空则直接从 localStorage 查找
+        let vodName: string | undefined;
+
+        // 方法1：从 availableSources 查找
         const matchedSource = availableSources.find(
           (s) => s.source_key === source.key
         );
-        const vodName = matchedSource?.vod_name;
+        vodName = matchedSource?.vod_name;
+
+        // 方法2：如果 availableSources 为空，直接从 localStorage 查找
+        if (!vodName) {
+          try {
+            const stored = localStorage.getItem("multi_source_matches");
+            if (stored) {
+              const data = JSON.parse(stored);
+              if (data.matches && Array.isArray(data.matches)) {
+                // 用 vod_id 和 source_key 同时匹配
+                const match = data.matches.find(
+                  (m: AvailableSource) =>
+                    String(m.vod_id) === dramaId && m.source_key === source.key
+                );
+                vodName = match?.vod_name;
+              }
+            }
+          } catch (e) {
+            console.warn("[vodName lookup from localStorage failed]", e);
+          }
+        }
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("📌 Debug - vodName:", vodName);
+        }
 
         const response = await fetch("/api/drama/detail", {
           method: "POST",
@@ -409,8 +437,18 @@ export default function PlayPage() {
       {/* 主内容区域 - 左右分栏布局 */}
       <div className="max-w-[1920px] mx-auto flex flex-col lg:flex-row gap-0 p-0 relative">
         {/* 左侧：视频播放器区域 */}
-        <div className={`flex-1 transition-all duration-300 ${isRightPanelOpen ? 'lg:min-h-[calc(100vh-65px)]' : 'lg:h-[calc(100vh-65px)]'}`}>
-          <div className={`relative w-full bg-black overflow-hidden ${isRightPanelOpen ? 'aspect-video h-full' : 'h-full'}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ${
+            isRightPanelOpen
+              ? "lg:min-h-[calc(100vh-65px)]"
+              : "lg:h-[calc(100vh-65px)]"
+          }`}
+        >
+          <div
+            className={`relative w-full bg-black overflow-hidden ${
+              isRightPanelOpen ? "aspect-video h-full" : "h-full"
+            }`}
+          >
             {dramaDetail && dramaDetail.episodes.length > 0 && (
               <UnifiedPlayer
                 videoUrl={dramaDetail.episodes[currentEpisode].url}
@@ -518,10 +556,11 @@ export default function PlayPage() {
                           selectEpisode(index);
                           setShowAllEpisodes(false);
                         }}
-                        className={`aspect-video rounded-lg text-xs lg:text-sm flex flex-col items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${currentEpisode === index
+                        className={`aspect-video rounded-lg text-xs lg:text-sm flex flex-col items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${
+                          currentEpisode === index
                             ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
                             : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
-                          }`}
+                        }`}
                       >
                         {episode.name}
                       </button>
@@ -592,8 +631,9 @@ export default function PlayPage() {
                       </h3>
                       <div className="relative">
                         <p
-                          className={`text-xs lg:text-sm text-gray-300 leading-relaxed transition-all duration-300 ${isDescriptionExpanded ? "" : "line-clamp-4"
-                            }`}
+                          className={`text-xs lg:text-sm text-gray-300 leading-relaxed transition-all duration-300 ${
+                            isDescriptionExpanded ? "" : "line-clamp-4"
+                          }`}
                           dangerouslySetInnerHTML={{
                             __html: dramaDetail.blurb
                               .replace(/<[^>]*>/g, "")
@@ -678,18 +718,21 @@ export default function PlayPage() {
 
                     {/* 集数预览（显示前12集） */}
                     <div className="grid grid-cols-4 gap-2.5 mb-4">
-                      {dramaDetail.episodes.slice(0, 12).map((episode, index) => (
-                        <button
-                          key={index}
-                          onClick={() => selectEpisode(index)}
-                          className={`rounded-lg flex flex-col text-xs lg:text-sm items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${currentEpisode === index
-                              ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
-                              : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
+                      {dramaDetail.episodes
+                        .slice(0, 12)
+                        .map((episode, index) => (
+                          <button
+                            key={index}
+                            onClick={() => selectEpisode(index)}
+                            className={`rounded-lg flex flex-col text-xs lg:text-sm items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${
+                              currentEpisode === index
+                                ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
+                                : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
                             }`}
-                        >
-                          {episode.name}
-                        </button>
-                      ))}
+                          >
+                            {episode.name}
+                          </button>
+                        ))}
                     </div>
 
                     {/* 查看全部按钮 */}
