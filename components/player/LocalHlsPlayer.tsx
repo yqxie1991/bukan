@@ -12,6 +12,12 @@ import { createHlsConfig } from "@/lib/player/hls-config";
 import { PlayerLoading } from "./PlayerLoading";
 import { PlayerErrorDisplay } from "./PlayerError";
 
+// 弹幕相关导入
+import { DanmakuPanel } from "./DanmakuPanel";
+import type { DanmakuItem } from "@/lib/player/danmaku-service";
+import { autoLoadDanmaku } from "@/lib/player/danmaku-service";
+import { MessageSquare, Loader2 } from "lucide-react";
+
 interface LocalHlsPlayerProps {
   videoUrl: string;
   title: string;
@@ -28,7 +34,7 @@ const MAX_KEY_ERROR = 5;
 
 export function LocalHlsPlayer({
   videoUrl,
-  title: _title, // eslint-disable-line @typescript-eslint/no-unused-vars
+  title,
   settings,
   onProgress,
   onEnded,
@@ -43,6 +49,19 @@ export function LocalHlsPlayer({
   const [, setPlayMode] = useState<"direct" | "proxy" | "detecting">(
     "detecting"
   );
+
+  // 弹幕状态
+  const [isDanmakuPanelOpen, setIsDanmakuPanelOpen] = useState(false);
+  const [danmakuList, setDanmakuList] = useState<DanmakuItem[]>([]);
+  const [autoLoadStatus, setAutoLoadStatus] = useState<{
+    loading: boolean;
+    message: string;
+    matchedTitle?: string;
+  }>({ loading: false, message: "" });
+  const danmakuPluginRef = useRef<ReturnType<
+    typeof import("artplayer-plugin-danmuku").default
+  > | null>(null);
+  const autoLoadAttemptedRef = useRef(false);
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -181,9 +200,10 @@ export function LocalHlsPlayer({
         }
 
         // 动态导入
-        const [ArtplayerModule, HlsModule] = await Promise.all([
+        const [ArtplayerModule, HlsModule, DanmukuModule] = await Promise.all([
           import("artplayer"),
           import("hls.js"),
+          import("artplayer-plugin-danmuku"),
         ]);
 
         if (!isMountedRef.current || !containerRef.current) {
@@ -193,12 +213,48 @@ export function LocalHlsPlayer({
 
         const Artplayer = ArtplayerModule.default;
         const Hls = HlsModule.default;
+        const artplayerPluginDanmuku = DanmukuModule.default;
 
         // 清理旧实例
         cleanupPlayer();
 
         // 创建 HLS 配置
         const hlsConfig = createHlsConfig(Hls);
+
+        // 创建弹幕插件实例
+        const danmakuPlugin = artplayerPluginDanmuku({
+          danmuku: [],
+          // 以下为非必填
+          speed: 5, // 弹幕持续时间，范围在[1 ~ 10]
+          margin: [10, "25%"], // 弹幕上下边距，支持像素数字和百分比
+          opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
+          color: "***REMOVED***FFFFFF", // 默认弹幕颜色，可以被单独弹幕项覆盖
+          mode: 0, // 默认弹幕模式: 0: 滚动，1: 顶部，2: 底部
+          modes: [0, 1, 2], // 弹幕可见的模式
+          fontSize: 25, // 弹幕字体大小，支持像素数字和百分比
+          antiOverlap: true, // 弹幕是否防重叠
+          synchronousPlayback: true, // 是否同步播放速度
+          mount: undefined, // 弹幕发射器挂载点, 默认为播放器控制栏中部
+          heatmap: false, // 是否开启热力图
+          width: 512, // 当播放器宽度小于此值时，弹幕发射器置于播放器底部
+          points: [], // 热力图数据
+          filter: (danmu) => danmu.text.length <= 100, // 弹幕载入前的过滤器
+          beforeVisible: () => true, // 弹幕显示前的过滤器，返回 true 则可以发送
+          visible: true, // 弹幕层是否可见
+          emitter: true, // 是否开启弹幕发射器
+          maxLength: 200, // 弹幕输入框最大长度, 范围在[1 ~ 1000]
+          lockTime: 5, // 输入框锁定时间，范围在[1 ~ 60]
+          theme: "dark", // 弹幕主题，支持 dark 和 light，只在自定义挂载时生效
+          OPACITY: {}, // 不透明度配置项
+          FONT_SIZE: {}, // 弹幕字号配置项
+          MARGIN: {}, // 显示区域配置项
+          SPEED: {}, // 弹幕速度配置项
+          COLOR: [], // 颜色列表配置项
+
+          // 手动发送弹幕前的过滤器，返回 true 则可以发送
+          beforeEmit: () => Promise.resolve(true),
+        } as Parameters<typeof artplayerPluginDanmuku>[0]);
+        danmakuPluginRef.current = danmakuPlugin;
 
         // 创建 ArtPlayer 实例
         const art = new Artplayer({
@@ -298,12 +354,58 @@ export function LocalHlsPlayer({
               },
             },
           ],
+          plugins: [danmakuPlugin],
         });
 
         artRef.current = art;
 
         // 事件监听
-        art.on("ready", () => setIsLoading(false));
+        art.on("ready", () => {
+          setIsLoading(false);
+
+          // 自动加载弹幕
+          if (!autoLoadAttemptedRef.current && title) {
+            autoLoadAttemptedRef.current = true;
+            setAutoLoadStatus({
+              loading: true,
+              message: "正在自动匹配弹幕...",
+            });
+
+            autoLoadDanmaku(title).then((result) => {
+              if (result.success && result.danmaku.length > 0) {
+                setDanmakuList(result.danmaku);
+                setAutoLoadStatus({
+                  loading: false,
+                  message: result.message,
+                  matchedTitle: result.matchedTitle,
+                });
+
+                // 加载弹幕到播放器
+
+                const plugin = art.plugins.artplayerPluginDanmuku as any;
+                if (plugin) {
+                  plugin.config({ danmuku: result.danmaku });
+                  plugin.load();
+                  console.log(`🎯 自动加载 ${result.danmaku.length} 条弹幕`);
+                }
+
+                // 3秒后清除提示
+                setTimeout(() => {
+                  setAutoLoadStatus({ loading: false, message: "" });
+                }, 3000);
+              } else {
+                setAutoLoadStatus({
+                  loading: false,
+                  message: result.message,
+                });
+                // 5秒后清除错误提示
+                setTimeout(() => {
+                  setAutoLoadStatus({ loading: false, message: "" });
+                }, 5000);
+              }
+            });
+          }
+        });
 
         art.on("video:loadedmetadata", () => {
           if (settingsRef.current.autoSaveProgress) {
@@ -374,7 +476,6 @@ export function LocalHlsPlayer({
   function handleHlsError(
     data: HlsErrorData,
     hls: HlsType,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Hls: any,
     useDirectPlay: boolean,
     setUseDirectPlay: (v: boolean) => void,
@@ -493,6 +594,20 @@ export function LocalHlsPlayer({
     }
   }
 
+  // 处理弹幕加载 - 必须在早期返回之前定义以遵守Hooks规则
+  const handleDanmakuLoad = useCallback((danmaku: DanmakuItem[]) => {
+    setDanmakuList(danmaku);
+    if (artRef.current && danmakuPluginRef.current) {
+      // 清空现有弹幕并加载新弹幕
+      const plugin = artRef.current.plugins.artplayerPluginDanmuku as any;
+      if (plugin) {
+        plugin.config({ danmuku: danmaku });
+        plugin.load();
+        console.log(`🎯 已加载 ${danmaku.length} 条弹幕`);
+      }
+    }
+  }, []);
+
   if (!isClient) {
     return (
       <div className="relative w-full h-full bg-black flex items-center justify-center">
@@ -504,6 +619,49 @@ export function LocalHlsPlayer({
   return (
     <div className="relative w-full h-full bg-black">
       <div ref={containerRef} className="w-full h-full" />
+
+      {/* 弹幕手动搜索按钮 - 仅在自动匹配失败时显示 */}
+      {danmakuList.length === 0 && !autoLoadStatus.loading && (
+        <div className="absolute top-3 right-3 z-40">
+          <button
+            onClick={() => setIsDanmakuPanelOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-black/60 hover:bg-black/80 rounded-lg transition-colors"
+            title="手动搜索弹幕"
+          >
+            <MessageSquare size={16} className="text-white" />
+            <span className="text-white text-xs">搜索弹幕</span>
+          </button>
+        </div>
+      )}
+
+      {/* 自动加载弹幕状态提示 */}
+      {autoLoadStatus.message && (
+        <div className="absolute top-3 right-3 z-40">
+          <div
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs backdrop-blur-sm border ${
+              autoLoadStatus.loading
+                ? "bg-black/70 border-white/20 text-white/90"
+                : danmakuList.length > 0
+                ? "bg-black/70 border-green-500/50 text-green-400"
+                : "bg-black/70 border-yellow-500/50 text-yellow-400"
+            }`}
+          >
+            {autoLoadStatus.loading && (
+              <Loader2 size={12} className="animate-spin text-white/70" />
+            )}
+            <span>{autoLoadStatus.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* 弹幕搜索面板 */}
+      <DanmakuPanel
+        videoTitle={title}
+        isOpen={isDanmakuPanelOpen}
+        onClose={() => setIsDanmakuPanelOpen(false)}
+        onDanmakuLoad={handleDanmakuLoad}
+      />
+
       {isLoading && <PlayerLoading />}
       {error && (
         <PlayerErrorDisplay
