@@ -163,10 +163,38 @@ export default function PlayPage() {
         setCurrentVodSource(source);
 
         // 获取详情 - 查找当前源对应的 vod_name（用于代理搜索）
+        // 优先从 availableSources 查找，如果为空则直接从 localStorage 查找
+        let vodName: string | undefined;
+
+        // 方法1：从 availableSources 查找
         const matchedSource = availableSources.find(
           (s) => s.source_key === source.key
         );
-        const vodName = matchedSource?.vod_name;
+        vodName = matchedSource?.vod_name;
+
+        // 方法2：如果 availableSources 为空，直接从 localStorage 查找
+        if (!vodName) {
+          try {
+            const stored = localStorage.getItem("multi_source_matches");
+            if (stored) {
+              const data = JSON.parse(stored);
+              if (data.matches && Array.isArray(data.matches)) {
+                // 用 vod_id 和 source_key 同时匹配
+                const match = data.matches.find(
+                  (m: AvailableSource) =>
+                    String(m.vod_id) === dramaId && m.source_key === source.key
+                );
+                vodName = match?.vod_name;
+              }
+            }
+          } catch (e) {
+            console.warn("[vodName lookup from localStorage failed]", e);
+          }
+        }
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("📌 Debug - vodName:", vodName);
+        }
 
         const response = await fetch("/api/drama/detail", {
           method: "POST",
@@ -308,10 +336,27 @@ export default function PlayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-2 border-stone-300 border-t-amber-500 mx-auto mb-4" />
-          <p className="text-stone-300 text-lg">加载中...</p>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-black flex items-center justify-center">
+        <div className="text-center relative">
+          {/* 外圈脉冲光环 */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-red-500/20 animate-ping" />
+          </div>
+          {/* 主加载动画 */}
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full border-4 border-zinc-800 border-t-red-500 border-r-red-400 animate-spin mx-auto" />
+            <div
+              className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-b-amber-500/50 animate-spin mx-auto"
+              style={{
+                animationDirection: "reverse",
+                animationDuration: "1.5s",
+              }}
+            />
+          </div>
+          <p className="text-zinc-300 text-lg mt-6 font-medium tracking-wide">
+            加载中...
+          </p>
+          <p className="text-zinc-500 text-sm mt-2">正在获取影视信息</p>
         </div>
       </div>
     );
@@ -319,27 +364,33 @@ export default function PlayPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-10 h-10 text-red-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-black flex items-center justify-center">
+        <div className="text-center px-6 max-w-md">
+          <div className="relative mb-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-red-500/30 to-red-600/10 rounded-full flex items-center justify-center mx-auto backdrop-blur-sm border border-red-500/20">
+              <svg
+                className="w-12 h-12 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-red-500/10 animate-pulse" />
           </div>
-          <p className="text-white text-xl mb-2">{error}</p>
+          <h2 className="text-white text-2xl font-bold mb-3">出错了</h2>
+          <p className="text-zinc-400 text-base mb-6 leading-relaxed">
+            {error}
+          </p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            className="px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 active:scale-95"
           >
             返回首页
           </button>
@@ -354,7 +405,7 @@ export default function PlayPage() {
 
   return (
     <div
-      className="h-screen"
+      className="h-screen overflow-hidden"
       style={{
         backgroundAttachment: "fixed",
         backgroundPosition: "center",
@@ -362,19 +413,36 @@ export default function PlayPage() {
         backgroundImage: "url(/movie-default-bg.jpg)",
       }}
     >
-      {/* 顶部导航栏 - Netflix风格 */}
-      <nav className="sticky top-0 z-450 bg-zinc-900/95 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-[48px] md:h-[64px] flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="text-white text-lg font-bold flex items-center gap-2 hover:text-red-500 transition-all duration-300 group"
-          >
-            <div className="p-2 rounded-lg bg-white/5 group-hover:bg-red-500/10 transition-all duration-300">
-              <ArrowLeft className="w-5 h-5" />
+      {/* 环境光效果 */}
+      <div className="fixed inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-0" />
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* 顶部导航栏 - 玻璃拟态风格 */}
+      <nav className="sticky top-0 z-50 bg-gradient-to-b from-zinc-900/98 via-zinc-900/95 to-zinc-900/90 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/20">
+        <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-[56px] md:h-[68px] flex items-center justify-between">
+          {/* 左侧：返回按钮和剧集信息 */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="text-white flex items-center gap-2.5 hover:text-red-400 transition-all duration-300 group"
+            >
+              <div className="p-2.5 rounded-xl bg-white/[0.08] group-hover:bg-red-500/20 transition-all duration-300 border border-transparent group-hover:border-red-500/30">
+                <ArrowLeft className="w-5 h-5" />
+              </div>
+              <span className="hidden sm:inline text-sm font-medium">返回</span>
+            </button>
+            {/* 当前播放信息 */}
+            <div className="hidden md:flex items-center gap-3 pl-4 border-l border-white/10">
+              <span className="text-white font-semibold text-sm max-w-[200px] truncate">
+                {dramaDetail.name}
+              </span>
+              <span className="px-2.5 py-1 bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-bold rounded-full shadow-lg shadow-red-500/30">
+                第{currentEpisode + 1}集
+              </span>
             </div>
-            <span className="hidden sm:inline">返回</span>
-          </button>
-          <div className="flex items-center gap-3 md:gap-4">
+          </div>
+          {/* 右侧：工具按钮 */}
+          <div className="flex items-center gap-2 md:gap-3">
             {/* 多源选择器 */}
             <SourceSelector
               sources={availableSources}
@@ -396,10 +464,10 @@ export default function PlayPage() {
             {!isRightPanelOpen && (
               <button
                 onClick={() => setIsRightPanelOpen(true)}
-                className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 transition-all duration-300 group"
+                className="p-2.5 rounded-xl bg-white/[0.08] hover:bg-red-500/20 transition-all duration-300 group border border-transparent hover:border-red-500/30"
                 title="打开侧边栏"
               >
-                <ChevronLeft className="w-5 h-5 text-white group-hover:text-red-500 transform rotate-180" />
+                <ChevronLeft className="w-5 h-5 text-white group-hover:text-red-400 transform rotate-180" />
               </button>
             )}
           </div>
@@ -409,8 +477,18 @@ export default function PlayPage() {
       {/* 主内容区域 - 左右分栏布局 */}
       <div className="max-w-[1920px] mx-auto flex flex-col lg:flex-row gap-0 p-0 relative">
         {/* 左侧：视频播放器区域 */}
-        <div className={`flex-1 transition-all duration-300 ${isRightPanelOpen ? 'lg:min-h-[calc(100vh-65px)]' : 'lg:h-[calc(100vh-65px)]'}`}>
-          <div className={`relative w-full bg-black overflow-hidden ${isRightPanelOpen ? 'aspect-video h-full' : 'h-full'}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ${
+            isRightPanelOpen
+              ? "lg:min-h-[calc(100vh-65px)]"
+              : "lg:h-[calc(100vh-65px)]"
+          }`}
+        >
+          <div
+            className={`relative w-full bg-black overflow-hidden ${
+              isRightPanelOpen ? "aspect-video h-full" : "h-full"
+            }`}
+          >
             {dramaDetail && dramaDetail.episodes.length > 0 && (
               <UnifiedPlayer
                 videoUrl={dramaDetail.episodes[currentEpisode].url}
@@ -434,25 +512,30 @@ export default function PlayPage() {
           </div>
 
           {/* 视频下方信息 - 仅在移动端显示 */}
-          <div className="lg:hidden p-4 bg-linear-to-b from-gray-900/90 to-gray-950/90 backdrop-blur-sm">
-            <h1 className="text-sm font-bold text-white mb-2 tracking-tight">
-              {dramaDetail.name}
-            </h1>
+          <div className="lg:hidden p-4 bg-gradient-to-b from-zinc-900/95 to-zinc-950/98 backdrop-blur-md border-t border-white/[0.05]">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-base font-bold text-white tracking-tight flex-1 truncate mr-3">
+                {dramaDetail.name}
+              </h1>
+              <span className="px-2.5 py-1 bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-bold rounded-full shadow-lg shadow-red-500/30 whitespace-nowrap">
+                第{currentEpisode + 1}集
+              </span>
+            </div>
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {dramaDetail.year && (
-                <span className="px-2 py-1 bg-linear-to-r from-red-600 to-red-500 text-white font-semibold rounded-md shadow-lg shadow-red-500/30">
+                <span className="px-2 py-0.5 bg-white/10 text-zinc-300 font-medium rounded border border-white/[0.08]">
                   {dramaDetail.year}
                 </span>
               )}
               {dramaDetail.type && (
-                <span className="text-gray-300 font-medium">
+                <span className="text-zinc-400 font-medium">
                   {dramaDetail.type}
                 </span>
               )}
               {dramaDetail.area && (
                 <>
-                  <span className="text-gray-600">•</span>
-                  <span className="text-gray-300 font-medium">
+                  <span className="text-zinc-600">•</span>
+                  <span className="text-zinc-400 font-medium">
                     {dramaDetail.area}
                   </span>
                 </>
@@ -461,56 +544,61 @@ export default function PlayPage() {
           </div>
         </div>
 
-        {/* 右侧：剧集信息和选择器 - Netflix风格 */}
+        {/* 右侧：剧集信息和选择器 - 玻璃拟态风格 */}
         {isRightPanelOpen ? (
-          <div className="w-full lg:w-[380px] xl:w-[420px] bg-zinc-900 overflow-y-auto lg:max-h-[calc(100vh-65px)] relative">
+          <div className="w-full lg:w-[380px] xl:w-[420px] bg-gradient-to-b from-zinc-900/98 via-zinc-900 to-zinc-950 overflow-y-auto lg:max-h-[calc(100vh-68px)] relative border-l border-white/[0.05]">
+            {/* 顶部装饰线 */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
             {/* 关闭按钮 */}
             <button
               onClick={() => setIsRightPanelOpen(false)}
-              className="hidden sm:block absolute top-4 right-4 z-20 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 group"
+              className="hidden sm:flex absolute top-5 right-5 z-20 p-2 bg-white/[0.08] hover:bg-red-500/20 rounded-xl transition-all duration-300 group border border-transparent hover:border-red-500/30 items-center justify-center"
               title="关闭侧边栏"
             >
-              <X className="w-5 h-5 text-gray-300 group-hover:text-white" />
+              <X className="w-4 h-4 text-zinc-400 group-hover:text-red-400 transition-colors" />
             </button>
-            <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
+            <div className="p-5 lg:p-6 space-y-5 lg:space-y-6">
               {/* 查看全部集数模式 */}
               {showAllEpisodes ? (
-                <div className="space-y-4 lg:space-y-6">
+                <div className="space-y-5">
                   {/* 返回按钮和标题 */}
-                  <div className="flex items-center justify-between sticky top-0 bg-zinc-900 pb-4 border-b border-white/10 z-10">
+                  <div className="flex items-center justify-between sticky top-0 bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-900/95 pb-4 border-b border-white/[0.08] z-10 -mx-5 lg:-mx-6 px-5 lg:px-6 pt-1">
                     <button
                       onClick={() => setShowAllEpisodes(false)}
-                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors group"
+                      className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group"
                     >
-                      <svg
-                        className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                      <span className="text-xs lg:text-sm font-semibold">
-                        返回
-                      </span>
+                      <div className="p-1.5 rounded-lg bg-white/[0.08] group-hover:bg-red-500/20 transition-all">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium">返回</span>
                     </button>
+                    <span className="text-xs text-zinc-500">
+                      共{dramaDetail.episodes.length}集
+                    </span>
                   </div>
 
                   {/* 剧集标题 */}
                   <div>
-                    <h1 className="text-sm lg:text-2xl font-bold text-white mb-2 line-clamp-2 tracking-tight leading-tight">
+                    <h1 className="text-lg lg:text-xl font-bold text-white mb-1 line-clamp-2 tracking-tight">
                       {dramaDetail.name}
                     </h1>
-                    <p className="text-xs lg:text-sm text-gray-400">选择集数</p>
+                    <p className="text-xs text-zinc-500">选择集数开始播放</p>
                   </div>
 
                   {/* 所有集数网格 */}
-                  <div className="grid grid-cols-4 gap-2.5 pb-6">
+                  <div className="grid grid-cols-4 gap-2 pb-6">
                     {dramaDetail.episodes.map((episode, index) => (
                       <button
                         key={index}
@@ -518,10 +606,11 @@ export default function PlayPage() {
                           selectEpisode(index);
                           setShowAllEpisodes(false);
                         }}
-                        className={`aspect-video rounded-lg text-xs lg:text-sm flex flex-col items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${currentEpisode === index
-                            ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
-                            : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
-                          }`}
+                        className={`py-2.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+                          currentEpisode === index
+                            ? "bg-gradient-to-br from-red-600 to-red-500 text-white shadow-md shadow-red-500/30 ring-1 ring-red-400/50"
+                            : "bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/[0.12]"
+                        }`}
                       >
                         {episode.name}
                       </button>
@@ -531,28 +620,34 @@ export default function PlayPage() {
               ) : (
                 <>
                   {/* 剧集标题和信息 - 仅在桌面端显示 */}
-                  <div className="hidden lg:block animate-fade-in">
+                  <div className="hidden lg:block">
                     <h1 className="text-2xl font-bold text-white mb-4 line-clamp-2 tracking-tight leading-tight">
                       {dramaDetail.name}
                     </h1>
-                    <div className="flex flex-wrap items-center gap-2 text-sm mb-4">
+                    <div className="flex flex-wrap items-center gap-2.5 text-sm mb-4">
                       {dramaDetail.year && (
-                        <span className="px-3 py-1.5 bg-linear-to-r from-red-600 to-red-500 text-white font-semibold rounded-md shadow-lg shadow-red-500/30">
+                        <span className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold rounded-lg shadow-md shadow-red-500/25">
                           {dramaDetail.year}
                         </span>
                       )}
                       {dramaDetail.remarks && (
-                        <span className="px-3 py-1.5 border border-white/20 text-gray-200 rounded-md font-medium backdrop-blur-sm bg-white/5">
+                        <span className="px-3 py-1.5 border border-white/15 text-zinc-200 rounded-lg font-medium bg-white/[0.06] backdrop-blur-sm">
                           {dramaDetail.remarks}
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300 font-medium">
-                      {dramaDetail.type && <span>{dramaDetail.type}</span>}
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400 font-medium">
+                      {dramaDetail.type && (
+                        <span className="hover:text-zinc-300 transition-colors">
+                          {dramaDetail.type}
+                        </span>
+                      )}
                       {dramaDetail.area && (
                         <>
-                          <span className="text-gray-600">•</span>
-                          <span>{dramaDetail.area}</span>
+                          <span className="text-zinc-600">•</span>
+                          <span className="hover:text-zinc-300 transition-colors">
+                            {dramaDetail.area}
+                          </span>
                         </>
                       )}
                     </div>
@@ -560,23 +655,23 @@ export default function PlayPage() {
 
                   {/* 演职人员 */}
                   {(dramaDetail.actor || dramaDetail.director) && (
-                    <div className="space-y-3 text-xs lg:text-sm lg:border-t lg:border-white/10 lg:pt-6">
+                    <div className="space-y-3 text-xs lg:text-sm lg:border-t lg:border-white/[0.08] lg:pt-5">
                       {dramaDetail.actor && (
-                        <div className="group">
-                          <span className="text-gray-400 font-semibold">
-                            主演：
+                        <div className="group flex">
+                          <span className="text-zinc-500 font-medium w-14 shrink-0">
+                            主演
                           </span>
-                          <span className="text-gray-200 group-hover:text-white transition-colors">
+                          <span className="text-zinc-300 group-hover:text-white transition-colors flex-1">
                             {dramaDetail.actor}
                           </span>
                         </div>
                       )}
                       {dramaDetail.director && (
-                        <div className="group">
-                          <span className="text-gray-400 font-semibold">
-                            导演：
+                        <div className="group flex">
+                          <span className="text-zinc-500 font-medium w-14 shrink-0">
+                            导演
                           </span>
-                          <span className="text-gray-200 group-hover:text-white transition-colors">
+                          <span className="text-zinc-300 group-hover:text-white transition-colors flex-1">
                             {dramaDetail.director}
                           </span>
                         </div>
@@ -592,8 +687,9 @@ export default function PlayPage() {
                       </h3>
                       <div className="relative">
                         <p
-                          className={`text-xs lg:text-sm text-gray-300 leading-relaxed transition-all duration-300 ${isDescriptionExpanded ? "" : "line-clamp-4"
-                            }`}
+                          className={`text-xs lg:text-sm text-gray-300 leading-relaxed transition-all duration-300 ${
+                            isDescriptionExpanded ? "" : "line-clamp-4"
+                          }`}
                           dangerouslySetInnerHTML={{
                             __html: dramaDetail.blurb
                               .replace(/<[^>]*>/g, "")
@@ -649,11 +745,15 @@ export default function PlayPage() {
                   )}
 
                   {/* 选集区域 */}
-                  <div className="border-t border-white/10 pt-6">
+                  <div className="border-t border-white/[0.08] pt-5">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xs lg:text-sm font-bold text-white tracking-tight">
+                      <h2 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                        <span className="w-1 h-4 bg-gradient-to-b from-red-500 to-red-600 rounded-full"></span>
                         选集
                       </h2>
+                      <span className="text-xs text-zinc-500">
+                        共{dramaDetail.episodes.length}集
+                      </span>
                     </div>
 
                     {/* 上一集/下一集按钮 */}
@@ -661,7 +761,7 @@ export default function PlayPage() {
                       <button
                         onClick={previousEpisode}
                         disabled={currentEpisode === 0}
-                        className="flex-1 px-4 py-2.5 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-gray-600 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
+                        className="flex-1 px-4 py-2.5 bg-white/[0.08] hover:bg-white/15 disabled:bg-white/[0.03] disabled:text-zinc-600 text-white rounded-xl transition-all duration-300 text-sm font-semibold border border-white/[0.08] hover:border-white/15 disabled:border-transparent"
                       >
                         上一集
                       </button>
@@ -670,37 +770,40 @@ export default function PlayPage() {
                         disabled={
                           currentEpisode === dramaDetail.episodes.length - 1
                         }
-                        className="flex-1 px-4 py-2.5 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:shadow-none"
+                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg shadow-red-500/20 hover:shadow-red-500/30 disabled:shadow-none"
                       >
                         下一集
                       </button>
                     </div>
 
                     {/* 集数预览（显示前12集） */}
-                    <div className="grid grid-cols-4 gap-2.5 mb-4">
-                      {dramaDetail.episodes.slice(0, 12).map((episode, index) => (
-                        <button
-                          key={index}
-                          onClick={() => selectEpisode(index)}
-                          className={`rounded-lg flex flex-col text-xs lg:text-sm items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${currentEpisode === index
-                              ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
-                              : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      {dramaDetail.episodes
+                        .slice(0, 12)
+                        .map((episode, index) => (
+                          <button
+                            key={index}
+                            onClick={() => selectEpisode(index)}
+                            className={`py-2.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 relative overflow-hidden ${
+                              currentEpisode === index
+                                ? "bg-gradient-to-br from-red-600 to-red-500 text-white shadow-md shadow-red-500/30 ring-1 ring-red-400/50"
+                                : "bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/[0.12]"
                             }`}
-                        >
-                          {episode.name}
-                        </button>
-                      ))}
+                          >
+                            {episode.name}
+                          </button>
+                        ))}
                     </div>
 
                     {/* 查看全部按钮 */}
                     {dramaDetail.episodes.length > 12 && (
                       <button
                         onClick={() => setShowAllEpisodes(true)}
-                        className="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                        className="w-full px-4 py-3 bg-white/[0.06] hover:bg-white/[0.10] text-white rounded-xl transition-all duration-300 text-sm font-medium border border-white/[0.08] hover:border-white/[0.15] flex items-center justify-center gap-2 group"
                       >
-                        <span>查看全部</span>
+                        <span>查看全部 {dramaDetail.episodes.length} 集</span>
                         <svg
-                          className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                          className="w-4 h-4 group-hover:translate-x-1 transition-transform text-zinc-400 group-hover:text-white"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"

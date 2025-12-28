@@ -175,3 +175,49 @@ label[for] {
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
 }
+
+.artplayer-plugin-danmuku .apd-send {
+  background-color: ***REMOVED***e50914 !important;
+  color: ***REMOVED***ffffff !important;
+  font-weight: bold !important;
+  transition: background-color 0.2s ease;
+}
+
+.artplayer-plugin-danmuku .apd-send:hover {
+  background-color: ***REMOVED***b20710 !important;
+}
+
+/* ========== 弹幕滚动优化 - 防止闪烁 ========== */
+
+/* 弹幕容器层 GPU 加速 */
+.artplayer-plugin-danmuku {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: contents;
+}
+
+/* 弹幕文字项 GPU 加速与平滑渲染 */
+.artplayer-plugin-danmuku .apd-item {
+  /* 强制 GPU 渲染层 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* 提示浏览器即将变化的属性 */
+  will-change: transform;
+  /* 隐藏背面，提高渲染性能 */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* 开启抗锯齿 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 文字阴影增强可读性 */
+  text-shadow: 
+    1px 1px 2px rgba(0, 0, 0, 0.8),
+    -1px -1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* 弹幕滚动动画优化 */
+.artplayer-plugin-danmuku .apd-item.apd-playing {
+  /* 使用 3D 变换触发 GPU 加速 */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}

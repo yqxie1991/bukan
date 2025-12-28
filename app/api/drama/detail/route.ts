@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     const vodName: string = body.vodName; // 用于代理搜索
     
     let response: Response;
-    
+
     // 如果有搜索代理，使用代理搜索获取详情
     if (source.searchProxy && vodName) {
       response = await fetch(source.searchProxy, {
@@ -117,8 +117,11 @@ export async function POST(request: NextRequest) {
         }),
         signal: AbortSignal.timeout(15000),
       });
+    } else if (source.searchProxy && !vodName) {
+      // searchProxy 存在但 vodName 缺失，需要通过电影详情页进入
+      return errorResponse('请从电影详情页点击播放按钮进入，以获取最佳播放体验', 400);
     } else {
-      // 标准 GET 请求
+      // 标准 GET 请求（无需代理的源）
       const apiParams = new URLSearchParams({
         ac: 'detail',
         ids: body.ids,
@@ -143,7 +146,6 @@ export async function POST(request: NextRequest) {
     
     // 检查是否是错误响应
     if (responseText.includes('域名未授权') || responseText.startsWith('<?xml') || responseText.startsWith('<!DOCTYPE')) {
-      console.warn('⚠️ 源API访问被拒绝');
       return errorResponse('源API访问失败');
     }
     

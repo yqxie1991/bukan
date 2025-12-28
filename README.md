@@ -22,8 +22,10 @@
 
 - 🎬 **视频聚合** - 聚合 Dailymotion 等多个视频源
 - 📝 **豆瓣匹配** - 自动匹配豆瓣电影信息和评分
+- 💬 **弹幕功能** - 自动匹配加载弹幕，支持手动搜索
+- 🎥 **高级播放器** - ArtPlayer 播放器，支持 HLS、倍速、快捷键
 - 📱 **响应式设计** - 完美支持移动端和桌面端
-- 🎨 **现代化 UI** - 美观的界面设计
+- 🎨 **现代化 UI** - Netflix 风格界面设计
 - 🔐 **后台管理** - 视频源配置、频道管理 (`/login`)
 - 🚀 **多种部署** - 支持 Vercel、Docker、VPS 一键部署
 
@@ -165,10 +167,12 @@ cd ~/kerkerker
 
 ***REMOVED******REMOVED******REMOVED*** 可选变量
 
-| 变量名            | 说明         | 默认值      |
-| ----------------- | ------------ | ----------- |
-| `ADMIN_PASSWORD`  | 后台管理密码 | `bukan`  |
-| `MONGODB_DB_NAME` | 数据库名称   | `kerkerker` |
+| 变量名                        | 说明           | 默认值                               |
+| ----------------------------- | -------------- | ------------------------------------ |
+| `ADMIN_PASSWORD`              | 后台管理密码   | `bukan`                           |
+| `MONGODB_DB_NAME`             | 数据库名称     | `kerkerker`                          |
+| `NEXT_PUBLIC_DANMU_API_URL`   | 弹幕 API 地址  | `https://danmuapi1-eight.vercel.app` |
+| `NEXT_PUBLIC_DANMU_API_TOKEN` | 弹幕 API Token | -                                    |
 
 ***REMOVED******REMOVED******REMOVED*** MongoDB URI 示例
 
@@ -231,10 +235,14 @@ open http://localhost:3000
 kerkerker/
 ├── app/                    ***REMOVED*** Next.js App Router
 ├── components/             ***REMOVED*** React 组件
+│   └── player/             ***REMOVED*** 播放器组件
+│       ├── LocalHlsPlayer.tsx  ***REMOVED*** 本地 HLS 播放器
+│       └── DanmakuPanel.tsx    ***REMOVED*** 弹幕搜索面板
 ├── lib/                    ***REMOVED*** 工具库
 │   ├── cache.ts            ***REMOVED*** 内存缓存
 │   ├── db.ts               ***REMOVED*** MongoDB 连接
-│   └── ...
+│   └── player/             ***REMOVED*** 播放器工具
+│       └── danmaku-service.ts  ***REMOVED*** 弹幕服务
 ├── scripts/                ***REMOVED*** 部署脚本
 │   └── install.sh          ***REMOVED*** 一键部署脚本
 ├── docker-compose.yml      ***REMOVED*** 生产环境
