@@ -13,15 +13,16 @@ import { PlayerLoading } from "./PlayerLoading";
 import { PlayerErrorDisplay } from "./PlayerError";
 
 // 弹幕相关导入
-import { DanmakuPanel } from "./DanmakuPanel";
 import type { DanmakuItem } from "@/lib/player/danmaku-service";
 import { autoLoadDanmaku } from "@/lib/player/danmaku-service";
-import { MessageSquare, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface LocalHlsPlayerProps {
   videoUrl: string;
   title: string;
   settings: LocalPlayerSettings;
+  externalDanmaku?: DanmakuItem[];
+  onDanmakuCountChange?: (count: number) => void;
   onProgress?: (time: number) => void;
   onEnded?: () => void;
   onError?: () => void;
@@ -36,6 +37,8 @@ export function LocalHlsPlayer({
   videoUrl,
   title,
   settings,
+  externalDanmaku,
+  onDanmakuCountChange,
   onProgress,
   onEnded,
   onError,
@@ -51,7 +54,6 @@ export function LocalHlsPlayer({
   );
 
   // 弹幕状态
-  const [isDanmakuPanelOpen, setIsDanmakuPanelOpen] = useState(false);
   const [danmakuList, setDanmakuList] = useState<DanmakuItem[]>([]);
   const [autoLoadStatus, setAutoLoadStatus] = useState<{
     loading: boolean;
@@ -226,12 +228,12 @@ export function LocalHlsPlayer({
           danmuku: [],
           // 以下为非必填
           speed: 5, // 弹幕持续时间，范围在[1 ~ 10]
-          margin: [10, "25%"], // 弹幕上下边距，支持像素数字和百分比
+          margin: [5, "20%"], // 弹幕上下边距，移动端适配
           opacity: 1, // 弹幕透明度，范围在[0 ~ 1]
           color: "***REMOVED***FFFFFF", // 默认弹幕颜色，可以被单独弹幕项覆盖
           mode: 0, // 默认弹幕模式: 0: 滚动，1: 顶部，2: 底部
           modes: [0, 1, 2], // 弹幕可见的模式
-          fontSize: 25, // 弹幕字体大小，支持像素数字和百分比
+          fontSize: "4%", // 弹幕字体大小，使用百分比实现响应式
           antiOverlap: true, // 弹幕是否防重叠
           synchronousPlayback: true, // 是否同步播放速度
           mount: undefined, // 弹幕发射器挂载点, 默认为播放器控制栏中部
@@ -595,18 +597,29 @@ export function LocalHlsPlayer({
   }
 
   // 处理弹幕加载 - 必须在早期返回之前定义以遵守Hooks规则
-  const handleDanmakuLoad = useCallback((danmaku: DanmakuItem[]) => {
-    setDanmakuList(danmaku);
-    if (artRef.current && danmakuPluginRef.current) {
-      // 清空现有弹幕并加载新弹幕
-      const plugin = artRef.current.plugins.artplayerPluginDanmuku as any;
-      if (plugin) {
-        plugin.config({ danmuku: danmaku });
-        plugin.load();
-        console.log(`🎯 已加载 ${danmaku.length} 条弹幕`);
+  const handleDanmakuLoad = useCallback(
+    (danmaku: DanmakuItem[]) => {
+      setDanmakuList(danmaku);
+      onDanmakuCountChange?.(danmaku.length);
+      if (artRef.current && danmakuPluginRef.current) {
+        // 清空现有弹幕并加载新弹幕
+        const plugin = artRef.current.plugins.artplayerPluginDanmuku as any;
+        if (plugin) {
+          plugin.config({ danmuku: danmaku });
+          plugin.load();
+          console.log(`🎯 已加载 ${danmaku.length} 条弹幕`);
+        }
       }
+    },
+    [onDanmakuCountChange]
+  );
+
+  // 响应外部弹幕数据变化
+  useEffect(() => {
+    if (externalDanmaku && externalDanmaku.length > 0) {
+      handleDanmakuLoad(externalDanmaku);
     }
-  }, []);
+  }, [externalDanmaku, handleDanmakuLoad]);
 
   if (!isClient) {
     return (
@@ -620,22 +633,6 @@ export function LocalHlsPlayer({
     <div className="relative w-full h-full bg-black">
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* 弹幕手动搜索按钮 - 始终显示，允许用户纠正自动匹配错误 */}
-      {!autoLoadStatus.loading && (
-        <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
-          <button
-            onClick={() => setIsDanmakuPanelOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-black/60 hover:bg-black/80 rounded-lg transition-colors"
-            title="搜索弹幕"
-          >
-            <MessageSquare size={16} className="text-white" />
-            <span className="text-white text-xs">
-              {danmakuList.length > 0 ? "换弹幕" : "搜索弹幕"}
-            </span>
-          </button>
-        </div>
-      )}
-
       {/* 自动加载弹幕状态提示 */}
       {autoLoadStatus.loading && autoLoadStatus.message && (
         <div className="absolute top-3 right-3 z-40">
@@ -645,14 +642,6 @@ export function LocalHlsPlayer({
           </div>
         </div>
       )}
-
-      {/* 弹幕搜索面板 */}
-      <DanmakuPanel
-        videoTitle={title}
-        isOpen={isDanmakuPanelOpen}
-        onClose={() => setIsDanmakuPanelOpen(false)}
-        onDanmakuLoad={handleDanmakuLoad}
-      />
 
       {isLoading && <PlayerLoading />}
       {error && (

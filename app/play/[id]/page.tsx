@@ -6,6 +6,8 @@ import { DramaDetail, VodSource } from "@/types/drama";
 import { UnifiedPlayer } from "@/components/player/UnifiedPlayer";
 import { SourceSelector } from "@/components/player/SourceSelector";
 import { PlayerSettingsPanel } from "@/components/player/PlayerSettingsPanel";
+import { DanmakuSelector } from "@/components/player/DanmakuSelector";
+import type { DanmakuItem } from "@/lib/player/danmaku-service";
 import type { PlayerConfig } from "@/app/api/player-config/route";
 import { ArrowLeft, X, ChevronLeft } from "lucide-react";
 
@@ -50,6 +52,10 @@ export default function PlayPage() {
   const [playerConfig, setPlayerConfig] = useState<PlayerConfig | null>(null);
   const [playerMode, setPlayerMode] = useState<"iframe" | "local">("iframe");
   const [currentIframePlayerIndex, setCurrentIframePlayerIndex] = useState(0);
+
+  // 弹幕状态
+  const [danmakuList, setDanmakuList] = useState<DanmakuItem[]>([]);
+  const [danmakuCount, setDanmakuCount] = useState(0);
 
   // 从 API 获取视频源配置
   useEffect(() => {
@@ -254,6 +260,9 @@ export default function PlayPage() {
     (index: number) => {
       if (index >= 0 && dramaDetail && index < dramaDetail.episodes.length) {
         setCurrentEpisode(index);
+        // 切换集数时重置弹幕状态，让新集数可以自动加载
+        setDanmakuList([]);
+        setDanmakuCount(0);
       }
     },
     [dramaDetail]
@@ -420,6 +429,17 @@ export default function PlayPage() {
                 onIframePlayerChange={setCurrentIframePlayerIndex}
               />
             )}
+            {/* 弹幕选择器 - 仅在本地模式下显示 */}
+            {playerMode === "local" && dramaDetail && (
+              <DanmakuSelector
+                videoTitle={`${dramaDetail.name} - 第${currentEpisode + 1}集`}
+                danmakuCount={danmakuCount}
+                onDanmakuLoad={(danmaku) => {
+                  setDanmakuList(danmaku);
+                  setDanmakuCount(danmaku.length);
+                }}
+              />
+            )}
             {/* 展开侧边栏按钮 */}
             {!isRightPanelOpen && (
               <button
@@ -456,6 +476,8 @@ export default function PlayPage() {
                 mode={playerMode}
                 currentIframePlayerIndex={currentIframePlayerIndex}
                 vodSource={currentVodSource}
+                externalDanmaku={danmakuList}
+                onDanmakuCountChange={setDanmakuCount}
                 onProgress={() => {
                   // 播放进度更新
                 }}
