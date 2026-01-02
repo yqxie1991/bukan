@@ -196,8 +196,15 @@ function SearchContent() {
     router.push(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
   };
 
-  // 点击影片 - 直接跳转播放页面
+  // 点击影片 - 清除旧缓存后跳转播放页面
   const handlePlayClick = (drama: Drama & { source: VodSource }) => {
+    // 清除旧的 multi_source_matches 缓存，避免 SourceSelector 显示旧数据
+    try {
+      localStorage.removeItem("multi_source_matches");
+    } catch {
+      // 静默处理
+    }
+
     router.push(`/play/${drama.id}?source=${drama.source.key}`);
   };
 

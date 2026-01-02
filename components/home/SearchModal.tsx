@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { X, Clock, Trash2 } from "lucide-react";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -9,12 +11,28 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const router = useRouter();
   const [searchKeyword, setSearchKeyword] = useState("");
+  const { history, addToHistory, removeFromHistory, clearHistory } =
+    useSearchHistory();
 
-  const handleSearch = () => {
-    if (!searchKeyword.trim()) return;
+  const handleSearch = (keyword?: string) => {
+    const searchTerm = keyword || searchKeyword;
+    if (!searchTerm.trim()) return;
+
+    // 保存到搜索历史
+    addToHistory(searchTerm.trim());
+
     onClose(); // 先关闭弹窗
-    router.push(`/search?q=${encodeURIComponent(searchKeyword.trim())}`);
+    router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
     setSearchKeyword(""); // 清空输入
+  };
+
+  const handleHistoryClick = (keyword: string) => {
+    handleSearch(keyword);
+  };
+
+  const handleRemoveHistory = (e: React.MouseEvent, keyword: string) => {
+    e.stopPropagation();
+    removeFromHistory(keyword);
   };
 
   if (!isOpen) return null;
@@ -80,21 +98,55 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   Enter
                 </kbd>{" "}
                 开始搜索 •{" "}
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">
-                  Esc
-                </kbd>{" "}
+                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">Esc</kbd>{" "}
                 关闭
               </p>
             </div>
+
+            {/* 搜索历史 */}
+            {history.length > 0 && (
+              <div className="mt-6 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">搜索历史</span>
+                  </div>
+                  <button
+                    onClick={clearHistory}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>清除全部</span>
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {history.map((keyword, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleHistoryClick(keyword)}
+                      className="group flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-full cursor-pointer transition-all duration-200"
+                    >
+                      <span className="text-sm text-gray-200 group-hover:text-white">
+                        {keyword}
+                      </span>
+                      <button
+                        onClick={(e) => handleRemoveHistory(e, keyword)}
+                        className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all duration-200"
+                        title="删除"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* 点击背景关闭 */}
-      <div
-        className="absolute inset-0 -z-10"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 -z-10" onClick={onClose} />
     </div>
   );
 }
