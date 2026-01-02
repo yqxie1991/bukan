@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { VodSource } from "@/types/drama";
 import { ShortDramaSource } from "@/types/shorts-source";
@@ -22,7 +22,7 @@ type TabType = "sources" | "shorts" | "dailymotion" | "player";
 
 const VALID_TABS: TabType[] = ["sources", "shorts", "dailymotion", "player"];
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -257,5 +257,26 @@ export default function SettingsPage() {
         />
       )}
     </div>
+  );
+}
+
+// 加载占位符
+function SettingsLoading() {
+  return (
+    <div className="min-h-screen bg-[***REMOVED***141414] flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-600 border-t-red-600 mx-auto mb-4" />
+        <p className="text-gray-400">加载中...</p>
+      </div>
+    </div>
+  );
+}
+
+// 主页面组件 - 用 Suspense 包装
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsLoading />}>
+      <SettingsContent />
+    </Suspense>
   );
 }
