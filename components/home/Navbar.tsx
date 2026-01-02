@@ -17,12 +17,12 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
   // 防止移动端菜单打开时页面滚动
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
 
@@ -31,9 +31,23 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
     { href: "/browse/movies", label: "电影", icon: Film },
     { href: "/browse/tv", label: "电视剧", icon: Tv },
     { href: "/browse/latest", label: "最新", icon: Clock },
-    { href: "/dailymotion", label: "短剧Motion", icon: Video },
-    { href: "https://github.com/unilei/kerkerker", label: "Github", icon: Github, external: true },
+    {
+      label: "短剧",
+      icon: Video,
+      children: [
+        { href: "/shorts", label: "短剧" },
+        { href: "/dailymotion", label: "短剧Motion" },
+      ],
+    },
+    {
+      href: "https://github.com/unilei/kerkerker",
+      label: "Github",
+      icon: Github,
+      external: true,
+    },
   ];
+
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   return (
     <>
@@ -62,7 +76,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
             {/* Logo */}
             <div className="flex items-center gap-1">
-              <img className="w-8 h-8 md:w-10 md:h-10" src="/logo.png" alt="logo" />
+              <img
+                className="w-8 h-8 md:w-10 md:h-10"
+                src="/logo.png"
+                alt="logo"
+              />
               <h1
                 onClick={() => {
                   router.push("/");
@@ -76,16 +94,62 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
             {/* 导航链接 - 桌面端 */}
             <div className="hidden md:flex items-center space-x-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  target={item.external ? "_blank" : undefined}
-                  className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) =>
+                item.children ? (
+                  <div
+                    key={item.label}
+                    className="relative group"
+                    onMouseEnter={() => setOpenDropdown(item.label)}
+                    onMouseLeave={() => setOpenDropdown(null)}
+                  >
+                    <button className="text-gray-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1 py-2">
+                      {item.label}
+                      <svg
+                        className={`w-3 h-3 transition-transform duration-200 ${
+                          openDropdown === item.label ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {/* 下拉菜单 - 使用 pt-2 创建无缝hover区域 */}
+                    {openDropdown === item.label && (
+                      <div className="absolute top-full left-0 pt-1">
+                        <div className="py-2 bg-zinc-900 rounded-lg shadow-2xl border border-zinc-800 min-w-[140px] overflow-hidden">
+                          {/* 顶部红色装饰线 - Netflix风格 */}
+                          <div className="absolute top-1 left-0 right-0 h-0.5 bg-red-600" />
+                          {item.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className="block px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-red-600/20 transition-colors"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href!}
+                    target={item.external ? "_blank" : undefined}
+                    className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
             </div>
           </div>
 
@@ -118,7 +182,9 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
       {/* 移动端侧边栏菜单 */}
       <div
         className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
-          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isMobileMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         {/* 背景遮罩 */}
@@ -147,10 +213,34 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           <nav className="p-4 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
+              if (item.children) {
+                return (
+                  <div key={item.label} className="space-y-1">
+                    <div className="flex items-center space-x-3 px-4 py-3 text-gray-400">
+                      <Icon className="w-5 h-5" />
+                      <span className="text-base font-medium">
+                        {item.label}
+                      </span>
+                    </div>
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                      >
+                        <span className="text-sm font-medium">
+                          {child.label}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={item.href!}
                   target={item.external ? "_blank" : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 group"

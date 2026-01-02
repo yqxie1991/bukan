@@ -323,15 +323,18 @@ export default function PlayPage() {
     return () => window.removeEventListener("keydown", handleKeydown);
   }, [previousEpisode, nextEpisode, goBack]);
 
-  // 保存播放历史
+  // 保存播放历史 - 统一使用视频源封面
   useEffect(() => {
     if (dramaDetail && typeof window !== "undefined") {
       try {
         const history = {
           id: dramaDetail.id,
           name: dramaDetail.name,
+          cover: dramaDetail.pic || "",
           episode: currentEpisode,
           timestamp: Date.now(),
+          sourceKey: currentVodSource?.key || currentSourceKey || "",
+          sourceName: currentVodSource?.name || "",
         };
         localStorage.setItem(
           `play_history_${dramaDetail.id}`,
@@ -341,7 +344,7 @@ export default function PlayPage() {
         // 静默失败，不影响播放
       }
     }
-  }, [dramaDetail, currentEpisode]);
+  }, [dramaDetail, currentEpisode, currentVodSource, currentSourceKey]);
 
   if (loading) {
     return (
