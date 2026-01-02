@@ -1,23 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { VodSource } from "@/types/drama";
+import { ShortDramaSource } from "@/types/shorts-source";
 import { Toast, ConfirmDialog } from "@/components/Toast";
 import type { PlayerConfig } from "@/app/api/player-config/route";
 import { VodSourcesTab } from "@/components/admin/VodSourcesTab";
 import { PlayerConfigTab } from "@/components/admin/PlayerConfigTab";
 import { DailymotionChannelsTab } from "@/components/admin/DailymotionChannelsTab";
-import type { ToastState, ConfirmState } from "@/components/admin/types";
+import { ShortsSourcesTab } from "@/components/admin/ShortsSourcesTab";
+import type {
+  ToastState,
+  ConfirmState,
+  UnifiedImportCallbacks,
+} from "@/components/admin/types";
 import type { DailymotionChannelConfig } from "@/types/dailymotion-config";
+import { Tv, Film, Youtube, Settings } from "lucide-react";
 
-type TabType = "sources" | "player" | "dailymotion";
+type TabType = "sources" | "shorts" | "dailymotion" | "player";
+
+const VALID_TABS: TabType[] = ["sources", "shorts", "dailymotion", "player"];
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("sources");
+  const searchParams = useSearchParams();
+
+  // 从 URL 读取初始 tab
+  const getInitialTab = (): TabType => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && VALID_TABS.includes(urlTab as TabType)) {
+      return urlTab as TabType;
+    }
+    return "sources";
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab);
   const [sources, setSources] = useState<VodSource[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>("");
+  const [shortsSources, setShortsSources] = useState<ShortDramaSource[]>([]);
+  const [selectedShortsKey, setSelectedShortsKey] = useState<string>("");
   const [playerConfig, setPlayerConfig] = useState<PlayerConfig | null>(null);
   const [dailymotionChannels, setDailymotionChannels] = useState<
     DailymotionChannelConfig[]
@@ -28,6 +50,14 @@ export default function SettingsPage() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
+  // 切换 tab 时更新 URL
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -37,6 +67,15 @@ export default function SettingsPage() {
         if (vodResult.code === 200 && vodResult.data) {
           setSources(vodResult.data.sources || []);
           setSelectedKey(vodResult.data.selected?.key || "");
+        }
+
+        // 加载短剧源配置
+        const shortsResponse = await fetch("/api/shorts-sources");
+        const shortsResult = await shortsResponse.json();
+
+        if (shortsResult.code === 200 && shortsResult.data) {
+          setShortsSources(shortsResult.data.sources || []);
+          setSelectedShortsKey(shortsResult.data.selected?.key || "");
         }
 
         const playerResponse = await fetch("/api/player-config");
@@ -74,10 +113,30 @@ export default function SettingsPage() {
     }
   };
 
+  // 统一导入回调 - 允许任意 Tab 更新所有类型的源
+  const unifiedImportCallbacks: UnifiedImportCallbacks = useMemo(
+    () => ({
+      onVodSourcesImport: (newSources, selected) => {
+        setSources(newSources);
+        if (selected) setSelectedKey(selected);
+      },
+      onShortsSourcesImport: (newSources, selected) => {
+        setShortsSources(newSources);
+        if (selected) setSelectedShortsKey(selected);
+      },
+      onDailymotionImport: (channels, defaultId) => {
+        setDailymotionChannels(channels);
+        if (defaultId) setDefaultChannelId(defaultId);
+      },
+    }),
+    []
+  );
+
   const tabs = [
-    { id: "sources" as TabType, name: "视频源管理", icon: "📺" },
-    { id: "player" as TabType, name: "播放器设置", icon: "▶️" },
-    { id: "dailymotion" as TabType, name: "Dailymotion", icon: "🎬" },
+    { id: "sources" as TabType, name: "视频源管理", icon: Tv },
+    { id: "shorts" as TabType, name: "短剧源管理", icon: Film },
+    { id: "dailymotion" as TabType, name: "Dailymotion", icon: Youtube },
+    { id: "player" as TabType, name: "播放器设置", icon: Settings },
   ];
 
   return (
@@ -102,25 +161,28 @@ export default function SettingsPage() {
       <div className="bg-[***REMOVED***181818] border-b border-[***REMOVED***333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-4 text-sm font-medium transition-all relative ${
-                  activeTab === tab.id
-                    ? "text-white"
-                    : "text-[***REMOVED***808080] hover:text-white"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span>{tab.icon}</span>
-                  <span>{tab.name}</span>
-                </span>
-                {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[***REMOVED***E50914]" />
-                )}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`px-6 py-4 text-sm font-medium transition-all relative ${
+                    activeTab === tab.id
+                      ? "text-white"
+                      : "text-[***REMOVED***808080] hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon size={18} strokeWidth={1.5} />
+                    <span>{tab.name}</span>
+                  </span>
+                  {activeTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[***REMOVED***E50914]" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
       </div>
@@ -135,6 +197,19 @@ export default function SettingsPage() {
             onSelectedKeyChange={setSelectedKey}
             onShowToast={setToast}
             onShowConfirm={setConfirm}
+            unifiedImport={unifiedImportCallbacks}
+          />
+        )}
+
+        {activeTab === "shorts" && (
+          <ShortsSourcesTab
+            sources={shortsSources}
+            selectedKey={selectedShortsKey}
+            onSourcesChange={setShortsSources}
+            onSelectedKeyChange={setSelectedShortsKey}
+            onShowToast={setToast}
+            onShowConfirm={setConfirm}
+            unifiedImport={unifiedImportCallbacks}
           />
         )}
 
@@ -157,6 +232,7 @@ export default function SettingsPage() {
             }}
             onShowToast={setToast}
             onShowConfirm={setConfirm}
+            unifiedImport={unifiedImportCallbacks}
           />
         )}
       </div>

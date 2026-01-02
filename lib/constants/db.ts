@@ -9,6 +9,10 @@ export const COLLECTIONS = {
   VOD_SOURCES: 'vod_sources',
   /** VOD 视频源选择记录 */
   VOD_SOURCE_SELECTION: 'vod_source_selection',
+  /** 短剧视频源配置 */
+  SHORTS_SOURCES: 'shorts_sources',
+  /** 短剧视频源选择记录 */
+  SHORTS_SOURCE_SELECTION: 'shorts_source_selection',
   /** Dailymotion 频道列表 */
   DAILYMOTION_CHANNELS: 'dailymotion_channels',
   /** Dailymotion 全局配置 */
