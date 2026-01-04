@@ -255,7 +255,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           {/* 侧边栏底部 */}
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-800">
             <p className="text-xs text-gray-500 text-center">
-              © 2025 壳儿 · 这就是个壳儿
+              © 2026 壳儿 · 这就是个壳儿
             </p>
           </div>
         </div>

@@ -115,6 +115,7 @@ const GENRE_OPTIONS = [
 
 const YEAR_OPTIONS = [
   "全部",
+  "2026",
   "2025",
   "2024",
   "2023",
