@@ -181,7 +181,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
       {/* 移动端侧边栏菜单 */}
       <div
-        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
+        className={`md:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
           isMobileMenuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
