@@ -181,7 +181,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
       {/* 移动端侧边栏菜单 */}
       <div
-        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
+        className={`md:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
           isMobileMenuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -255,7 +255,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           {/* 侧边栏底部 */}
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-800">
             <p className="text-xs text-gray-500 text-center">
-              © 2025 壳儿 · 这就是个壳儿
+              © 2026 壳儿 · 这就是个壳儿
             </p>
           </div>
         </div>
