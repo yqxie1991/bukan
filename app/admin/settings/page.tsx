@@ -10,17 +10,18 @@ import { VodSourcesTab } from "@/components/admin/VodSourcesTab";
 import { PlayerConfigTab } from "@/components/admin/PlayerConfigTab";
 import { DailymotionChannelsTab } from "@/components/admin/DailymotionChannelsTab";
 import { ShortsSourcesTab } from "@/components/admin/ShortsSourcesTab";
+import { DatabaseSettingsTab } from "@/components/admin/DatabaseSettingsTab";
 import type {
   ToastState,
   ConfirmState,
   UnifiedImportCallbacks,
 } from "@/components/admin/types";
 import type { DailymotionChannelConfig } from "@/types/dailymotion-config";
-import { Tv, Film, Youtube, Settings } from "lucide-react";
+import { Tv, Film, Youtube, Settings, Database } from "lucide-react";
 
-type TabType = "sources" | "shorts" | "dailymotion" | "player";
+type TabType = "sources" | "shorts" | "dailymotion" | "player" | "database";
 
-const VALID_TABS: TabType[] = ["sources", "shorts", "dailymotion", "player"];
+const VALID_TABS: TabType[] = ["sources", "shorts", "dailymotion", "player", "database"];
 
 function SettingsContent() {
   const router = useRouter();
@@ -137,6 +138,7 @@ function SettingsContent() {
     { id: "shorts" as TabType, name: "短剧源管理", icon: Film },
     { id: "dailymotion" as TabType, name: "Dailymotion", icon: Youtube },
     { id: "player" as TabType, name: "播放器设置", icon: Settings },
+    { id: "database" as TabType, name: "数据库", icon: Database },
   ];
 
   return (
@@ -233,6 +235,12 @@ function SettingsContent() {
             onShowToast={setToast}
             onShowConfirm={setConfirm}
             unifiedImport={unifiedImportCallbacks}
+          />
+        )}
+
+        {activeTab === "database" && (
+          <DatabaseSettingsTab
+            onShowToast={setToast}
           />
         )}
       </div>
