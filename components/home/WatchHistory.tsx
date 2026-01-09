@@ -55,20 +55,20 @@ export function WatchHistory() {
             >
               <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 shadow-lg transition-all duration-300 group-hover/card:shadow-xl group-hover/card:shadow-red-500/20 group-hover/card:scale-105">
                 {/* 封面图 - 添加 referrerPolicy 绕过防盗链 */}
-                <img
-                  src={item.cover || ""}
-                  alt={item.name}
-                  className={`w-full h-full object-cover ${
-                    !item.cover ? "hidden" : ""
-                  }`}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    // 图片加载失败时隐藏 img 标签
-                    const target = e.target as HTMLImageElement;
-                    target.classList.add("hidden");
-                  }}
-                />
+                {item.cover && (
+                  <img
+                    src={item.cover}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      // 图片加载失败时隐藏 img 标签
+                      const target = e.target as HTMLImageElement;
+                      target.classList.add("hidden");
+                    }}
+                  />
+                )}
                 {/* Fallback 占位 - 当图片失败或不存在时始终在底层显示 */}
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 -z-10">
                   <span className="text-gray-400 text-sm text-center px-2">

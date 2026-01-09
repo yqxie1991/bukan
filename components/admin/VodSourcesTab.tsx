@@ -134,6 +134,7 @@ export function VodSourcesTab({
         let finalSources: VodSource[];
         let finalSelected: string | null;
 
+        let vodResultMsg = "";
         if (importMode === "merge") {
           // 合并模式：保留现有，跳过重复（按 key 判断）
           const existingKeys = new Set(sources.map((s) => s.key));
@@ -142,22 +143,18 @@ export function VodSourcesTab({
           );
           finalSources = [...sources, ...newSources];
           finalSelected = selectedKey || finalSources[0]?.key || null;
-          results.push(
-            `视频源 +${newSources.length} 个${
-              newSources.length < unifiedPreview.vodSources.length
-                ? `（跳过 ${
-                    unifiedPreview.vodSources.length - newSources.length
-                  } 个重复）`
-                : ""
-            }`
-          );
+          vodResultMsg = `视频源 +${newSources.length} 个${
+            newSources.length < unifiedPreview.vodSources.length
+              ? `（跳过 ${
+                  unifiedPreview.vodSources.length - newSources.length
+                } 个重复）`
+              : ""
+          }`;
         } else {
           // 替换模式
           finalSources = unifiedPreview.vodSources;
           finalSelected = unifiedPreview.vodSources[0]?.key || null;
-          results.push(
-            `视频源 ${unifiedPreview.vodSources.length} 个（已替换）`
-          );
+          vodResultMsg = `视频源 ${unifiedPreview.vodSources.length} 个（已替换）`;
         }
 
         const response = await fetch("/api/vod-sources", {
@@ -172,8 +169,10 @@ export function VodSourcesTab({
         if (result.code === 200) {
           onSourcesChange(finalSources);
           if (finalSelected) onSelectedKeyChange(finalSelected);
+          results.push(vodResultMsg);
         } else {
           hasError = true;
+          results.push(`视频源导入失败: ${result.message || "未知错误"}`);
         }
       }
 
@@ -194,6 +193,7 @@ export function VodSourcesTab({
         let finalSources: ShortDramaSource[];
         let finalSelected: string | null;
 
+        let shortsResultMsg = "";
         if (importMode === "merge") {
           const existingKeys = new Set(existingShortsSources.map((s) => s.key));
           const newSources = unifiedPreview.shortsSources.filter(
@@ -202,21 +202,17 @@ export function VodSourcesTab({
           finalSources = [...existingShortsSources, ...newSources];
           finalSelected =
             existingShortsSelected || finalSources[0]?.key || null;
-          results.push(
-            `短剧源 +${newSources.length} 个${
-              newSources.length < unifiedPreview.shortsSources.length
-                ? `（跳过 ${
-                    unifiedPreview.shortsSources.length - newSources.length
-                  } 个重复）`
-                : ""
-            }`
-          );
+          shortsResultMsg = `短剧源 +${newSources.length} 个${
+            newSources.length < unifiedPreview.shortsSources.length
+              ? `（跳过 ${
+                  unifiedPreview.shortsSources.length - newSources.length
+                } 个重复）`
+              : ""
+          }`;
         } else {
           finalSources = unifiedPreview.shortsSources;
           finalSelected = unifiedPreview.shortsSources[0]?.key || null;
-          results.push(
-            `短剧源 ${unifiedPreview.shortsSources.length} 个（已替换）`
-          );
+          shortsResultMsg = `短剧源 ${unifiedPreview.shortsSources.length} 个（已替换）`;
         }
 
         const response = await fetch("/api/shorts-sources", {
@@ -233,8 +229,10 @@ export function VodSourcesTab({
             finalSources,
             finalSelected || undefined
           );
+          results.push(shortsResultMsg);
         } else {
           hasError = true;
+          results.push(`短剧源导入失败: ${result.message || "未知错误"}`);
         }
       }
 
@@ -300,8 +298,10 @@ export function VodSourcesTab({
 
       if (results.length > 0) {
         onShowToast({
-          message: `✅ 导入成功: ${results.join("、")}`,
-          type: "success",
+          message: hasError
+            ? `⚠️ 部分导入完成: ${results.join("、")}`
+            : `✅ 导入成功: ${results.join("、")}`,
+          type: hasError ? "warning" : "success",
         });
       } else if (hasError) {
         onShowToast({ message: "导入失败，请重试", type: "error" });
