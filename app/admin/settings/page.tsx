@@ -147,7 +147,7 @@ function SettingsContent() {
       <div className="bg-[***REMOVED***141414] border-b border-[***REMOVED***333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold text-[***REMOVED***E50914]">壳儿</h1>
+            <h1 className="text-2xl font-bold text-[***REMOVED***E50914]">不看</h1>
             <span className="text-white text-lg">系统设置</span>
           </div>
           <button

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, Film, Tv, Clock, Video, Github } from "lucide-react";
+import { Menu, X, Home, Film, Tv, Clock, Video, Calendar, History } from "lucide-react";
+import { HistoryPopup } from "./HistoryPopup";
 
 interface NavbarProps {
   scrolled: boolean;
@@ -30,7 +31,9 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
     { href: "/", label: "首页", icon: Home },
     { href: "/browse/movies", label: "电影", icon: Film },
     { href: "/browse/tv", label: "电视剧", icon: Tv },
+    { href: "/calendar", label: "追剧日历", icon: Calendar },
     { href: "/browse/latest", label: "最新", icon: Clock },
+    { href: "/history", label: "历史记录", icon: History, mobileOnly: true },
     {
       label: "短剧",
       icon: Video,
@@ -39,12 +42,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
         { href: "/dailymotion", label: "短剧Motion" },
       ],
     },
-    {
-      href: "https://github.com/unilei/kerkerker",
-      label: "Github",
-      icon: Github,
-      external: true,
-    },
+    
   ];
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -75,26 +73,24 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             </button>
 
             {/* Logo */}
-            <div className="flex items-center gap-1">
+            <Link 
+              href="/" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-1"
+            >
               <img
                 className="w-8 h-8 md:w-10 md:h-10"
                 src="/logo.png"
                 alt="logo"
               />
-              <h1
-                onClick={() => {
-                  router.push("/");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="text-red-600 text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer hover:text-red-500 transition-colors"
-              >
-                壳儿
-              </h1>
-            </div>
+              <span className="text-red-600 text-xl md:text-2xl lg:text-3xl font-bold tracking-tight hover:text-red-500 transition-colors">
+                不看
+              </span>
+            </Link>
 
             {/* 导航链接 - 桌面端 */}
             <div className="hidden md:flex items-center space-x-6">
-              {navItems.map((item) =>
+              {navItems.filter(item => !('mobileOnly' in item && item.mobileOnly)).map((item) =>
                 item.children ? (
                   <div
                     key={item.label}
@@ -154,7 +150,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           </div>
 
           {/* 右侧功能区 */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-2">
             {/* 搜索按钮 */}
             <button
               onClick={onSearchOpen}
@@ -175,6 +171,9 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                 />
               </svg>
             </button>
+
+            {/* 历史记录弹出 */}
+            <HistoryPopup />
           </div>
         </div>
       </nav>
@@ -204,7 +203,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             <div className="flex items-center gap-2">
               <img className="w-10 h-10" src="/logo.png" alt="logo" />
               <h2 className="text-red-600 text-2xl font-bold tracking-tight">
-                壳儿
+                不看
               </h2>
             </div>
           </div>
@@ -255,8 +254,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           {/* 侧边栏底部 */}
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-800">
             <p className="text-xs text-gray-500 text-center">
-              © 2026 壳儿 · 这就是个壳儿
-            </p>
+                         </p>
           </div>
         </div>
       </div>
