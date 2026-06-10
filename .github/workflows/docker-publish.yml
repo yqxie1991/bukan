@@ -2,6 +2,11 @@ name: Build and Push Docker Image
 
 on:
   workflow_dispatch: ***REMOVED*** 允许在 GitHub Actions 页面手动触发构建与推送
+    inputs:
+      version:
+        description: 'Docker 镜像的版本号 (例如: v1.0.0)'
+        required: true
+        default: 'latest'
 
 jobs:
   build-and-push:
@@ -27,7 +32,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=v1.1
+            type=raw,value=latest
+            type=raw,value=${{ github.event.inputs.version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
