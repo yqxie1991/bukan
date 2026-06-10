@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+const { subtle } = crypto.webcrypto;
 const PBKDF2_ITERATIONS = 100000;
 
 interface EncryptedPackage {
@@ -23,8 +24,43 @@ interface ConfigPayload {
 }
 
 /**
- * 服务器端解密 - 使用 Node.js crypto 模块
- * 支持 HTTP 环境（不依赖 Web Crypto API）
+ * 使用 Web Crypto API 派生密钥，确保与客户端加密格式 100% 兼容
+ */
+async function deriveKeyServer(
+  password: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  // 导入密码为 pbkdf2 密钥材料
+  const keyMaterial = await subtle.importKey(
+    'raw',
+    passwordBuffer,
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+
+  // 派生 AES-GCM 密钥
+  return await subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: iterations,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * 服务器端解密 - 使用 Web Crypto API
+ * 确保与前端原解密逻辑行为一致，杜绝算法/IV/填充微小差异导致的失败
  */
 async function decryptConfigServer(
   encryptedPackage: EncryptedPackage,
@@ -41,31 +77,37 @@ async function decryptConfigServer(
   }
 
   // 解码 Base64
-  const saltBuffer = Buffer.from(salt, 'base64');
-  const ivBuffer = Buffer.from(iv, 'base64');
-  const dataBuffer = Buffer.from(data, 'base64');
-  const tagBuffer = Buffer.from(tag, 'base64');
+  const saltBytes = new Uint8Array(Buffer.from(salt, 'base64'));
+  const ivBytes = new Uint8Array(Buffer.from(iv, 'base64'));
+  const dataBytes = new Uint8Array(Buffer.from(data, 'base64'));
+  const tagBytes = new Uint8Array(Buffer.from(tag, 'base64'));
 
-  // PBKDF2 密钥派生
-  const key = crypto.pbkdf2Sync(
-    password,
-    saltBuffer,
-    iterations || PBKDF2_ITERATIONS,
-    32, // 256 bits
-    'sha256'
-  );
+  // 合并数据和标签（AES-GCM 在 Web Crypto API 解密时需要传入密文与验证标签拼接后的完整数据）
+  const ciphertext = new Uint8Array(dataBytes.length + tagBytes.length);
+  ciphertext.set(dataBytes);
+  ciphertext.set(tagBytes, dataBytes.length);
 
-  // AES-256-GCM 解密
   try {
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, ivBuffer);
-    decipher.setAuthTag(tagBuffer);
+    // 派生密钥
+    const key = await deriveKeyServer(
+      password,
+      saltBytes,
+      Number(iterations) || PBKDF2_ITERATIONS
+    );
 
-    const decrypted = Buffer.concat([
-      decipher.update(dataBuffer),
-      decipher.final(),
-    ]);
+    // 解密
+    const plaintextBuffer = await subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: ivBytes,
+      },
+      key,
+      ciphertext
+    );
 
-    const payload = JSON.parse(decrypted.toString('utf8')) as ConfigPayload;
+    const decoder = new TextDecoder();
+    const decryptedText = decoder.decode(plaintextBuffer);
+    const payload = JSON.parse(decryptedText) as ConfigPayload;
 
     // 验证过期时间
     if (payload.expiresAt && Date.now() > payload.expiresAt) {
@@ -74,10 +116,12 @@ async function decryptConfigServer(
 
     return payload;
   } catch (error) {
+    console.error('❌ decryptConfigServer 发生错误:', error);
     if (error instanceof Error && error.message.includes('过期')) {
       throw error;
     }
-    throw new Error('解密失败：密码错误或数据已损坏');
+    const detailMsg = error instanceof Error ? error.message : String(error);
+    throw new Error(`解密失败：密码错误、数据已损坏或解密异常 (${detailMsg})`);
   }
 }
 
