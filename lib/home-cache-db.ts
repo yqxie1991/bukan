@@ -242,9 +242,13 @@ export async function syncHomeData(key: "hero" | "categories") {
   const now = new Date().toISOString();
 
   let freshData: any;
+  const doubanIdsToSync: string[] = [];
 
   if (key === "hero") {
     const rawHero = await getHeroMovies();
+    rawHero.forEach((h) => {
+      if (h.id) doubanIdsToSync.push(String(h.id));
+    });
     // 本地化 Banner 横竖版海报及封面
     freshData = await Promise.all(
       rawHero.map(async (hero) => {
@@ -275,6 +279,11 @@ export async function syncHomeData(key: "hero" | "categories") {
     freshData = await Promise.all(
       rawCategories.map(async (cat) => {
         const slicedData = cat.data.slice(0, 20); // 截取前20条
+        slicedData.forEach((item: any) => {
+          if (item.id && !doubanIdsToSync.includes(String(item.id))) {
+            doubanIdsToSync.push(String(item.id));
+          }
+        });
         const localizedData = await Promise.all(
           slicedData.map(async (item) => {
             const localCover = await saveImageToLocal(
@@ -308,8 +317,59 @@ export async function syncHomeData(key: "hero" | "categories") {
     { upsert: true }
   );
 
-  // 2. 异步触发孤立海报清理（在后台静默执行，不阻碍 API 的响应响应）
+  // 2. 异步触发孤立海报清理（在后台静默执行，不阻碍 API 的响应）
   cleanOrphanImages().catch(console.error);
 
+  // 3. 异步触发前 20 部影片的完整详情本地刮削缓存（不阻塞 API 响应）
+  if (doubanIdsToSync.length > 0) {
+    syncAllDetailsAsync(doubanIdsToSync).catch(console.error);
+  }
+
   return freshData;
+}
+
+/**
+ * 异步批量同步影片的详情数据到本地 MongoDB 缓存，限流并发以防止触发豆瓣微服务封锁
+ */
+async function syncAllDetailsAsync(doubanIds: string[]) {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection(COLLECTIONS.HOME_CACHE);
+    const { getSubjectDetail } = await import("./douban-service");
+    
+    console.log(`⏰ [Home Cache] 开始在后台异步刮削并缓存 ${doubanIds.length} 部影片的详情元数据...`);
+
+    const batchSize = 5;
+    for (let i = 0; i < doubanIds.length; i += batchSize) {
+      const batch = doubanIds.slice(i, i + batchSize);
+      await Promise.all(
+        batch.map(async (id) => {
+          try {
+            const detail = await getSubjectDetail(id);
+            if (detail) {
+              const now = new Date().toISOString();
+              await collection.updateOne(
+                { key: `detail_${id}` },
+                {
+                  $set: {
+                    key: `detail_${id}`,
+                    data: detail,
+                    updated_at: now,
+                  },
+                },
+                { upsert: true }
+              );
+            }
+          } catch (err) {
+            console.error(`✗ 后台同步影片详情失败 [id: ${id}]:`, err);
+          }
+        })
+      );
+      // 小段延迟以降低豆瓣微服务访问频次压力
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    console.log(`✓ [Home Cache] 前台首屏 ${doubanIds.length} 部影片的完整详情数据均已在本地数据库缓存成功。`);
+  } catch (error) {
+    console.error("后台同步批量影片详情整体出错:", error);
+  }
 }

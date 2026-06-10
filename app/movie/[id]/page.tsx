@@ -124,9 +124,11 @@ export default function MovieDetailPage() {
     // 2. 异步请求 API 补充详细信息
     const fetchApiDetail = async () => {
       try {
-        const { getSubjectDetail } = await import("@/lib/douban-service");
-        const apiData = await getSubjectDetail(doubanId);
-        if (apiData && apiData.id) {
+        const response = await fetch(`/api/douban/detail?id=${doubanId}`);
+        if (!response.ok) return;
+        const result = await response.json();
+        if (result.code === 200 && result.data) {
+          const apiData = result.data;
           // 用 API 数据补充缓存没有的字段，缓存字段优先
           setMovieDetail((prev) => {
             const cachedData = prev || ({} as MovieDetail);
