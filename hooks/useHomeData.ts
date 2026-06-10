@@ -17,6 +17,24 @@ interface UseHomeDataReturn {
   refetch: () => Promise<void>;
 }
 
+const fetchHero = async () => {
+  const res = await fetch('/api/home/hero');
+  const json = await res.json();
+  if (json.code !== 200) {
+    throw new Error(json.message || '获取 Banner 缓存数据失败');
+  }
+  return json.data;
+};
+
+const fetchCategories = async () => {
+  const res = await fetch('/api/home/categories');
+  const json = await res.json();
+  if (json.code !== 200) {
+    throw new Error(json.message || '获取分类列表缓存数据失败');
+  }
+  return json.data;
+};
+
 /**
  * 管理首页数据加载
  * 使用 SWR 实现缓存，页面返回时不会重复加载
@@ -28,7 +46,7 @@ export function useHomeData(): UseHomeDataReturn {
     error: heroError,
     isLoading: heroLoading,
     mutate: mutateHero,
-  } = useSWR(SWR_KEY_HERO, getHeroMovies);
+  } = useSWR(SWR_KEY_HERO, fetchHero);
 
   // 分类数据
   const {
@@ -36,7 +54,7 @@ export function useHomeData(): UseHomeDataReturn {
     error: categoryError,
     isLoading: categoryLoading,
     mutate: mutateCategories,
-  } = useSWR(SWR_KEY_CATEGORIES, getNewContent);
+  } = useSWR(SWR_KEY_CATEGORIES, fetchCategories);
 
   // 转换 Hero 数据格式
   const { heroMovies, heroDataList } = useMemo(() => {

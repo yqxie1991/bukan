@@ -49,8 +49,8 @@ export function ShortsSourcesTab({
 
   // 解密预览
   const handleDecryptPreview = async () => {
-    if (!importPassword || !importData) {
-      setDecryptError("请输入密码和加密数据");
+    if (!importData) {
+      setDecryptError("请输入配置数据或订阅 URL");
       return;
     }
 
@@ -58,6 +58,76 @@ export function ShortsSourcesTab({
     setDecryptError("");
     setImportPreview(null);
 
+    let isJson = false;
+    let jsonErrorMsg = "";
+
+    // 1. 尝试直接作为明文 JSON 解析
+    try {
+      let rawText = importData.trim();
+      let isPlainJson = false;
+      let parsedPayload: any = null;
+
+      if (isSubscriptionUrl(rawText)) {
+        try {
+          const response = await fetch(rawText);
+          if (response.ok) {
+            const text = await response.text();
+            parsedPayload = JSON.parse(text);
+            isPlainJson = true;
+          }
+        } catch (e) {
+          console.log("尝试直接拉取 URL 失败，将尝试走解密逻辑", e);
+        }
+      } else {
+        parsedPayload = JSON.parse(rawText);
+        isPlainJson = true;
+      }
+
+      if (isPlainJson && parsedPayload) {
+        isJson = true;
+        let shortsSourcesList: any[] = [];
+        
+        // 格式 A: 标准打包格式
+        if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
+          shortsSourcesList = parsedPayload.shortsSources;
+        } 
+        // 格式 B: 单页导出的 sources 字段
+        else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
+          shortsSourcesList = parsedPayload.sources;
+        }
+        // 格式 C: 纯数组格式 (直接是列表)
+        else if (Array.isArray(parsedPayload)) {
+          shortsSourcesList = parsedPayload;
+        }
+
+        if (shortsSourcesList.length === 0) {
+          throw new Error("JSON 中没有找到有效的短剧源配置 (请检查是否包含 shortsSources、sources 键或本身是列表)");
+        }
+
+        setImportPreview(shortsSourcesList);
+        setIsDecrypting(false);
+        return; // 解析成功，直接返回
+      }
+    } catch (parseError) {
+      jsonErrorMsg = parseError instanceof Error ? parseError.message : "未知 JSON 格式错误";
+      console.log("解析明文 JSON 失败", parseError);
+    }
+
+    // 2. 如果本身是合法的 JSON，但提取数据失败，不走解密模式，直接报告格式错误
+    if (isJson) {
+      setDecryptError(`明文配置解析失败: ${jsonErrorMsg}`);
+      setIsDecrypting(false);
+      return;
+    }
+
+    // 3. 若非合法 JSON，且没有密码，则无法进行加密包解密
+    if (!importPassword) {
+      setDecryptError("未识别为合法的明文 JSON 配置，如果是加密配置请输入解密密码");
+      setIsDecrypting(false);
+      return;
+    }
+
+    // 4. 原解密流程
     try {
       const response = await fetch("/api/decrypt", {
         method: "POST",
@@ -559,14 +629,14 @@ export function ShortsSourcesTab({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              解密密码 <span className="text-red-400">*</span>
+              解密密码 <span className="text-slate-500 font-normal">(未加密配置无需填写)</span>
             </label>
             <input
               type="password"
               value={importPassword}
               onChange={(e) => setImportPassword(e.target.value)}
               className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="输入加密时使用的密码"
+              placeholder="如果是加密配置，请输入密码；未加密则留空"
             />
           </div>
 
@@ -594,10 +664,10 @@ export function ShortsSourcesTab({
 
           <button
             onClick={handleDecryptPreview}
-            disabled={isDecrypting || !importPassword || !importData}
+            disabled={isDecrypting || !importData}
             className="w-full px-4 py-2 bg-[***REMOVED***E50914] hover:bg-[***REMOVED***B20710] disabled:bg-[***REMOVED***333] disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
           >
-            {isDecrypting ? "解密中..." : "🔓 解密预览"}
+            {isDecrypting ? "解析中..." : "🔍 解析/解密预览"}
           </button>
 
           {importPreview && importPreview.length > 0 && (
@@ -606,7 +676,7 @@ export function ShortsSourcesTab({
                 <h4 className="text-sm font-medium text-slate-300">
                   预览 ({importPreview.length} 个短剧源)
                 </h4>
-                <span className="text-xs text-green-400">✅ 解密成功</span>
+                <span className="text-xs text-green-400">✅ 解析成功</span>
               </div>
               <div className="max-h-48 overflow-y-auto space-y-2 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
                 {importPreview.map((source, index) => (

@@ -64,8 +64,8 @@ export function VodSourcesTab({
 
   // 解密预览 - 统一导入，解析所有类型
   const handleDecryptPreview = async () => {
-    if (!importPassword || !importData) {
-      setDecryptError("请输入密码和加密数据");
+    if (!importData) {
+      setDecryptError("请输入配置数据或订阅 URL");
       return;
     }
 
@@ -74,6 +74,104 @@ export function VodSourcesTab({
     setImportPreview(null);
     setUnifiedPreview(null);
 
+    let isJson = false;
+    let jsonErrorMsg = "";
+
+    // 1. 尝试直接作为明文 JSON 解析
+    try {
+      let rawText = importData.trim();
+      let isPlainJson = false;
+      let parsedPayload: any = null;
+
+      if (isSubscriptionUrl(rawText)) {
+        try {
+          const response = await fetch(rawText);
+          if (response.ok) {
+            const text = await response.text();
+            parsedPayload = JSON.parse(text);
+            isPlainJson = true;
+          }
+        } catch (e) {
+          console.log("尝试直接拉取 URL 失败，将尝试走解密逻辑", e);
+        }
+      } else {
+        parsedPayload = JSON.parse(rawText);
+        isPlainJson = true;
+      }
+
+      if (isPlainJson && parsedPayload) {
+        isJson = true; // 确认为 JSON 格式，之后如果失败说明是内容格式不匹配，不用再走解密了
+        const preview: UnifiedImportPreview = {};
+        
+        // 格式 A: 标准打包格式
+        if (parsedPayload.vodSources || parsedPayload.shortsSources || parsedPayload.dailymotionChannels) {
+          if (parsedPayload.vodSources && Array.isArray(parsedPayload.vodSources)) {
+            preview.vodSources = parsedPayload.vodSources;
+            setImportPreview(parsedPayload.vodSources);
+          }
+          if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
+            preview.shortsSources = parsedPayload.shortsSources;
+          }
+          if (parsedPayload.dailymotionChannels && Array.isArray(parsedPayload.dailymotionChannels)) {
+            preview.dailymotionChannels = parsedPayload.dailymotionChannels;
+          }
+        }
+        // 格式 B: 单页导出的 sources 字段
+        else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
+          preview.vodSources = parsedPayload.sources;
+          setImportPreview(parsedPayload.sources);
+        }
+        // 格式 C: 兼容 TVBox 的 sites 字段
+        else if (parsedPayload.sites && Array.isArray(parsedPayload.sites)) {
+          const mappedSources = parsedPayload.sites.map((site: any) => ({
+            key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
+            name: site.name || '未命名视频源',
+            api: site.api || '',
+            playUrl: site.playUrl || '',
+            priority: 0,
+            type: "json" as const,
+            usePlayUrl: true
+          })).filter((s: any) => s.api); // 过滤无 api 地址的源
+
+          if (mappedSources.length > 0) {
+            preview.vodSources = mappedSources;
+            setImportPreview(mappedSources);
+          }
+        }
+        // 格式 D: 纯数组格式 (直接是列表)
+        else if (Array.isArray(parsedPayload)) {
+          preview.vodSources = parsedPayload;
+          setImportPreview(parsedPayload);
+        }
+
+        if (Object.keys(preview).length === 0) {
+          throw new Error("JSON 中没有找到有效的视频源、短剧源或频道配置 (请检查是否包含 vodSources、sources、sites 键或本身是列表)");
+        }
+
+        setUnifiedPreview(preview);
+        setIsDecrypting(false);
+        return; // 解析明文成功，直接返回
+      }
+    } catch (parseError) {
+      jsonErrorMsg = parseError instanceof Error ? parseError.message : "未知 JSON 格式错误";
+      console.log("解析明文 JSON 失败", parseError);
+    }
+
+    // 2. 如果本身是合法的 JSON，但提取数据失败，不走解密模式，直接报告格式错误
+    if (isJson) {
+      setDecryptError(`明文配置解析失败: ${jsonErrorMsg}`);
+      setIsDecrypting(false);
+      return;
+    }
+
+    // 3. 若非合法 JSON，且没有密码，则无法进行加密包解密
+    if (!importPassword) {
+      setDecryptError("未识别为合法的明文 JSON 配置，如果是加密配置请输入解密密码");
+      setIsDecrypting(false);
+      return;
+    }
+
+    // 4. 原解密流程
     try {
       const response = await fetch("/api/decrypt", {
         method: "POST",
@@ -752,14 +850,14 @@ export function VodSourcesTab({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              解密密码 <span className="text-red-400">*</span>
+              解密密码 <span className="text-slate-500 font-normal">(未加密配置无需填写)</span>
             </label>
             <input
               type="password"
               value={importPassword}
               onChange={(e) => setImportPassword(e.target.value)}
               className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="输入加密时使用的密码"
+              placeholder="如果是加密配置，请输入密码；未加密则留空"
             />
           </div>
 
@@ -787,16 +885,16 @@ export function VodSourcesTab({
 
           <button
             onClick={handleDecryptPreview}
-            disabled={isDecrypting || !importPassword || !importData}
+            disabled={isDecrypting || !importData}
             className="w-full px-4 py-2 bg-[***REMOVED***E50914] hover:bg-[***REMOVED***B20710] disabled:bg-[***REMOVED***333] disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
           >
-            {isDecrypting ? "解密中..." : "🔓 解密预览"}
+            {isDecrypting ? "解析中..." : "🔍 解析/解密预览"}
           </button>
 
           {unifiedPreview && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-slate-300">解密成功</h4>
+                <h4 className="text-sm font-medium text-slate-300">解析成功</h4>
                 <span className="text-xs text-green-400">✅ 包含以下配置</span>
               </div>
 
