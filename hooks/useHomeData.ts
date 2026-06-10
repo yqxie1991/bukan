@@ -17,7 +17,7 @@ interface UseHomeDataReturn {
   refetch: () => Promise<void>;
 }
 
-const fetchHero = async () => {
+const fetchHero = async (): Promise<any[]> => {
   const res = await fetch('/api/home/hero');
   const json = await res.json();
   if (json.code !== 200) {
@@ -26,13 +26,13 @@ const fetchHero = async () => {
   return json.data;
 };
 
-const fetchCategories = async () => {
+const fetchCategories = async (): Promise<CategoryData[]> => {
   const res = await fetch('/api/home/categories');
   const json = await res.json();
   if (json.code !== 200) {
     throw new Error(json.message || '获取分类列表缓存数据失败');
   }
-  return json.data;
+  return json.data as CategoryData[];
 };
 
 /**
