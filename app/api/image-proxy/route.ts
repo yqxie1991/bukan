@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
 
 // 允许 Node.js 忽略未授权的 SSL 证书，解决在部分没有内置根证书的 Docker 容器中代理外部图片失败的问题
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -102,6 +104,29 @@ export async function GET(request: NextRequest) {
     
     if (!url) {
       return NextResponse.json({ error: 'URL parameter is required' }, { status: 400 });
+    }
+
+    // 本地缓存图片直接读取并返回，避免走外部代理池或本地 fetch 时格式报错导致裂图
+    if (url.startsWith('/cache/images/')) {
+      try {
+        const filePath = path.join(process.cwd(), 'public', url);
+        const imageBuffer = await fs.readFile(filePath);
+        const ext = path.extname(filePath).toLowerCase();
+        let contentType = 'image/jpeg';
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.webp') contentType = 'image/webp';
+        
+        return new NextResponse(imageBuffer, {
+          status: 200,
+          headers: {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
+        });
+      } catch (err) {
+        console.error('Failed to read local cached image:', err);
+        // 读取失败则退回，继续走 fetch 代理池
+      }
     }
 
     // 使用代理池获取图片

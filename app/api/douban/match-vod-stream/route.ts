@@ -118,7 +118,10 @@ export async function GET(request: NextRequest) {
     return new Response('No video sources configured', { status: 404 });
   }
   
-  const origin = request.nextUrl.origin;
+  let origin = request.nextUrl.origin;
+  if (process.env.NODE_ENV === 'production') {
+    origin = `http://127.0.0.1:${process.env.PORT || 3000}`;
+  }
   
   // 创建 SSE 流
   const encoder = new TextEncoder();

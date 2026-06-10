@@ -111,7 +111,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const origin = request.nextUrl.origin;
+    let origin = request.nextUrl.origin;
+    if (process.env.NODE_ENV === 'production') {
+      origin = `http://127.0.0.1:${process.env.PORT || 3000}`;
+    }
 
     // 并行搜索所有源
     const matchPromises = allSources.map(async (source) => {
