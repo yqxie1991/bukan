@@ -16,6 +16,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    volumes:
+      - kerkerker-cache:/app/public/cache
     networks:
       - kerkerker-network
     restart: unless-stopped
@@ -46,4 +48,6 @@ volumes:
   mongodb-data:
     driver: local
   mongodb-config:
+    driver: local
+  kerkerker-cache:
     driver: local
