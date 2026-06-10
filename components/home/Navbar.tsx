@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, Film, Tv, Clock, Video, } from "lucide-react";
-
+import { Menu, X, Home, Calendar, Film, Tv, Clock, Video, History } from "lucide-react";
+import { HistoryPopup } from "./HistoryPopup"; //  加上花括号就对了！
 interface NavbarProps {
   scrolled: boolean;
   onSearchOpen: () => void;
@@ -91,7 +91,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
               >
                 不看
               </h1>
-            </div>
+            </Link> {/*
 
             {/* 导航链接 - 桌面端 */}
             <div className="hidden md:flex items-center space-x-6">
