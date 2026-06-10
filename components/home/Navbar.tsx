@@ -26,7 +26,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
     };
   }, [isMobileMenuOpen]);
 
-  const navItems = [
+  const navItems: any[] = [
     { href: "/", label: "首页", icon: Home },
     { href: "/browse/movies", label: "电影", icon: Film },
     { href: "/browse/tv", label: "电视剧", icon: Tv },
