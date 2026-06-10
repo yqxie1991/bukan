@@ -112,12 +112,27 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    volumes:
+      - kerkerker-cache:/app/public/cache ***REMOVED*** 图片持久化卷，防止容器重建/更新导致海报丢失
 
   mongodb:
     image: mongo:7
     volumes:
       - mongodb-data:/data/db ***REMOVED*** 数据持久化
+
+volumes:
+  mongodb-data:
+    driver: local
+  kerkerker-cache:
+    driver: local  ***REMOVED*** 使用 Docker 命名卷可自动对齐容器权限，完美规避群晖等系统的 Permission Denied 挂载问题
 ```
+
+> 💡 **针对群晖 (Synology) / 反向代理 (Lucky 等) 部署的优化说明**：
+> * **持久化命名卷**：生产部署必须挂载 `/app/public/cache` 卷。使用 Docker 命名卷（Named Volume）可以免去在群晖宿主机上手动赋予非 root 运行容器（UID 1001）写权限的繁琐步骤，完全防范权限拒绝错误。
+> * **缓存自愈能力**：系统内置了图片缓存存在性抽查，即使您手动删除了卷，第一次访问页面时，服务端也会自动触发数据重同步并重新在后台下载海报图片进行自愈，防范 500 裂图。
+> * **混合协议与回环网络兼容**：
+>   * **混合内容拦截 (Mixed Content)**：当使用外网 HTTPS（如 Lucky 端口映射）访问时，播放器对所有的 HTTP 视频源会自动采用本地域名 HTTPS 代理中转，并基于 `Referer` 头自适应解析外网域名（无需在 Lucky 反代中配置复杂的 `X-Forwarded-*` 头），彻底防止浏览器拦截播放。
+>   * **容器内回环 (Loopback) 检索**：流式匹配视频源在生产环境会强制通过 `127.0.0.1:3000` 本地地址请求自身接口，避免容器因局域网限制或反代策略导致请求自身域名超时失败，确保 22 个源流畅检索。
 
 ***REMOVED******REMOVED******REMOVED******REMOVED*** 常用命令
 
