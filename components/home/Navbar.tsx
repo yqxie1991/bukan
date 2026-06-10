@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, Film, Tv, Clock, Video, Calendar, History } from "lucide-react";
-import { HistoryPopup } from "./HistoryPopup";
+import { Menu, X, Home, Film, Tv, Clock, Video, } from "lucide-react";
 
 interface NavbarProps {
   scrolled: boolean;
@@ -83,10 +82,16 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                 src="/logo.png"
                 alt="logo"
               />
-              <span className="text-red-600 text-xl md:text-2xl lg:text-3xl font-bold tracking-tight hover:text-red-500 transition-colors">
+              <h1
+                onClick={() => {
+                  router.push("/");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-red-600 text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer hover:text-red-500 transition-colors"
+              >
                 不看
-              </span>
-            </Link>
+              </h1>
+            </div>
 
             {/* 导航链接 - 桌面端 */}
             <div className="hidden md:flex items-center space-x-6">
