@@ -127,7 +127,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                         <div className="py-2 bg-zinc-900 rounded-lg shadow-2xl border border-zinc-800 min-w-[140px] overflow-hidden">
                           {/* 顶部红色装饰线 - Netflix风格 */}
                           <div className="absolute top-1 left-0 right-0 h-0.5 bg-red-600" />
-                          {item.children.map((child) => (
+                          {item.children.map((child:any) => (
                             <Link
                               key={child.href}
                               href={child.href}
@@ -226,7 +226,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                         {item.label}
                       </span>
                     </div>
-                    {item.children.map((child) => (
+                    {item.children.map((child:any) => (
                       <Link
                         key={child.href}
                         href={child.href}
