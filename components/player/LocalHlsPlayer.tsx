@@ -94,6 +94,29 @@ export function LocalHlsPlayer({
     setIsClient(true);
   }, []);
 
+  // 当视频 URL 改变时，重置播放器状态和安全播放模式，防止 Mixed Content 拦截
+  useEffect(() => {
+    if (!videoUrl) return;
+    
+    const isHttpsEnv = typeof window !== "undefined" && window.location.protocol === "https:";
+    const isHttpVideo = videoUrl.startsWith("http://");
+    
+    if (isHttpsEnv && isHttpVideo) {
+      console.log("🔒 HTTPS 页面加载 HTTP 视频，强制切换为代理播放模式以防止混合内容拦截 (Mixed Content)");
+      setUseDirectPlay(false);
+      setPlayMode("proxy");
+    } else {
+      setUseDirectPlay(true);
+      setPlayMode("detecting");
+    }
+    
+    setError(null);
+    setIsLoading(true);
+    networkRetryCount.current = 0;
+    mediaRetryCount.current = 0;
+    keyErrorCount.current = 0;
+  }, [videoUrl]);
+
   // 获取代理后的URL
   const getProxiedUrl = useCallback(
     (url: string) => {

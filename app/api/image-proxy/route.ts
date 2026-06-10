@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// 允许 Node.js 忽略未授权的 SSL 证书，解决在部分没有内置根证书的 Docker 容器中代理外部图片失败的问题
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 // 代理池配置
 const PROXY_POOL = [
   {

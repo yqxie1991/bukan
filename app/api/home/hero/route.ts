@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getHomeCache, syncHomeData, startCronJob } from "@/lib/home-cache-db";
+import { getHeroMovies } from "@/lib/douban-service";
 
 export async function GET() {
   try {
@@ -13,14 +14,20 @@ export async function GET() {
     }
     return NextResponse.json({ code: 200, message: "获取成功", data });
   } catch (error) {
-    console.error("获取本地 Banner 缓存失败:", error);
-    return NextResponse.json(
-      {
-        code: 500,
-        message: error instanceof Error ? error.message : "获取失败",
-        data: null,
-      },
-      { status: 500 }
-    );
+    console.error("获取本地 Banner 缓存失败，正在降级为直连微服务拉取:", error);
+    try {
+      // 熔断降级：本地数据库不可用时，直接直连远程微服务拉取
+      const data = await getHeroMovies();
+      return NextResponse.json({ code: 200, message: "获取成功 (降级直连模式)", data });
+    } catch (fallbackError) {
+      return NextResponse.json(
+        {
+          code: 500,
+          message: fallbackError instanceof Error ? fallbackError.message : "获取失败",
+          data: null,
+        },
+        { status: 500 }
+      );
+    }
   }
 }

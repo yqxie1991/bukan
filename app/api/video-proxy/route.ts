@@ -89,8 +89,9 @@ export async function GET(request: NextRequest) {
       // 读取 m3u8 内容
       const m3u8Content = await videoResponse.text();
       
-      // 重写 m3u8 内容
-      const rewrittenContent = rewriteM3U8(m3u8Content, videoUrl, request.nextUrl.origin);
+      // 获取真实外网域名 Origin 并重写 m3u8 内容
+      const realOrigin = getRealOrigin(request);
+      const rewrittenContent = rewriteM3U8(m3u8Content, videoUrl, realOrigin);
       
       // 返回重写后的 m3u8
       return new NextResponse(rewrittenContent, {
@@ -139,6 +140,43 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * 获取请求的真实 Origin (考虑反代及外网域名环境)
+ */
+function getRealOrigin(request: NextRequest): string {
+  // 1. 优先使用环境变量
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.APP_URL) {
+    return process.env.APP_URL;
+  }
+
+  // 2. 其次通过请求的 Referer 提取真实外网 Origin (最精准，无视反代配置缺失)
+  const referer = request.headers.get('referer');
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      if (refererUrl.protocol.startsWith('http')) {
+        return refererUrl.origin;
+      }
+    } catch (e) {
+      // 忽略解析错误
+    }
+  }
+
+  // 3. 再次尝试从代理头获取
+  const proto = request.headers.get('x-forwarded-proto') || 'http';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  // 4. 兜底使用 nextUrl.origin
+  return request.nextUrl.origin;
 }
 
 /**
