@@ -101,6 +101,44 @@ export async function getHomeCache(key: "hero" | "categories") {
       return null;
     }
 
+    // 校验本地图片文件是否存在（防止容器重建导致 public/cache 目录下的非持久化图片丢失）
+    if (cache.data) {
+      let filesExist = true;
+      const checkPaths = (obj: any): string[] => {
+        const paths: string[] = [];
+        const extract = (item: any) => {
+          if (!item) return;
+          if (typeof item === 'string' && item.startsWith('/cache/images/')) {
+            paths.push(item);
+          } else if (Array.isArray(item)) {
+            item.forEach(extract);
+          } else if (typeof item === 'object') {
+            Object.values(item).forEach(extract);
+          }
+        };
+        extract(obj);
+        return paths;
+      };
+      
+      const cachedImagePaths = checkPaths(cache.data);
+      // 抽查前 3 个图片文件是否存在
+      const samplePaths = cachedImagePaths.slice(0, 3);
+      for (const imgPath of samplePaths) {
+        try {
+          const filePath = path.join(process.cwd(), 'public', imgPath);
+          await fs.access(filePath);
+        } catch {
+          console.log(`⚠️ 检测到本地缓存图片 [${imgPath}] 丢失，判定缓存失效，将触发重新同步以自愈`);
+          filesExist = false;
+          break;
+        }
+      }
+      
+      if (!filesExist) {
+        return null;
+      }
+    }
+
     return cache.data;
   } catch (error) {
     console.error(`读取缓存失败 [key: ${key}]:`, error);
