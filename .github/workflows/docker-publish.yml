@@ -1,8 +1,7 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches: [ "main", "master" ]  ***REMOVED*** 当你向 main 或 master 分支推送代码时触发
+  workflow_dispatch: ***REMOVED*** 允许在 GitHub Actions 页面手动触发构建与推送
 
 jobs:
   build-and-push:
