@@ -200,16 +200,13 @@ function rewriteM3U8(content: string, baseUrl: string, proxyOrigin: string): str
   };
   
   const rewrittenLines = lines.map(line => {
-    // 处理 ***REMOVED***EXT-X-KEY 标签中的 URI
-    if (line.startsWith('***REMOVED***EXT-X-KEY:')) {
-      // 匹配 URI="..." 或 URI='...' 或 URI=...
-      const uriMatch = line.match(/URI=["']?([^"',]+)["']?/);
-      if (uriMatch && uriMatch[1]) {
-        const originalUri = uriMatch[1];
-        const absoluteUri = resolveUrl(originalUri);
-        const proxiedUri = `${proxyOrigin}/api/video-proxy?url=${encodeURIComponent(absoluteUri)}`;
-        // 替换原始URI为代理URI
-        return line.replace(/URI=["']?[^"',]+["']?/, `URI="${proxiedUri}"`);
+    // 通用处理带 URI 属性的标签 (包括 ***REMOVED***EXT-X-KEY, ***REMOVED***EXT-X-MEDIA, ***REMOVED***EXT-X-MAP 等)
+    if (line.startsWith('***REMOVED***')) {
+      if (line.includes('URI=')) {
+        return line.replace(/URI=["']?([^"',]+)["']?/g, (match, p1) => {
+          const absoluteUri = resolveUrl(p1);
+          return `URI="${proxyOrigin}/api/video-proxy?url=${encodeURIComponent(absoluteUri)}"`;
+        });
       }
       return line;
     }

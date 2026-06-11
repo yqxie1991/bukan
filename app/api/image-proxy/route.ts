@@ -8,13 +8,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // 代理池配置
 const PROXY_POOL = [
   {
-    name: 'wsrv.nl',
+    name: 'wsrv.link0.me',
     url: (imgUrl: string) => `https://wsrv.link0.me/?url=${encodeURIComponent(imgUrl)}&output=webp&q=85`,
     timeout: 8000,
   },
   {
-    name: 'wsrv.nl',
-    url: (imgUrl: string) => `https://wsrv.link0.me/?url=${encodeURIComponent(imgUrl)}&output=webp&q=100`,
+    name: 'images.weserv.nl',
+    url: (imgUrl: string) => `https://images.weserv.nl/?url=${encodeURIComponent(imgUrl)}&output=webp&q=85`,
     timeout: 8000,
   } 
 ];
@@ -109,7 +109,11 @@ export async function GET(request: NextRequest) {
     // 本地缓存图片直接读取并返回，避免走外部代理池或本地 fetch 时格式报错导致裂图
     if (url.startsWith('/cache/images/')) {
       try {
-        const filePath = path.join(process.cwd(), 'public', url);
+        const safeDir = path.join(process.cwd(), 'public', 'cache', 'images');
+        const filePath = path.resolve(process.cwd(), 'public', url.replace(/^\//, ''));
+        if (!filePath.startsWith(safeDir)) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
         const imageBuffer = await fs.readFile(filePath);
         const ext = path.extname(filePath).toLowerCase();
         let contentType = 'image/jpeg';

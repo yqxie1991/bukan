@@ -397,6 +397,7 @@ export function LocalHlsPlayer({
             });
 
             autoLoadDanmaku(title).then((result) => {
+              if (!isMountedRef.current) return;
               if (result.success && result.danmaku.length > 0) {
                 setDanmakuList(result.danmaku);
                 setAutoLoadStatus({
