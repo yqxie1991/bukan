@@ -19,4 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `optimize-disk-writes` | 优化群晖 Docker 磁盘持续写入 | `[x] 已完成` | `High` | 2026-06-11 | [plan.md](tracks/optimize-disk-writes/plan.md) |
+| - | - | - | - | - | - |
+
+***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
+* 📦 [optimize-disk-writes](archive/optimize-disk-writes/index.md) —— 优化群晖 Docker 磁盘持续写入 (Completed: 2026-06-11)
