@@ -82,33 +82,36 @@ export function DailymotionChannelsTab({
       }
 
       if (isPlainJson && parsedPayload) {
-        isJson = true;
-        let dailymotionChannelsList: any[] = [];
-        
-        // 格式 A: 标准打包格式
-        if (parsedPayload.dailymotionChannels && Array.isArray(parsedPayload.dailymotionChannels)) {
-          dailymotionChannelsList = parsedPayload.dailymotionChannels;
-        } 
-        // 格式 B: 单页导出的 channels 字段
-        else if (parsedPayload.channels && Array.isArray(parsedPayload.channels)) {
-          dailymotionChannelsList = parsedPayload.channels;
-        }
-        // 格式 C: 单页导出的 sources 字段
-        else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
-          dailymotionChannelsList = parsedPayload.sources;
-        }
-        // 格式 D: 纯数组格式 (直接是列表)
-        else if (Array.isArray(parsedPayload)) {
-          dailymotionChannelsList = parsedPayload;
-        }
+        const isEncrypted = parsedPayload && typeof parsedPayload === 'object' && parsedPayload.version && parsedPayload.algorithm && parsedPayload.data;
+        if (!isEncrypted) {
+          isJson = true;
+          let dailymotionChannelsList: any[] = [];
+          
+          // 格式 A: 标准打包格式
+          if (parsedPayload.dailymotionChannels && Array.isArray(parsedPayload.dailymotionChannels)) {
+            dailymotionChannelsList = parsedPayload.dailymotionChannels;
+          } 
+          // 格式 B: 单页导出的 channels 字段
+          else if (parsedPayload.channels && Array.isArray(parsedPayload.channels)) {
+            dailymotionChannelsList = parsedPayload.channels;
+          }
+          // 格式 C: 单页导出的 sources 字段
+          else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
+            dailymotionChannelsList = parsedPayload.sources;
+          }
+          // 格式 D: 纯数组格式 (直接是列表)
+          else if (Array.isArray(parsedPayload)) {
+            dailymotionChannelsList = parsedPayload;
+          }
 
-        if (dailymotionChannelsList.length === 0) {
-          throw new Error("JSON 中没有找到有效的 Dailymotion 频道配置 (请检查是否包含 dailymotionChannels、channels、sources 键或本身是列表)");
-        }
+          if (dailymotionChannelsList.length === 0) {
+            throw new Error("JSON 中没有找到有效的 Dailymotion 频道配置 (请检查是否包含 dailymotionChannels、channels、sources 键或本身是列表)");
+          }
 
-        setImportPreview(dailymotionChannelsList);
-        setIsDecrypting(false);
-        return; // 解析成功，直接返回
+          setImportPreview(dailymotionChannelsList);
+          setIsDecrypting(false);
+          return; // 解析成功，直接返回
+        }
       }
     } catch (parseError) {
       jsonErrorMsg = parseError instanceof Error ? parseError.message : "未知 JSON 格式错误";

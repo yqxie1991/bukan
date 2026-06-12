@@ -100,57 +100,60 @@ export function VodSourcesTab({
       }
 
       if (isPlainJson && parsedPayload) {
-        isJson = true; // 确认为 JSON 格式，之后如果失败说明是内容格式不匹配，不用再走解密了
-        const preview: UnifiedImportPreview = {};
-        
-        // 格式 A: 标准打包格式
-        if (parsedPayload.vodSources || parsedPayload.shortsSources || parsedPayload.dailymotionChannels) {
-          if (parsedPayload.vodSources && Array.isArray(parsedPayload.vodSources)) {
-            preview.vodSources = parsedPayload.vodSources;
-            setImportPreview(parsedPayload.vodSources);
+        const isEncrypted = parsedPayload && typeof parsedPayload === 'object' && parsedPayload.version && parsedPayload.algorithm && parsedPayload.data;
+        if (!isEncrypted) {
+          isJson = true; // 确认为 JSON 格式，之后如果失败说明是内容格式不匹配，不用再走解密了
+          const preview: UnifiedImportPreview = {};
+          
+          // 格式 A: 标准打包格式
+          if (parsedPayload.vodSources || parsedPayload.shortsSources || parsedPayload.dailymotionChannels) {
+            if (parsedPayload.vodSources && Array.isArray(parsedPayload.vodSources)) {
+              preview.vodSources = parsedPayload.vodSources;
+              setImportPreview(parsedPayload.vodSources);
+            }
+            if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
+              preview.shortsSources = parsedPayload.shortsSources;
+            }
+            if (parsedPayload.dailymotionChannels && Array.isArray(parsedPayload.dailymotionChannels)) {
+              preview.dailymotionChannels = parsedPayload.dailymotionChannels;
+            }
           }
-          if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
-            preview.shortsSources = parsedPayload.shortsSources;
+          // 格式 B: 单页导出的 sources 字段
+          else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
+            preview.vodSources = parsedPayload.sources;
+            setImportPreview(parsedPayload.sources);
           }
-          if (parsedPayload.dailymotionChannels && Array.isArray(parsedPayload.dailymotionChannels)) {
-            preview.dailymotionChannels = parsedPayload.dailymotionChannels;
-          }
-        }
-        // 格式 B: 单页导出的 sources 字段
-        else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
-          preview.vodSources = parsedPayload.sources;
-          setImportPreview(parsedPayload.sources);
-        }
-        // 格式 C: 兼容 TVBox 的 sites 字段
-        else if (parsedPayload.sites && Array.isArray(parsedPayload.sites)) {
-          const mappedSources = parsedPayload.sites.map((site: any) => ({
-            key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
-            name: site.name || '未命名视频源',
-            api: site.api || '',
-            playUrl: site.playUrl || '',
-            priority: 0,
-            type: "json" as const,
-            usePlayUrl: true
-          })).filter((s: any) => s.api); // 过滤无 api 地址的源
+          // 格式 C: 兼容 TVBox 的 sites 字段
+          else if (parsedPayload.sites && Array.isArray(parsedPayload.sites)) {
+            const mappedSources = parsedPayload.sites.map((site: any) => ({
+              key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
+              name: site.name || '未命名视频源',
+              api: site.api || '',
+              playUrl: site.playUrl || '',
+              priority: 0,
+              type: "json" as const,
+              usePlayUrl: true
+            })).filter((s: any) => s.api); // 过滤无 api 地址的源
 
-          if (mappedSources.length > 0) {
-            preview.vodSources = mappedSources;
-            setImportPreview(mappedSources);
+            if (mappedSources.length > 0) {
+              preview.vodSources = mappedSources;
+              setImportPreview(mappedSources);
+            }
           }
-        }
-        // 格式 D: 纯数组格式 (直接是列表)
-        else if (Array.isArray(parsedPayload)) {
-          preview.vodSources = parsedPayload;
-          setImportPreview(parsedPayload);
-        }
+          // 格式 D: 纯数组格式 (直接是列表)
+          else if (Array.isArray(parsedPayload)) {
+            preview.vodSources = parsedPayload;
+            setImportPreview(parsedPayload);
+          }
 
-        if (Object.keys(preview).length === 0) {
-          throw new Error("JSON 中没有找到有效的视频源、短剧源或频道配置 (请检查是否包含 vodSources、sources、sites 键或本身是列表)");
-        }
+          if (Object.keys(preview).length === 0) {
+            throw new Error("JSON 中没有找到有效的视频源、短剧源或频道配置 (请检查是否包含 vodSources、sources、sites 键 or 本身是列表)");
+          }
 
-        setUnifiedPreview(preview);
-        setIsDecrypting(false);
-        return; // 解析明文成功，直接返回
+          setUnifiedPreview(preview);
+          setIsDecrypting(false);
+          return; // 解析明文成功，直接返回
+        }
       }
     } catch (parseError) {
       jsonErrorMsg = parseError instanceof Error ? parseError.message : "未知 JSON 格式错误";

@@ -84,29 +84,32 @@ export function ShortsSourcesTab({
       }
 
       if (isPlainJson && parsedPayload) {
-        isJson = true;
-        let shortsSourcesList: any[] = [];
-        
-        // 格式 A: 标准打包格式
-        if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
-          shortsSourcesList = parsedPayload.shortsSources;
-        } 
-        // 格式 B: 单页导出的 sources 字段
-        else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
-          shortsSourcesList = parsedPayload.sources;
-        }
-        // 格式 C: 纯数组格式 (直接是列表)
-        else if (Array.isArray(parsedPayload)) {
-          shortsSourcesList = parsedPayload;
-        }
+        const isEncrypted = parsedPayload && typeof parsedPayload === 'object' && parsedPayload.version && parsedPayload.algorithm && parsedPayload.data;
+        if (!isEncrypted) {
+          isJson = true;
+          let shortsSourcesList: any[] = [];
+          
+          // 格式 A: 标准打包格式
+          if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
+            shortsSourcesList = parsedPayload.shortsSources;
+          } 
+          // 格式 B: 单页导出的 sources 字段
+          else if (parsedPayload.sources && Array.isArray(parsedPayload.sources)) {
+            shortsSourcesList = parsedPayload.sources;
+          }
+          // 格式 C: 纯数组格式 (直接是列表)
+          else if (Array.isArray(parsedPayload)) {
+            shortsSourcesList = parsedPayload;
+          }
 
-        if (shortsSourcesList.length === 0) {
-          throw new Error("JSON 中没有找到有效的短剧源配置 (请检查是否包含 shortsSources、sources 键或本身是列表)");
-        }
+          if (shortsSourcesList.length === 0) {
+            throw new Error("JSON 中没有找到有效的短剧源配置 (请检查是否包含 shortsSources、sources 键或本身是列表)");
+          }
 
-        setImportPreview(shortsSourcesList);
-        setIsDecrypting(false);
-        return; // 解析成功，直接返回
+          setImportPreview(shortsSourcesList);
+          setIsDecrypting(false);
+          return; // 解析成功，直接返回
+        }
       }
     } catch (parseError) {
       jsonErrorMsg = parseError instanceof Error ? parseError.message : "未知 JSON 格式错误";
