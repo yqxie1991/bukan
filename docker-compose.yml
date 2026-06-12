@@ -39,9 +39,13 @@ services:
         max-file: "3"
     restart: unless-stopped
 
-  ***REMOVED*** 🍃 Database 服务：MongoDB 7.0 数据库
+  ***REMOVED*** 🍃 Database 服务：MongoDB 数据库
   ***REMOVED*** 🛠️ 针对群晖机械硬盘进行了极致优化：关闭 Journal、关闭诊断收集、锁定内存，防咔哒声并保护硬盘寿命
   mongodb:
+    ***REMOVED*** ⚠️【群晖 CPU 兼容防闪退指南】：
+    ***REMOVED***    MongoDB 5.0+ (包括 7.0) 要求 CPU 必须支持 AVX 指令集。
+    ***REMOVED***    绝大多数群晖 CPU（如 J3455、J4125、N5105 等）不支持 AVX，运行 mongo:7 会发生崩溃闪退！
+    ***REMOVED***    如果您的容器启动后反复重启，请将下方 image 一行修改为：image: mongo:4.4
     image: mongo:7
     container_name: bukan-mongodb
     ***REMOVED*** 调优参数解释：
