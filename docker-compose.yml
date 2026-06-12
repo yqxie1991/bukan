@@ -4,7 +4,7 @@
 ***REMOVED*** 💡 提示：
 ***REMOVED***    1. 本配置已针对群晖进行了极致调优（控制空闲磁盘写盘、限制内存占用为 256MB）。
 ***REMOVED***    2. 使用已打包的远程镜像部署，无需在群晖本地进行高负载的编译打包。
-***REMOVED***    3. 卷名保持了您原本的命名（kerkerker），容器重建升级后历史记录和海报绝不丢失！
+***REMOVED***    3. 全面适配了最新更名的 bukan 命名空间与独立卷，干净整洁。
 ***REMOVED*** =====================================================================
 
 version: '3.8'
@@ -12,7 +12,7 @@ version: '3.8'
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/kerkerker:v1.5
+    image: ghcr.io/yqxie1991/bukan:v1.5   ***REMOVED*** 👈 已升级为 bukan 镜像命名
     container_name: bukan-app
     ports:
       - "3008:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
@@ -23,15 +23,14 @@ services:
       ***REMOVED*** 您可以直接在此处将 "bukan" 替换为您的自定义私有强密码。
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
-      - MONGODB_URI=mongodb://mongodb:27017/kerkerker
+      - MONGODB_URI=mongodb://mongodb:27017/bukan   ***REMOVED*** 👈 数据库名称已升级为 bukan
       - PORT=3000
     depends_on:
       - mongodb
     volumes:
-      ***REMOVED*** 👈 保持使用您原有的卷名，完美防范升级/重建容器后的海报丢失与裂图
-      - kerkerker-cache:/app/public/cache
+      - bukan-cache:/app/public/cache             ***REMOVED*** 👈 缓存卷已升级为 bukan-cache
     networks:
-      - kerkerker-network
+      - bukan-network
     logging:
       driver: "json-file"
       options:
@@ -53,10 +52,9 @@ services:
     ports:
       - "27018:27017"            ***REMOVED*** 外部连接数据库端口（可选，不需要可注释掉）
     environment:
-      - MONGO_INITDB_DATABASE=kerkerker
+      - MONGO_INITDB_DATABASE=bukan               ***REMOVED*** 👈 数据库初始化名称已升级为 bukan
     volumes:
-      ***REMOVED*** 👈 保持使用您原有的卷名，重启和升级后完美继承所有的观影历史记录！
-      - mongodb-data:/data/db
+      - mongodb-data:/data/db                     ***REMOVED*** 👈 数据库数据卷
       - mongodb-config:/data/configdb
     logging:
       driver: "json-file"
@@ -64,18 +62,18 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - kerkerker-network
+      - bukan-network
     restart: unless-stopped
 
 networks:
-  kerkerker-network:
+  bukan-network:                                  ***REMOVED*** 👈 独立网络已升级为 bukan-network
     driver: bridge
 
 volumes:
-  ***REMOVED*** 👈 必须在底部注册这些数据卷，否则 Docker Compose 会报错
+  ***REMOVED*** 👈 在底部注册这些新命名的 bukan 数据卷
   mongodb-data:
     driver: local  ***REMOVED*** 数据库持久化卷
   mongodb-config:
     driver: local  ***REMOVED*** 数据库配置卷
-  kerkerker-cache:
+  bukan-cache:
     driver: local  ***REMOVED*** 图片海报缓存卷
