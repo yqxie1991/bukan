@@ -61,58 +61,109 @@
 
 ***REMOVED******REMOVED******REMOVED*** 方式一：Docker Compose 部署（推荐，完美适配群晖）
 
-***REMOVED******REMOVED******REMOVED******REMOVED*** 1. 快速启动
+本平台已针对群晖 NAS (Synology DSM) 的运行环境及机械硬盘进行了极致优化。强烈推荐使用内置了调优参数的 `docker-compose.yml` 配置文件进行一键部署。
+
+***REMOVED******REMOVED******REMOVED******REMOVED*** 1. 优化版生产环境 `docker-compose.yml` 配置文件
+
+```yaml
+version: '3.8'
+
+services:
+  ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
+  app:
+    image: ghcr.io/yqxie1991/bukan:v1.5   ***REMOVED*** 拉取远程编译好的轻量化生产镜像
+    container_name: bukan-app
+    ports:
+      - "3008:3000"              ***REMOVED*** 外部访问端口， Lucky 反代等可直接指向此 3008 端口
+    environment:
+      - NODE_ENV=production
+      
+      ***REMOVED*** ⚠️【安全警示】强烈建议在部署前修改此处的默认管理密码（防止被他人越权扫后台）！
+      ***REMOVED*** 您可以直接在此处将 "bukan" 替换为您的自定义私有强密码。
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
+      
+      - MONGODB_URI=mongodb://mongodb:27017/bukan
+      - PORT=3000
+    depends_on:
+      - mongodb
+    volumes:
+      - bukan-cache:/app/public/cache             ***REMOVED*** 缓存卷，防容器重建升级后海报裂图
+    networks:
+      - bukan-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"          ***REMOVED*** 限制单个日志文件最大为 10MB，防止系统盘被日志撑爆
+        max-file: "3"
+    restart: unless-stopped
+
+  ***REMOVED*** 🍃 Database 服务：MongoDB 7.0 数据库
+  ***REMOVED*** 🛠️ 针对群晖机械硬盘进行了极致优化：关闭 Journal、关闭诊断收集、锁定内存，防咔哒声并保护硬盘寿命
+  mongodb:
+    image: mongo:7
+    container_name: bukan-mongodb
+    ***REMOVED*** 调优参数解释：
+    ***REMOVED*** --nojournal: 关闭日志持久化写入，大幅减少空闲时磁盘写入量，免去磁头咔哒噪音并保护硬盘寿命。
+    ***REMOVED*** --quiet: 压制冗余日志，保持后台安静。
+    ***REMOVED*** --wiredTigerCacheSizeGB 0.25: 将 WiredTiger 缓存限制在 256MB，防止其无节制吃满主机内存。
+    ***REMOVED*** --setParameter diagnosticDataCollectionEnabled=false: 彻底禁用后台定期数据诊断收集，消灭后台高频微写盘。
+    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
+    ports:
+      - "27018:27017"            ***REMOVED*** 外部连接数据库端口（可选，不需要可注释掉）
+    environment:
+      - MONGO_INITDB_DATABASE=bukan
+    volumes:
+      - mongodb-data:/data/db                     ***REMOVED*** 数据库数据卷
+      - mongodb-config:/data/configdb
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - bukan-network
+    restart: unless-stopped
+
+networks:
+  bukan-network:
+    driver: bridge
+
+volumes:
+  ***REMOVED*** 必须在底部注册这些数据卷以进行持久化，Docker 会自动打通权限，规避群晖权限拒绝报错
+  mongodb-data:
+    driver: local
+  mongodb-config:
+    driver: local
+  bukan-cache:
+    driver: local
+```
+
+***REMOVED******REMOVED******REMOVED******REMOVED*** 2. Linux VPS 命令行启动步骤
 ```bash
 ***REMOVED*** 克隆项目至本地 bukan 目录
 git clone https://github.com/yqxie1991/bukan.git
 cd bukan
 
-***REMOVED*** 复制环境变量模板并修改 ADMIN_PASSWORD 等变量
-cp .env.example .env
-nano .env
-
-***REMOVED*** 后台启动服务
+***REMOVED*** 编辑 docker-compose.yml 里的 ADMIN_PASSWORD 默认密码，然后启动
 docker-compose up -d
 ```
 
-***REMOVED******REMOVED******REMOVED******REMOVED*** 2. 极致性能优化版 `docker-compose.yml` 推荐
-```yaml
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - MONGODB_URI=mongodb://mongodb:27017/bukan
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    volumes:
-      - bukan-cache:/app/public/cache ***REMOVED*** 海报命名卷持久化，免去宿主机 UID 写权限麻烦
-    restart: unless-stopped
+***REMOVED******REMOVED******REMOVED******REMOVED*** 3. 🛠️ 群晖 NAS Container Manager 图形化部署步骤（零命令避坑）
 
-  mongodb:
-    image: mongo:7
-    ***REMOVED*** WiredTiger cache 锁定为 256MB，且禁用 Journal 和连接心跳日志，实现硬盘静默
-    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
-    environment:
-      - MONGO_INITDB_DATABASE=bukan
-    volumes:
-      - mongodb-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+群晖系统的共享文件夹权限极其严密，直接映射本地绝对目录常因权限不匹配导致数据库容器无限闪退。采用 **Docker 命名卷 (Named Volumes)** 是群晖上最稳妥的部署实践，请遵循以下步骤：
 
-volumes:
-  mongodb-data:
-    driver: local
-  bukan-cache:
-    driver: local
-```
+1. **准备文件夹**：在群晖 `File Station` 中的 `docker` 文件夹下，新建一个名为 `bukan` 的子文件夹（该目录仅存放 YAML 文件，**不需要**在里面建任何其他数据子文件夹）。
+2. **启动 Container Manager**：打开群晖的 **Container Manager** (原 Docker 套件)。
+3. **新建项目 (Project)**：
+   * 点击左侧的 **“项目”** -> 点击右侧的 **“新增”**。
+   * **项目名称**：输入 `bukan`。
+   * **路径**：选择刚才在第 1 步创建的 `/volume1/docker/bukan` 文件夹。
+   * **来源**：选择 **“创建 docker-compose.yml”**。
+4. **粘贴并修改配置**：
+   * 将上方提供的 **优化版生产环境 docker-compose.yml** 里的内容全量复制粘贴到文本框中。
+   * ⚠️ 强烈建议将配置文件中第 20 行的 `ADMIN_PASSWORD` 从 `bukan` 修改为您自定义的强密码。
+5. **部署并运行**：点击下一步，根据向导点击“完成”。Container Manager 会自动从 GitHub 下载镜像，自动初始化完美的数据库和图片缓存持久化卷（数据卷生命周期与容器隔离，后续升级容器数据绝不丢失）。
+6. **配置 Luck 反代**：部署成功后，服务运行在群晖内网的 `3008` 端口。请在您的 Lucky 反代后台新建一条 Web 服务反代规则，将您的外网 HTTPS 域名直接反代指向 `http://群晖局域网内网IP:3008` 即可安全访问。
 
 ---
 
