@@ -1,42 +1,61 @@
+***REMOVED*** =====================================================================
+***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - Docker Compose 生产部署配置
+***REMOVED*** =====================================================================
+***REMOVED*** 💡 提示：
+***REMOVED***    在部署前，建议在同级目录下创建一个 `.env` 文件来配置敏感环境变量。
+***REMOVED***    或在启动前仔细核对以下各个服务的 environment 环境变量。
+***REMOVED*** =====================================================================
+
 services:
-  ***REMOVED*** 🎬 “不看 (bukan)” Next.js 影视应用服务
+  ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: bukan-app
     ports:
-      - "3008:3000"
+      - "3008:3000"              ***REMOVED*** 外部访问端口，可根据实际需求更改（如 "80:3000"）
     environment:
       - NODE_ENV=production
+      
+      ***REMOVED*** ⚠️【安全警示】强烈建议在生产部署前修改此处的默认管理密码！
+      ***REMOVED*** 推荐做法：在同级目录创建 `.env` 文件，并在其中写入 `ADMIN_PASSWORD=你自己的强密码`
+      ***REMOVED*** 或是直接将下面的 "bukan" 替换为你的私有强密码。
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
-      - MONGODB_URI=mongodb://mongodb:27017/bukan
-      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL:-}
+      
+      - MONGODB_URI=mongodb://mongodb:27017/bukan  ***REMOVED*** 链接同网络内的 MongoDB 服务
+      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL:-} ***REMOVED*** 可选：豆瓣海报海报反代 API 地址
     depends_on:
-      - mongodb
+      - mongodb                  ***REMOVED*** 确保 MongoDB 数据库先启动
     volumes:
-      - bukan-cache:/app/public/cache
+      - bukan-cache:/app/public/cache ***REMOVED*** 挂载图片/海报等静态资源缓存卷，避免容器重启后丢失
     networks:
       - bukan-network
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
-    restart: unless-stopped
+        max-size: "10m"          ***REMOVED*** 限制单个日志文件最大为 10MB
+        max-file: "3"            ***REMOVED*** 最多保留 3 个日志归档，防止日志撑爆磁盘
+    restart: unless-stopped      ***REMOVED*** 除非手动停止，否则容器崩溃或宿主机重启时自动拉起
 
-  ***REMOVED*** 🍃 MongoDB 数据库服务（深度优化：减小内存开销与压制磁盘频繁写入）
+  ***REMOVED*** 🍃 Database 服务：MongoDB 7.0 数据库
+  ***REMOVED*** 🛠️ 针对群晖 NAS (Synology DSM) 及机械硬盘家用服务器进行了极致优化，防硬盘频繁写盘
   mongodb:
     image: mongo:7
     container_name: bukan-mongodb
+    ***REMOVED*** 调优参数解释：
+    ***REMOVED*** --nojournal: 关闭日志持久化写入，大幅减少空闲时磁盘写入量，免去磁头咔哒噪音并保护硬盘寿命。
+    ***REMOVED*** --quiet: 压制冗余日志，保持后台安静。
+    ***REMOVED*** --wiredTigerCacheSizeGB 0.25: 将 WiredTiger 缓存限制在 256MB，防止其无节制吃满主机内存。
+    ***REMOVED*** --setParameter diagnosticDataCollectionEnabled=false: 彻底禁用后台定期数据诊断收集，消灭后台高频微写盘。
     command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
     ports:
-      - "27018:27017"
+      - "27018:27017"            ***REMOVED*** 外部数据库连接端口（可用于外部管理，不需要可注释掉此端口映射以提高安全性）
     environment:
       - MONGO_INITDB_DATABASE=bukan
     volumes:
-      - mongodb-data:/data/db
-      - mongodb-config:/data/configdb
+      - mongodb-data:/data/db        ***REMOVED*** 数据库持久化数据卷
+      - mongodb-config:/data/configdb ***REMOVED*** 数据库配置卷
     logging:
       driver: "json-file"
       options:
@@ -48,7 +67,7 @@ services:
 
 networks:
   bukan-network:
-    driver: bridge
+    driver: bridge               ***REMOVED*** 创建独立的桥接网络，隔离外界非必要访问
 
 volumes:
   mongodb-data:
@@ -57,3 +76,4 @@ volumes:
     driver: local
   bukan-cache:
     driver: local
+
