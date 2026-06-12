@@ -1,10 +1,10 @@
 ***REMOVED*** Plan: config-flow-optimization-and-category-row-fix
 
 ***REMOVED******REMOVED*** Phase 1: 手动配置源添加 (视频源、短剧源、频道)
-- [ ] 任务 1.1: 重构后台三个写操作 API，使其在接收单条数据时支持直接插入数据库
-- [ ] 任务 1.2: 前端影视源管理 Tab (VodSourcesTab) 新增“手动添加”模态框与输入表单
-- [ ] 任务 1.3: 前端短剧源管理 Tab (ShortsSourcesTab) 新增“手动添加”模态框与输入表单
-- [ ] 任务 1.4: 前端频道管理 Tab (DailymotionChannelsTab) 新增“手动添加”模态框与输入表单
+- [x] 任务 1.1: 重构后台三个写操作 API，使其在接收单条数据时支持直接插入数据库 6363dc5
+- [x] 任务 1.2: 前端影视源管理 Tab (VodSourcesTab) 新增“手动添加”模态框与输入表单 6363dc5
+- [x] 任务 1.3: 前端短剧源管理 Tab (ShortsSourcesTab) 新增“手动添加”模态框与输入表单 6363dc5
+- [x] 任务 1.4: 前端频道管理 Tab (DailymotionChannelsTab) 新增“手动添加”模态框与输入表单 6363dc5
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: 手动配置源添加' (Protocol in workflow.md)
 
 ***REMOVED******REMOVED*** Phase 2: 订阅链接维护与数据库 API 开发
