@@ -86,7 +86,7 @@ export async function getDatabase(): Promise<Db> {
 
   try {
     const uri = getMongoURI();
-    const dbName = process.env.MONGODB_DB_NAME || 'kerkerker';
+    const dbName = process.env.MONGODB_DB_NAME || 'bukan';
     
     // 如果没有 client promise，创建一个
     if (!globalForMongo.mongoClientPromise) {
