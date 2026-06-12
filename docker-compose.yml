@@ -12,15 +12,16 @@ version: '3.8'
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v1.5   ***REMOVED*** 👈 已升级为 bukan 镜像命名
+    ***REMOVED*** 💡 提示：版本号默认为 v2.0，部署前请务必前往 GitHub 查看最新 Release 并修改为最新版本号！
+    image: ghcr.io/yqxie1991/bukan:v2.0   ***REMOVED*** 👈 远程编译好的轻量化生产镜像
     container_name: bukan-app
     ports:
       - "3008:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
     environment:
       - NODE_ENV=production
       
-      ***REMOVED*** ⚠️【安全警示】强烈建议在部署前修改此处的默认管理密码（防止被他人越权扫后台）！
-      ***REMOVED*** 您可以直接在此处将 "bukan" 替换为您的自定义私有强密码。
+      ***REMOVED*** ⚠️【安全警示】由于此项目已在 GitHub 公开，默认密码默认为 "bukan"！
+      ***REMOVED*** 强烈建议在部署前修改为您的自定义私有强密码，以防止他人扫描并越权登录您的后台！
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
       - MONGODB_URI=mongodb://mongodb:27017/bukan   ***REMOVED*** 👈 数据库名称已升级为 bukan

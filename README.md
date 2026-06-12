@@ -71,15 +71,16 @@ version: '3.8'
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v1.5   ***REMOVED*** 拉取远程编译好的轻量化生产镜像
+    ***REMOVED*** 💡 提示：版本号默认为 v2.0，部署前请务必前往 GitHub 查看最新 Release 并修改为最新版本号！
+    image: ghcr.io/yqxie1991/bukan:v2.0   ***REMOVED*** 👈 远程编译好的轻量化生产镜像
     container_name: bukan-app
     ports:
       - "3008:3000"              ***REMOVED*** 外部访问端口， Lucky 反代等可直接指向此 3008 端口
     environment:
       - NODE_ENV=production
       
-      ***REMOVED*** ⚠️【安全警示】强烈建议在部署前修改此处的默认管理密码（防止被他人越权扫后台）！
-      ***REMOVED*** 您可以直接在此处将 "bukan" 替换为您的自定义私有强密码。
+      ***REMOVED*** ⚠️【安全警示】由于此项目已在 GitHub 公开，默认密码默认为 "bukan"！
+      ***REMOVED*** 强烈建议在部署前修改为您的自定义私有强密码，以防止他人扫描并越权登录您的后台！
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
       - MONGODB_URI=mongodb://mongodb:27017/bukan
@@ -161,7 +162,7 @@ docker-compose up -d
    * **来源**：选择 **“创建 docker-compose.yml”**。
 4. **粘贴并修改配置**：
    * 将上方提供的 **优化版生产环境 docker-compose.yml** 里的内容全量复制粘贴到文本框中。
-   * ⚠️ 强烈建议将配置文件中第 20 行的 `ADMIN_PASSWORD` 从 `bukan` 修改为您自定义的强密码。
+   * ⚠️ 强烈建议将配置文件中的 `ADMIN_PASSWORD` 从默认值 `bukan` 修改为您自定义的强密码，防止被他人扫后台越权登录。
 5. **部署并运行**：点击下一步，根据向导点击“完成”。Container Manager 会自动从 GitHub 下载镜像，自动初始化完美的数据库和图片缓存持久化卷（数据卷生命周期与容器隔离，后续升级容器数据绝不丢失）。
 6. **配置 Luck 反代**：部署成功后，服务运行在群晖内网的 `3008` 端口。请在您的 Lucky 反代后台新建一条 Web 服务反代规则，将您的外网 HTTPS 域名直接反代指向 `http://群晖局域网内网IP:3008` 即可安全访问。
 
@@ -193,7 +194,7 @@ curl -fsSL https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/inst
 ***REMOVED******REMOVED******REMOVED*** 可选变量
 | 变量名 | 说明 | 默认值 |
 | :--- | :--- | :--- |
-| `ADMIN_PASSWORD` | 后台管理密码 (`/login`) | `bukan` |
+| `ADMIN_PASSWORD` | 后台管理密码 (`/login`) | `bukan` (强烈建议修改) |
 | `MONGODB_DB_NAME` | 数据库库名 | `bukan` |
 | `NEXT_PUBLIC_DANMU_API_URL` | 弹幕接口地址 | `https://danmuapi1-eight.vercel.app` |
 
