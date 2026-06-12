@@ -1,23 +1,23 @@
 services:
-  ***REMOVED*** Next.js 应用（生产环境）
+  ***REMOVED*** 🎬 “不看 (bukan)” Next.js 影视应用服务
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kerkerker-app
+    container_name: bukan-app
     ports:
       - "3008:3000"
     environment:
       - NODE_ENV=production
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - MONGODB_URI=mongodb://mongodb:27017/kerkerker
-      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
+      - MONGODB_URI=mongodb://mongodb:27017/bukan
+      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL:-}
     depends_on:
       - mongodb
     volumes:
-      - kerkerker-cache:/app/public/cache
+      - bukan-cache:/app/public/cache
     networks:
-      - kerkerker-network
+      - bukan-network
     logging:
       driver: "json-file"
       options:
@@ -25,15 +25,15 @@ services:
         max-file: "3"
     restart: unless-stopped
 
-  ***REMOVED*** MongoDB 数据库服务
+  ***REMOVED*** 🍃 MongoDB 数据库服务（深度优化：减小内存开销与压制磁盘频繁写入）
   mongodb:
     image: mongo:7
-    container_name: kerkerker-mongodb
+    container_name: bukan-mongodb
     command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
     ports:
       - "27018:27017"
     environment:
-      - MONGO_INITDB_DATABASE=kerkerker
+      - MONGO_INITDB_DATABASE=bukan
     volumes:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
@@ -43,11 +43,11 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - kerkerker-network
+      - bukan-network
     restart: unless-stopped
 
 networks:
-  kerkerker-network:
+  bukan-network:
     driver: bridge
 
 volumes:
@@ -55,5 +55,5 @@ volumes:
     driver: local
   mongodb-config:
     driver: local
-  kerkerker-cache:
+  bukan-cache:
     driver: local
