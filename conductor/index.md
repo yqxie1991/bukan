@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `system-resource-optimization` | 群晖系统资源占用优化、空闲写盘压制与安全漏洞修复 | `[~] 进行中` | `High` | 2026-06-11 | [plan.md](tracks/system-resource-optimization/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [ui-theme-optimization](archive/ui-theme-optimization/index.md) —— 界面卡片 Hover 优化与自动/手动主题切换 (Completed: 2026-06-12)
