@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `rewrite-readme-entirely` | 全量删除并重写项目 README.md 说明文档 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/rewrite-readme-entirely/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [update-github-owner-url](archive/update-github-owner-url/index.md) —— 更新 README.md 中的 GitHub 用户名由 unilei 为 yqxie1991 (Completed: 2026-06-12)
