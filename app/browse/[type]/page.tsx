@@ -219,7 +219,7 @@ function FilterRow({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2 border-b border-gray-800/50 last:border-b-0">
+    <div className="flex items-start gap-3 py-2 border-b border-gray-200 dark:border-gray-800/50 last:border-b-0">
       <span className="text-gray-400 text-sm whitespace-nowrap min-w-12 pt-1">
         {label}：
       </span>
@@ -233,7 +233,7 @@ function FilterRow({
               className={`text-sm transition-colors ${
                 isActive
                   ? "text-blue-500 font-medium"
-                  : "text-gray-300 hover:text-white"
+                  : "text-foreground/70 hover:text-foreground"
               }`}
             >
               {option}
@@ -502,7 +502,7 @@ export default function BrowsePage() {
           <div className="flex items-center gap-4 mb-4">
             <div className="text-4xl md:text-5xl">{config.emoji}</div>
             <div>
-              <h1 className="text-2xl lg:text-4xl font-bold text-white mb-1 tracking-tight">
+              <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-1 tracking-tight">
                 {config.title}
               </h1>
               <p className="text-sm md:text-base text-gray-400">
@@ -515,7 +515,7 @@ export default function BrowsePage() {
 
       {/* 筛选器（仅 latest） */}
       {config.hasFilters && (
-        <div className="px-4 md:px-12 py-4 bg-gray-900/50 border-y border-gray-800/50">
+        <div className="px-4 md:px-12 py-4 bg-foreground/5 border-y border-gray-200 dark:bg-gray-900/50 dark:border-gray-800/50 transition-colors duration-300">
           <FilterRow
             label="类型"
             options={GENRE_OPTIONS}
@@ -643,7 +643,7 @@ export default function BrowsePage() {
                 ) : hasMore ? (
                   <button
                     onClick={loadMore}
-                    className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-colors border border-white/10 hover:border-white/20"
+                    className="px-8 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-lg font-medium transition-colors border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20"
                   >
                     加载更多
                   </button>

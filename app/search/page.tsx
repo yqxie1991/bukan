@@ -245,7 +245,7 @@ function SearchContent() {
                 style={{ fontFamily: '"Smiley Sans", sans-serif' }}
               >
                 <span className="text-red-600">不看</span>
-                <span className="text-white ml-1">搜索</span>
+                <span className="text-foreground ml-1">搜索</span>
               </h1>
             </div>
             {/* 搜索框 */}
@@ -272,7 +272,7 @@ function SearchContent() {
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="搜索电影、电视剧、动漫..."
-                  className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-12 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-white/10 transition-all"
+                  className="w-full bg-foreground/5 border border-gray-200 dark:border-white/10 rounded-full py-2.5 pl-12 pr-12 text-sm md:text-base text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-foreground/10 dark:focus:bg-white/10 transition-all duration-300"
                   autoFocus
                 />
                 {searchKeyword && (
@@ -315,8 +315,8 @@ function SearchContent() {
                   onClick={() => setCurrentSource(null)}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
                     currentSource === null
-                      ? "bg-white text-black shadow-lg shadow-white/10"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10"
+                      ? "bg-foreground text-background dark:bg-white dark:text-black shadow-md"
+                      : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-gray-200 dark:hover:border-white/10"
                   }`}
                 >
                   全部
@@ -335,7 +335,7 @@ function SearchContent() {
                       className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                         currentSource?.key === source.key
                           ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
-                          : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10"
+                          : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-gray-200 dark:hover:border-white/10"
                       }`}
                     >
                       {source.name}
@@ -344,7 +344,7 @@ function SearchContent() {
                           className={`px-1.5 py-0.5 rounded-full text-[10px] ${
                             currentSource?.key === source.key
                               ? "bg-white/20 text-white"
-                              : "bg-white/10 text-gray-500"
+                              : "bg-foreground/10 text-foreground/60"
                           }`}
                         >
                           {count}
@@ -369,20 +369,20 @@ function SearchContent() {
                 <>
                   <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   正在从 {searchProgress.total} 个源中搜索...
-                  <span className="ml-2 px-2 py-0.5 bg-white/5 rounded-md text-xs">
+                  <span className="ml-2 px-2 py-0.5 bg-foreground/5 rounded-md text-xs border border-gray-200 dark:border-white/5 transition-colors duration-300">
                     已完成 {searchProgress.completed}/{searchProgress.total}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="text-white font-medium">
+                  <span className="text-foreground font-medium">
                     {searchResults.length}
                   </span>{" "}
                   个结果
                   {queryKeyword && (
                     <>
                       · 关键词{" "}
-                      <span className="text-white font-medium">
+                      <span className="text-foreground font-medium">
                         &ldquo;{queryKeyword}&rdquo;
                       </span>
                     </>
@@ -412,13 +412,13 @@ function SearchContent() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">未配置视频源</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">未配置视频源</h3>
             <p className="text-gray-400 mb-8 max-w-sm text-center">
               请先在后台管理中配置视频源后再使用搜索功能
             </p>
             <a
               href="/admin/settings"
-              className="px-8 py-3 bg-white text-black font-medium rounded-full hover:bg-gray-200 transition-colors"
+              className="px-8 py-3 bg-foreground text-background hover:bg-foreground/90 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-full transition-colors duration-300"
             >
               前往配置
             </a>
@@ -486,7 +486,7 @@ function SearchContent() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 未找到相关内容
               </h3>
               <p className="text-gray-400 mb-2">
@@ -499,7 +499,7 @@ function SearchContent() {
               <div className="flex items-center space-x-4">
                 <button
                   onClick={goBack}
-                  className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                  className="px-6 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground border border-gray-200 dark:border-white/10 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors duration-300"
                 >
                   返回首页
                 </button>
@@ -515,9 +515,9 @@ function SearchContent() {
         ) : (
           /* 初始状态 */
           <div className="flex flex-col items-center justify-center py-32">
-            <div className="w-24 h-24 bg-gray-900 rounded-full flex items-center justify-center mb-6">
+            <div className="w-24 h-24 bg-foreground/5 rounded-full flex items-center justify-center mb-6">
               <svg
-                className="w-12 h-12 text-gray-600"
+                className="w-12 h-12 text-gray-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -530,7 +530,7 @@ function SearchContent() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">搜索影视资源</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">搜索影视资源</h3>
             <p className="text-gray-400 mb-2">
               输入关键词，将在 {allSources.length} 个视频源中搜索
             </p>

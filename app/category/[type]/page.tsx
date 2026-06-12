@@ -206,7 +206,7 @@ export default function CategoryPage() {
         <div className="relative">
           <div className="flex items-center gap-4">
             <div className="text-2xl md:text-4xl">{config.emoji}</div>
-            <h1 className="text-4xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+            <h1 className="text-4xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">
               {config.name}
             </h1>
           </div>
@@ -268,7 +268,7 @@ export default function CategoryPage() {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="flex items-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 disabled:bg-white/5 text-white rounded-xl font-medium transition-all border border-white/10 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-8 py-4 bg-foreground/5 hover:bg-foreground/10 disabled:bg-foreground/5 text-foreground rounded-xl font-medium transition-all border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loadingMore ? (
                     <>

@@ -389,7 +389,7 @@ export default function MovieDetailPage() {
               style={{ fontFamily: '"Smiley Sans", sans-serif' }}
             >
               <span className="text-red-600">不看</span>
-              <span className="text-white ml-1">详情</span>
+              <span className="text-foreground ml-1">详情</span>
             </h1>
           </div>
         </div>
@@ -487,7 +487,7 @@ export default function MovieDetailPage() {
             <div className="flex-1 w-full animate-fade-in delay-100">
               {/* 标题和元数据 */}
               <div className="mb-10">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight drop-shadow-xl">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight drop-shadow-xl">
                   {title}
                 </h1>
 
@@ -500,18 +500,18 @@ export default function MovieDetailPage() {
                     </div>
                   )}
                   {movieDetail?.release_year && (
-                    <div className="px-3 py-1.5 bg-white/10 rounded-lg text-gray-200 backdrop-blur-sm border border-white/5">
+                    <div className="px-3 py-1.5 bg-foreground/5 rounded-lg text-foreground/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 transition-colors duration-300">
                       {movieDetail.release_year}
                     </div>
                   )}
                   {movieDetail?.duration && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-gray-200 backdrop-blur-sm border border-white/5">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 rounded-lg text-foreground/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 transition-colors duration-300">
                       <Clock className="w-3.5 h-3.5" />
                       {movieDetail.duration}
                     </div>
                   )}
                   {movieDetail?.region && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-gray-200 backdrop-blur-sm border border-white/5">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 rounded-lg text-foreground/80 backdrop-blur-sm border border-gray-200 dark:border-white/5 transition-colors duration-300">
                       <MapPin className="w-3.5 h-3.5" />
                       {movieDetail.region}
                     </div>
@@ -582,7 +582,7 @@ export default function MovieDetailPage() {
                 {/* 剧照 */}
                 {movieDetail?.photos && movieDetail.photos.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                       <ImageIcon className="w-5 h-5 text-blue-400" />
                       剧照
                     </h3>
@@ -593,7 +593,7 @@ export default function MovieDetailPage() {
                           href={photo.image}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="aspect-video rounded-lg overflow-hidden bg-white/5 hover:opacity-80 transition-opacity"
+                          className="aspect-video rounded-lg overflow-hidden bg-foreground/5 hover:opacity-80 transition-opacity"
                         >
                           <img
                             src={getImageUrl(photo.thumb || photo.image)}
@@ -609,7 +609,7 @@ export default function MovieDetailPage() {
                 {/* 热门短评 */}
                 {movieDetail?.comments && movieDetail.comments.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                       <MessageCircle className="w-5 h-5 text-green-400" />
                       热门短评
                     </h3>
@@ -617,9 +617,9 @@ export default function MovieDetailPage() {
                       {movieDetail.comments.slice(0, 3).map((comment) => (
                         <div
                           key={comment.id}
-                          className="bg-white/5 rounded-lg p-3 border border-white/5"
+                          className="bg-foreground/5 rounded-lg p-3 border border-gray-200 dark:border-white/5 transition-colors duration-300"
                         >
-                          <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
+                          <p className="text-foreground/80 text-sm leading-relaxed line-clamp-3">
                             {comment.content}
                           </p>
                           <p className="text-gray-500 text-xs mt-2">
@@ -633,9 +633,9 @@ export default function MovieDetailPage() {
               </div>
 
               {/* 播放源区域 */}
-              <div className="bg-[***REMOVED***121212]/40 backdrop-blur-2xl rounded-3xl border border-white/5 p-6 md:p-8 shadow-2xl shadow-black/20">
+              <div className="bg-foreground/5 dark:bg-[***REMOVED***121212]/40 backdrop-blur-2xl rounded-3xl border border-gray-200 dark:border-white/5 p-6 md:p-8 shadow-xl transition-colors duration-300">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
                     <span className="w-1 h-6 bg-red-600 rounded-full" />
                     播放源
                     {searchStatus === "searching" && totalSourceCount > 0 && (
@@ -648,9 +648,9 @@ export default function MovieDetailPage() {
 
                   {/* 统计信息 */}
                   {availableSources.length > 0 && (
-                    <div className="text-sm text-gray-400 bg-black/20 px-3 py-1 rounded-full border border-white/5">
+                    <div className="text-sm text-gray-400 bg-foreground/5 px-3 py-1 rounded-full border border-gray-200 dark:border-white/5 transition-colors duration-300">
                       已找到{" "}
-                      <span className="text-white font-bold">
+                      <span className="text-foreground font-bold">
                         {availableSources.length}
                       </span>{" "}
                       个可用源
@@ -693,7 +693,7 @@ export default function MovieDetailPage() {
                             className={`relative p-4 rounded-xl text-left transition-all duration-300 group border ${
                               index === 0
                                 ? "bg-red-500/10 border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50"
-                                : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
+                                : "bg-foreground/5 border-gray-200 dark:border-white/5 hover:bg-foreground/10 hover:border-gray-300 dark:hover:border-white/10"
                             }`}
                           >
                             <div className="flex items-start justify-between mb-2">
@@ -701,7 +701,7 @@ export default function MovieDetailPage() {
                                 className={`text-xs font-medium px-2 py-0.5 rounded-md ${
                                   index === 0
                                     ? "bg-red-500/20 text-red-300"
-                                    : "bg-white/10 text-gray-400 group-hover:text-white"
+                                    : "bg-foreground/10 text-gray-500 dark:text-gray-400 group-hover:text-foreground"
                                 }`}
                               >
                                 {source.source_name}
@@ -712,7 +712,7 @@ export default function MovieDetailPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="font-medium text-white text-sm line-clamp-1 group-hover:text-red-400 transition-colors">
+                            <div className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-red-400 dark:group-hover:text-red-400 transition-colors">
                               {source.vod_name}
                             </div>
                           </button>
@@ -725,18 +725,18 @@ export default function MovieDetailPage() {
                 {/* 未找到 */}
                 {searchStatus === "not_found" && (
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center">
                       <AlertCircle className="w-8 h-8 text-gray-500" />
                     </div>
                     <div className="text-center">
-                      <p className="text-white font-medium mb-1">
+                      <p className="text-foreground font-medium mb-1">
                         未找到匹配资源
                       </p>
                       <p className="text-sm text-gray-500">{errorMessage}</p>
                     </div>
                     <button
                       onClick={() => searchPlaySources(true)}
-                      className="mt-2 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full text-sm text-gray-300 hover:text-white transition-colors border border-white/5 flex items-center gap-2"
+                      className="mt-2 px-6 py-2 bg-foreground/5 hover:bg-foreground/10 rounded-full text-sm text-foreground/80 hover:text-foreground transition-colors border border-gray-200 dark:border-white/5 flex items-center gap-2"
                     >
                       <RefreshCw className="w-4 h-4" />
                       重新搜索
@@ -751,7 +751,7 @@ export default function MovieDetailPage() {
                       <AlertCircle className="w-8 h-8 text-[***REMOVED***E50914]" />
                     </div>
                     <div className="text-center">
-                      <p className="text-white font-medium mb-2">
+                      <p className="text-foreground font-medium mb-2">
                         未配置视频源
                       </p>
                       <p className="text-sm text-gray-400 max-w-xs">
