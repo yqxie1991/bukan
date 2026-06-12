@@ -487,8 +487,8 @@ export default function BrowsePage() {
 
       {/* Hero 区域 */}
       <div className="relative pt-24 pb-4 px-4 md:px-12 overflow-hidden">
-        {/* 装饰性背景 - 仅在暗黑模式下开启以提供霓虹氛围，在明亮模式下关闭以保持干净白底 */}
-        <div className="absolute inset-0 pointer-events-none hidden dark:block">
+        {/* 装饰性背景 - 亮色模式下降低不透明度至20%以提供雅致偏光，暗色模式下维持100%沉浸氛围 */}
+        <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-100 transition-opacity duration-500">
           <div
             className={`absolute inset-0 bg-gradient-to-r ${config.gradient}`}
           />

@@ -11,14 +11,14 @@
 @variant dark (.dark &);
 
 :root {
-  --background: ***REMOVED***f9f9fb;
+  --background: ***REMOVED***f5f5f7;
   --foreground: ***REMOVED***111827;
   --card-bg: ***REMOVED***ffffff;
   --border-color: ***REMOVED***e5e7eb;
 }
 
 .dark {
-  --background: ***REMOVED***000000;
+  --background: ***REMOVED***0a0a0c;
   --foreground: ***REMOVED***ffffff;
   --card-bg: ***REMOVED***121212;
   --border-color: ***REMOVED***262626;

@@ -54,7 +54,7 @@ export function CategoryRow({
 
       {/* 横向滚动列表 */}
       <div className="relative">
-        <div className="flex overflow-x-auto space-x-3 md:space-x-4 pb-4 scrollbar-hide scroll-smooth">
+        <div className="flex overflow-x-auto space-x-3 md:space-x-4 py-4 -my-4 scrollbar-hide scroll-smooth">
           {displayMovies.map((movie) => (
             <div key={movie.id} className="shrink-0 w-40 sm:w-48 md:w-56">
               <DoubanCard movie={movie} onSelect={onMovieClick} />

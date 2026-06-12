@@ -22,10 +22,10 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   return (
     <div
       onClick={() => onSelect(movie)}
-      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl hover:shadow-black/60 dark:hover:shadow-black/80"
+      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08),0_0_15px_rgba(0,0,0,0.02)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(229,9,20,0.15)] rounded-lg"
     >
       {/* 海报图片 */}
-      <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-gray-800">
+      <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-foreground/5 dark:bg-gray-800 border border-black/5 dark:border-white/5 transition-colors duration-300">
         {!imageError ? (
           <img
             src={imageUrl}
@@ -46,7 +46,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -55,8 +55,8 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
         
         {/* 加载状态 */}
         {isLoading && !imageError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-600 border-t-white" />
+          <div className="absolute inset-0 flex items-center justify-center bg-foreground/5 dark:bg-gray-800">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-black dark:border-t-white" />
           </div>
         )}
 
