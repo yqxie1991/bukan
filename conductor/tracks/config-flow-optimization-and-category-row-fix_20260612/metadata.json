@@ -1,0 +1,8 @@
+{
+  "track_id": "config-flow-optimization-and-category-row-fix_20260612",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-06-12T07:34:00Z",
+  "updated_at": "2026-06-12T07:34:00Z",
+  "description": "优化配置流程：1、目前导入配置时从链接读取然后批量导入的，增加手动填写的功能，方便只导入一个。2、从链接读取配置时，默认保存链接每天触发一次读取，防止更新不及时。3、ui-theme-optimization任务中解决过Phase 1: 物理样式与 Hover 功能优化，目前看来只解决了首页的问题，其他页面依然存在CategoryRow.tsx 误用的外层 group 属性问题"
+}

@@ -1,0 +1,24 @@
+***REMOVED*** Plan: config-flow-optimization-and-category-row-fix
+
+***REMOVED******REMOVED*** Phase 1: 手动配置源添加 (视频源、短剧源、频道)
+- [ ] 任务 1.1: 重构后台三个写操作 API，使其在接收单条数据时支持直接插入数据库
+- [ ] 任务 1.2: 前端影视源管理 Tab (VodSourcesTab) 新增“手动添加”模态框与输入表单
+- [ ] 任务 1.3: 前端短剧源管理 Tab (ShortsSourcesTab) 新增“手动添加”模态框与输入表单
+- [ ] 任务 1.4: 前端频道管理 Tab (DailymotionChannelsTab) 新增“手动添加”模态框与输入表单
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: 手动配置源添加' (Protocol in workflow.md)
+
+***REMOVED******REMOVED*** Phase 2: 订阅链接维护与数据库 API 开发
+- [ ] 任务 2.1: 设计并配置 MongoDB 中 `subscription_urls` 集合与关联数据库常数定义
+- [ ] 任务 2.2: 开发 `/api/subscription-urls` 管理 API（支持 GET/POST/PUT/DELETE 及管理员 validateSession 校验）
+- [ ] 任务 2.3: 开发 `/api/subscription-urls/sync` 订阅同步 API（用于免跨域服务端 fetch 拉取、兼容多格式合并入库）
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: 订阅链接维护与数据库 API 开发' (Protocol in workflow.md)
+
+***REMOVED******REMOVED*** Phase 3: 订阅自动后台同步与前端链接管理面板
+- [ ] 任务 3.1: 在服务端（同步 home-cache 定时器）部署每 24 小时对 `subscription_urls` 集合中订阅源的自动轮询检查与静默拉取合并机制
+- [ ] 任务 3.2: 后台管理页面新增“订阅链接管理 Tab”，显示列表、增加链接、编辑、删除并支持点击“立即手动同步”
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: 订阅自动后台同步与前端链接管理面板' (Protocol in workflow.md)
+
+***REMOVED******REMOVED*** Phase 4: 分类行样式与 Hover 透传修复
+- [ ] 任务 4.1: 修正 `CategoryRow.tsx` (或其他非首页分类列表卡片) 外层误用的 `group` 属性，解决 Hover 状态失效问题
+- [ ] 任务 4.2: 统一检查并修复各页面 Hover 缩放/渐变阴影的不协调问题，符合 Netflix 视觉规范
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: 分类行样式与 Hover 透传修复' (Protocol in workflow.md)

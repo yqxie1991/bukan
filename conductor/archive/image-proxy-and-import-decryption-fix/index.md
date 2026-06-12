@@ -3,7 +3,7 @@
 ***REMOVED******REMOVED*** 轨道元数据
 - **任务轨道 ID**: `image-proxy-and-import-decryption-fix`
 - **任务轨道名称**: 解决演示地址图片加载失败与订阅导入解密异常问题
-- **当前状态**: `[~] 进行中`
+- **当前状态**: `[x] 已完成`
 - **优先级**: `High`
 - **创建日期**: 2026-06-12
 - **关联规范**: [product-guidelines.md](../../product-guidelines.md)
