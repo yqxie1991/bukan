@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `rename-project-readme` | 修正主 README.md 文档中的项目名称为“不看” | `[~] 进行中` | `Low` | 2026-06-12 | [plan.md](tracks/rename-project-readme/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [update-readme](archive/update-readme/index.md) —— 更新项目 README.md 说明文档匹配当前方案 (Completed: 2026-06-12)
