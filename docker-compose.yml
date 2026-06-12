@@ -1,45 +1,46 @@
 ***REMOVED*** =====================================================================
-***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - Docker Compose 生产部署配置
+***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 生产部署专用配置
 ***REMOVED*** =====================================================================
 ***REMOVED*** 💡 提示：
-***REMOVED***    在部署前，建议在同级目录下创建一个 `.env` 文件来配置敏感环境变量。
-***REMOVED***    或在启动前仔细核对以下各个服务的 environment 环境变量。
+***REMOVED***    1. 本配置已针对群晖进行了极致调优（控制空闲磁盘写盘、限制内存占用为 256MB）。
+***REMOVED***    2. 使用已打包的远程镜像部署，无需在群晖本地进行高负载的编译打包。
+***REMOVED***    3. 卷名保持了您原本的命名（kerkerker），容器重建升级后历史记录和海报绝不丢失！
 ***REMOVED*** =====================================================================
+
+version: '3.8'
 
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/yqxie1991/kerkerker:v1.5
     container_name: bukan-app
     ports:
-      - "3008:3000"              ***REMOVED*** 外部访问端口，可根据实际需求更改（如 "80:3000"）
+      - "3008:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
     environment:
       - NODE_ENV=production
       
-      ***REMOVED*** ⚠️【安全警示】强烈建议在生产部署前修改此处的默认管理密码！
-      ***REMOVED*** 推荐做法：在同级目录创建 `.env` 文件，并在其中写入 `ADMIN_PASSWORD=你自己的强密码`
-      ***REMOVED*** 或是直接将下面的 "bukan" 替换为你的私有强密码。
+      ***REMOVED*** ⚠️【安全警示】强烈建议在部署前修改此处的默认管理密码（防止被他人越权扫后台）！
+      ***REMOVED*** 您可以直接在此处将 "bukan" 替换为您的自定义私有强密码。
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
-      - MONGODB_URI=mongodb://mongodb:27017/bukan  ***REMOVED*** 链接同网络内的 MongoDB 服务
-      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL:-} ***REMOVED*** 可选：豆瓣海报海报反代 API 地址
+      - MONGODB_URI=mongodb://mongodb:27017/kerkerker
+      - PORT=3000
     depends_on:
-      - mongodb                  ***REMOVED*** 确保 MongoDB 数据库先启动
+      - mongodb
     volumes:
-      - bukan-cache:/app/public/cache ***REMOVED*** 挂载图片/海报等静态资源缓存卷，避免容器重启后丢失
+      ***REMOVED*** 👈 保持使用您原有的卷名，完美防范升级/重建容器后的海报丢失与裂图
+      - kerkerker-cache:/app/public/cache
     networks:
-      - bukan-network
+      - kerkerker-network
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"          ***REMOVED*** 限制单个日志文件最大为 10MB
-        max-file: "3"            ***REMOVED*** 最多保留 3 个日志归档，防止日志撑爆磁盘
-    restart: unless-stopped      ***REMOVED*** 除非手动停止，否则容器崩溃或宿主机重启时自动拉起
+        max-size: "10m"          ***REMOVED*** 限制单个日志文件最大为 10MB，防止长久运行撑爆群晖系统盘
+        max-file: "3"
+    restart: unless-stopped
 
   ***REMOVED*** 🍃 Database 服务：MongoDB 7.0 数据库
-  ***REMOVED*** 🛠️ 针对群晖 NAS (Synology DSM) 及机械硬盘家用服务器进行了极致优化，防硬盘频繁写盘
+  ***REMOVED*** 🛠️ 针对群晖机械硬盘进行了极致优化：关闭 Journal、关闭诊断收集、锁定内存，防咔哒声并保护硬盘寿命
   mongodb:
     image: mongo:7
     container_name: bukan-mongodb
@@ -50,30 +51,31 @@ services:
     ***REMOVED*** --setParameter diagnosticDataCollectionEnabled=false: 彻底禁用后台定期数据诊断收集，消灭后台高频微写盘。
     command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
     ports:
-      - "27018:27017"            ***REMOVED*** 外部数据库连接端口（可用于外部管理，不需要可注释掉此端口映射以提高安全性）
+      - "27018:27017"            ***REMOVED*** 外部连接数据库端口（可选，不需要可注释掉）
     environment:
-      - MONGO_INITDB_DATABASE=bukan
+      - MONGO_INITDB_DATABASE=kerkerker
     volumes:
-      - mongodb-data:/data/db        ***REMOVED*** 数据库持久化数据卷
-      - mongodb-config:/data/configdb ***REMOVED*** 数据库配置卷
+      ***REMOVED*** 👈 保持使用您原有的卷名，重启和升级后完美继承所有的观影历史记录！
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     networks:
-      - bukan-network
+      - kerkerker-network
     restart: unless-stopped
 
 networks:
-  bukan-network:
-    driver: bridge               ***REMOVED*** 创建独立的桥接网络，隔离外界非必要访问
+  kerkerker-network:
+    driver: bridge
 
 volumes:
+  ***REMOVED*** 👈 必须在底部注册这些数据卷，否则 Docker Compose 会报错
   mongodb-data:
-    driver: local
+    driver: local  ***REMOVED*** 数据库持久化卷
   mongodb-config:
-    driver: local
-  bukan-cache:
-    driver: local
-
+    driver: local  ***REMOVED*** 数据库配置卷
+  kerkerker-cache:
+    driver: local  ***REMOVED*** 图片海报缓存卷
