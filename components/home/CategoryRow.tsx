@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useEffect, useRef, useState } from "react";
 import type { DoubanMovie } from "@/types/douban";
 import DoubanCard from "@/components/DoubanCard";
 
@@ -21,10 +21,40 @@ export function CategoryRow({
   const displayMovies = movies.slice(0, INITIAL_DISPLAY_COUNT);
   const hasMore = movies.length > INITIAL_DISPLAY_COUNT;
 
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        threshold: 0.02,
+        rootMargin: "0px 0px -45px 0px",
+      }
+    );
+
+    if (rowRef.current) {
+      observer.observe(rowRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="px-4 md:px-12">
+    <div ref={rowRef} className="px-4 md:px-12">
       {/* 标题和查看更多 */}
-      <div className="flex items-center justify-between mb-4">
+      <div 
+        className={`flex items-center justify-between mb-4 transition-all duration-700 ease-out transform ${
+          isIntersecting ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+        }`}
+      >
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           {icon}
           <span>{title}</span>
@@ -55,8 +85,16 @@ export function CategoryRow({
       {/* 横向滚动列表 */}
       <div className="relative">
         <div className="flex overflow-x-auto space-x-3 md:space-x-4 py-4 -my-4 scrollbar-hide scroll-smooth">
-          {displayMovies.map((movie) => (
-            <div key={movie.id} className="shrink-0 w-40 sm:w-48 md:w-56">
+          {displayMovies.map((movie, index) => (
+            <div 
+              key={movie.id} 
+              className={`shrink-0 w-40 sm:w-48 md:w-56 transition-all duration-700 ease-out transform ${
+                isIntersecting 
+                  ? "opacity-100 translate-y-0 scale-100" 
+                  : "opacity-0 translate-y-4 scale-95"
+              }`}
+              style={{ transitionDelay: `${index * 35}ms` }}
+            >
               <DoubanCard movie={movie} onSelect={onMovieClick} />
             </div>
           ))}

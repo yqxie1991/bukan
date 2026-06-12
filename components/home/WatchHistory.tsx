@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWatchHistory } from "@/hooks/useWatchHistory";
@@ -11,6 +12,33 @@ const MAX_DISPLAY_COUNT = 8;
 export function WatchHistory() {
   const router = useRouter();
   const { history, isLoading, removeHistory } = useWatchHistory();
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  useEffect(() => {
+    if (isLoading || history.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        threshold: 0.02,
+        rootMargin: "0px 0px -45px 0px",
+      }
+    );
+
+    if (rowRef.current) {
+      observer.observe(rowRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isLoading, history.length]);
 
   // 如果加载中或没有历史记录，不显示
   if (isLoading || history.length === 0) {
@@ -35,9 +63,13 @@ export function WatchHistory() {
   };
 
   return (
-    <div className="px-4 md:px-12">
+    <div ref={rowRef} className="px-4 md:px-12">
       {/* 标题和查看全部 */}
-      <div className="flex items-center justify-between mb-4">
+      <div 
+        className={`flex items-center justify-between mb-4 transition-all duration-700 ease-out transform ${
+          isIntersecting ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+        }`}
+      >
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <History className="w-6 h-6 text-red-500" />
           <span>继续观看</span>
@@ -54,11 +86,16 @@ export function WatchHistory() {
       {/* 横向滚动列表 */}
       <div className="relative group">
         <div className="flex overflow-x-auto space-x-3 md:space-x-4 pb-4 scrollbar-hide scroll-smooth">
-          {displayHistory.map((item) => (
+          {displayHistory.map((item, index) => (
             <div
               key={item.id}
               onClick={() => handleClick(item)}
-              className="shrink-0 w-40 sm:w-48 md:w-56 cursor-pointer group/card"
+              className={`shrink-0 w-40 sm:w-48 md:w-56 cursor-pointer group/card transition-all duration-700 ease-out transform ${
+                isIntersecting 
+                  ? "opacity-100 translate-y-0 scale-100" 
+                  : "opacity-0 translate-y-4 scale-95"
+              }`}
+              style={{ transitionDelay: `${index * 35}ms` }}
             >
               <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 shadow-lg transition-all duration-300 group-hover/card:shadow-xl group-hover/card:shadow-red-500/20 group-hover/card:scale-105">
                 {/* 封面图 */}

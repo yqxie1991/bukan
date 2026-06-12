@@ -69,6 +69,32 @@ Hover 是影视卡片的核心交互，必须在缩放、阴影、层级和过�
 </div>
 ```
 
+***REMOVED******REMOVED******REMOVED*** 3.2 视口交叉滚动渐入与波浪动效 (Scroll Reveal & Stagger Animation)
+为了让页面加载与向下滚动时的内容呈现更富有高端灵动的“呼吸感”，影视板块、追剧日历板块应统一支持视口交叉渐入和卡片的波浪入场动效。
+- **技术原理**：采用原生 `IntersectionObserver` 监测板块是否进入可见区域，配合 Tailwind CSS 的过渡属性和 React 内联 `transitionDelay` 属性实现差时波浪。
+- **动效标准**：
+  - **行标题入场**：随板块可见平滑下落微移入场：`transition-all duration-700 ease-out transform`，激活前 `opacity-0 -translate-y-2`，激活后 `opacity-100 translate-y-0`。
+  - **卡片入场**：随板块可见，呈 35ms 递增波浪式上滑缩放显现：`transition-all duration-700 ease-out transform`，激活前 `opacity-0 translate-y-4 scale-95`，激活后 `opacity-100 translate-y-0 scale-100`。
+  - **组件化示范 (React Hooks)**：
+    ```typescript
+    const rowRef = useRef<HTMLDivElement>(null);
+    const [isIntersecting, setIsIntersecting] = useState(false);
+
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsIntersecting(true);
+            observer.unobserve(entry.target);
+          }
+        },
+        { threshold: 0.02, rootMargin: "0px 0px -45px 0px" }
+      );
+      if (rowRef.current) observer.observe(rowRef.current);
+      return () => observer.disconnect();
+    }, []);
+    ```
+
 ---
 
 ***REMOVED******REMOVED*** 4. 文本与语义适配规范

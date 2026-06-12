@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, ChevronLeft, ChevronRight, Globe, Play, Star } from 'lucide-react';
 import { getCalendar, type CalendarDay, type CalendarEntry, type CalendarResponse } from '@/lib/douban-service';
@@ -158,13 +158,42 @@ function CalendarDaySection({
   onEntryClick: (entry: CalendarEntry) => void;
 }) {
   const dateInfo = formatDate(day.date);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        threshold: 0.02,
+        rootMargin: "0px 0px -45px 0px",
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
   
   if (!day.entries || day.entries.length === 0) return null;
 
   return (
-    <div className="px-4 md:px-12">
+    <div ref={sectionRef} className="px-4 md:px-12">
       {/* 日期标题 */}
-      <div className="flex items-center gap-3 mb-4">
+      <div 
+        className={`flex items-center gap-3 mb-4 transition-all duration-700 ease-out transform ${
+          isIntersecting ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+        }`}
+      >
         <div className={`w-2 h-2 rounded-full ${dateInfo.isToday ? 'bg-red-500' : dateInfo.isTomorrow ? 'bg-yellow-500' : 'bg-gray-500'}`} />
         <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
           {dateInfo.isToday && <span className="text-red-500">今天</span>}
@@ -181,7 +210,15 @@ function CalendarDaySection({
       <div className="relative group">
         <div className="flex overflow-x-auto space-x-3 md:space-x-4 pb-4 scrollbar-hide scroll-smooth">
           {day.entries.map((entry, index) => (
-            <div key={`${entry.show_id}-${entry.episode_number}-${index}`} className="shrink-0 w-36 sm:w-44 md:w-52">
+            <div 
+              key={`${entry.show_id}-${entry.episode_number}-${index}`} 
+              className={`shrink-0 w-36 sm:w-44 md:w-52 transition-all duration-700 ease-out transform ${
+                isIntersecting 
+                  ? "opacity-100 translate-y-0 scale-100" 
+                  : "opacity-0 translate-y-4 scale-95"
+              }`}
+              style={{ transitionDelay: `${index * 35}ms` }}
+            >
               <CalendarCard
                 entry={entry}
                 onClick={() => onEntryClick(entry)}
