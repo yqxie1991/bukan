@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `update-github-repo-url` | 更新 README.md 中的 GitHub 仓库链接与部署地址为 bukan | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/update-github-repo-url/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [rename-project-readme](archive/rename-project-readme/index.md) —— 修正主 README.md 文档中的项目名称为“不看” (Completed: 2026-06-12)
