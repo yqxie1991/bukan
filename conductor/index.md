@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `update-github-owner-url` | 更新 README.md 中的 GitHub 用户名由 unilei 为 yqxie1991 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/update-github-owner-url/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [update-github-repo-url](archive/update-github-repo-url/index.md) —— 更新 README.md 中的 GitHub 仓库链接与部署地址为 bukan (Completed: 2026-06-12)
