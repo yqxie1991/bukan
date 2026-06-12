@@ -1,179 +1,133 @@
-***REMOVED*** 🎬 不看 (bukan) - 影视资源聚合平台
+***REMOVED*** 🎬 不看 (bukan) - 影视资源聚合与沉浸式播放平台
 
 <div align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
-![MongoDB](https://img.shields.io/badge/MongoDB-7-green?style=flat-square&logo=mongodb)
+![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-19.2.0-blue?style=flat-square&logo=react)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.x-38B2AC?style=flat-square&logo=tailwind-css)
+![MongoDB](https://img.shields.io/badge/MongoDB-7.x-47A248?style=flat-square&logo=mongodb)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-**现代化影视资源聚合平台** - 支持 Dailymotion 视频源、豆瓣信息匹配、多种部署方式
+**极简主义、高性能影视资源聚合平台** —— 智能分片直连、豆瓣自愈匹配、自动与手动多态主题切换、群晖 Docker 极致写盘压制优化。
 
-🌐 **在线演示**: [https://bukan.vercel.app](https://kerkerker.vercel.app)
+🌐 **在线演示**: [https://bukan.vercel.app](https://bukan.vercel.app)
 
-[功能特性](***REMOVED***-功能特性) • [部署方式](***REMOVED***-部署方式) • [环境变量](***REMOVED***-环境变量) • [本地开发](***REMOVED***-本地开发)
+[核心设计哲学](***REMOVED***-核心设计哲学) • [功能特性](***REMOVED***-功能特性) • [快速部署](***REMOVED***-快速部署) • [环境变量](***REMOVED***-环境变量) • [本地开发](***REMOVED***-本地开发)
 
 </div>
 
 ---
 
+***REMOVED******REMOVED*** 🌟 核心设计哲学
+
+本平台在追求极简精致界面呈现的同时，从底层架构与工程指标出发，专门针对低能耗服务器（如群晖/NAS 宿主机、Docker 轻量化容器）进行了极致的性能压制与优化设计：
+
+***REMOVED******REMOVED******REMOVED*** 1. 影院级沉浸与响应式交互
+* **暗室影院视觉**：以高对比度的纯黑与深灰黑为基调，最大化凸显海报色彩。在视频详情页，背景色会根据影片海报的主色调自动进行平滑的、超大半径的径向高斯模糊渐变，营造极致包裹的沉浸感。
+* **丝滑微动效**：影片卡片悬停时触发 `1.05x` 等比物理放大，配合平滑的过渡动画及重度扩散性阴影（`hover:shadow-2xl`），提供极强的主视觉选中反馈。
+* **多态主题水合 (FOUC-free)**：支持自动（System）、浅色（Light）、深色（Dark）三态循环切换。首创在 `<head>` 中植入立即执行（Blocking）的本地偏好检索脚本，在 React 水合渲染前完成主题绑定，**彻底杜绝页面首开白/黑屏闪烁瞬间**。
+
+***REMOVED******REMOVED******REMOVED*** 2. 极致系统资源与网络克制 (群晖/NAS 专属)
+* **近乎静默的写盘动作**：
+  - **No-Journal**: 在群晖 Docker 部署配方中关闭了数据库预写日志（`--nojournal`），消除高频细微改动对磁盘的物理写盘损耗。
+  - **Quieting**: 开启静默级别（`--quiet`），从源头上压制了数据库每秒数百次的网络保活心跳与连接日志。
+  - **Log-Mitigation**: 清理过滤了视频代理高频 TS 视频切片拉取时的控制台 stdout 输出，阻断因 Docker 容器标准输出流重定向导致群晖系统系统日志频繁刷盘。
+* **Node 服务器带宽 0 占用**：
+  - 本地服务器仅用于重写和加密 M3U8 切片索引及直连鉴权校验。
+  - 对于大流量的 `.ts` 视频文件切片，系统会自动判定当前协议环境：除 HTTPS-to-HTTP 的混合内容（Mixed Content）防浏览器拦截外，其余流媒体均重写为**客户端直接与源站 CDN 直连下载分片**，将服务器下行公网带宽和 CPU 负载彻底降为接近 0。
+* **海报客户端 CDN 代理**：对所有外部豆瓣防盗链海报，直连官方 WebP 图片 CDN（`images.weserv.nl`）发起拉取，大幅释放本地带宽并带来客户端海报的高速缓存呈现。
+* **内存硬锁与防泄漏**：
+  - 强制限制 MongoDB WiredTiger 引擎的 Cache 物理内存占用为 256MB，防止其因无限膨胀撑爆群晖宿主机。
+  - 在播放器等高资源组件卸载的生命周期中，主动销毁全局监听器并触发 GC 垃圾回收，保障页面长时间挂载时浏览器 0 内存堆积。
+
+***REMOVED******REMOVED******REMOVED*** 3. 沙箱边界加固
+* 安全接口对所有的图片拉取代理进行了绝对的物理沙箱白名单前缀校对，从根本上隔离了利用 `../` 越权穿越路径访问宿主机敏感文件（Directory Traversal）的漏洞风险。
+
+---
+
 ***REMOVED******REMOVED*** ✨ 功能特性
 
-- 🎬 **视频聚合** - 聚合 Dailymotion 等多个视频源
-- 📝 **豆瓣匹配** - 自动匹配豆瓣电影信息和评分
-- 💬 **弹幕功能** - 自动匹配加载弹幕，支持手动搜索
-- 🎥 **高级播放器** - ArtPlayer 播放器，支持 HLS、倍速、快捷键
-- 📱 **响应式设计** - 完美支持移动端和桌面端
-- 🌓 **多态主题切换** - 支持自动 (System)、浅色 (Light)、深色 (Dark) 三挡循环手动切换，内置 localStorage 持久化且防闪烁
-- 🎨 **现代化 UI** - Netflix 风格界面设计，Hover 等比放大伴随扩散性阴影与遮罩
-- 🔐 **后台管理** - 视频源配置、频道管理 (`/login`)
-- 🔋 **极致资源优化** - 针对本地群晖等服务器压制写盘频次，通过分片直连零中转大幅节省带宽/CPU开销
-- 🚀 **多种部署** - 支持 Vercel、Docker、VPS 一键部署
-
-***REMOVED******REMOVED*** 📸 界面预览
-
-<details>
-<summary>点击展开预览图</summary>
-
-***REMOVED******REMOVED******REMOVED*** 首页
-
-![首页](screenshot/home.png)
-
-***REMOVED******REMOVED******REMOVED*** 搜索页
-
-![搜索](screenshot/movie-search.png)
-
-***REMOVED******REMOVED******REMOVED*** 详情页
-
-![详情页](screenshot/movie-detail.png)
-
-***REMOVED******REMOVED******REMOVED*** 播放页
-
-![播放页](screenshot/movie-playing.png)
-
-</details>
+- 🎬 **多源聚合** - 智能搜索并聚合多个视频源，支持多集连播、自动播放下一集。
+- 📝 **豆瓣自愈** - 自动拉取并匹配豆瓣评分及影视数据，海报自动缓存并自愈，防范 500 裂图。
+- 💬 **弹幕匹配** - 自动搜索并异步挂载匹配弹幕，支持手动弹幕拉取。
+- 🎥 **高级播放器** - 基于 ArtPlayer 定制，支持 HLS 解密、倍速微调、全功能快捷键与防盗链代理。
+- 📱 **多端自适应** - 移动端手势横向无阻尼轻扫、选集面板大按钮抽屉布局，完美兼容 iPhone 刘海屏安全区。
+- 🔐 **轻量后台** - 支持在线视频源一键配置与可用性管理。
 
 ---
 
-***REMOVED******REMOVED*** 🚀 部署方式
+***REMOVED******REMOVED*** 🚀 快速部署
 
-***REMOVED******REMOVED******REMOVED*** 方式一：Vercel 部署（推荐）
+***REMOVED******REMOVED******REMOVED*** 方式一：Docker Compose 部署（推荐，完美适配群晖）
 
-> 无需服务器，免费托管，自动 HTTPS
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yqxie1991/bukan)
-
-**步骤：**
-
-1. 点击上方按钮，Fork 项目到 Vercel
-2. 在 Vercel 控制台设置环境变量：
-   ```
-   MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/kerkerker
-   ADMIN_PASSWORD=your_password
-   ```
-3. 部署完成！
-
-> 💡 **提示**：Vercel 部署需要使用云端 MongoDB（如 [MongoDB Atlas](https://www.mongodb.com/atlas) 免费版）
-
----
-
-***REMOVED******REMOVED******REMOVED*** 方式二：Docker Compose 部署
-
-***REMOVED******REMOVED******REMOVED******REMOVED*** 快速启动
-
+***REMOVED******REMOVED******REMOVED******REMOVED*** 1. 快速启动
 ```bash
-***REMOVED*** 1. 克隆项目
+***REMOVED*** 克隆项目至本地 bukan 目录
 git clone https://github.com/yqxie1991/bukan.git
 cd bukan
 
-***REMOVED*** 2. 创建配置文件
+***REMOVED*** 复制环境变量模板并修改 ADMIN_PASSWORD 等变量
 cp .env.example .env
-
-***REMOVED*** 3. 编辑配置（可选）
 nano .env
 
-***REMOVED*** 4. 启动服务
+***REMOVED*** 后台启动服务
 docker-compose up -d
-
-***REMOVED*** 5. 查看日志
-docker-compose logs -f app
 ```
 
-***REMOVED******REMOVED******REMOVED******REMOVED*** docker-compose.yml 说明
-
+***REMOVED******REMOVED******REMOVED******REMOVED*** 2. 极致性能优化版 `docker-compose.yml` 推荐
 ```yaml
 services:
   app:
     build: .
     ports:
-      - "3000:3000" ***REMOVED*** 修改左侧端口号自定义访问端口
+      - "3000:3000"
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - MONGODB_URI=mongodb://mongodb:27017/kerkerker
+      - MONGODB_URI=mongodb://mongodb:27017/bukan
     depends_on:
       mongodb:
         condition: service_healthy
     volumes:
-      - kerkerker-cache:/app/public/cache ***REMOVED*** 图片持久化卷，防止容器重建/更新导致海报丢失
+      - bukan-cache:/app/public/cache ***REMOVED*** 海报命名卷持久化，免去宿主机 UID 写权限麻烦
+    restart: unless-stopped
 
   mongodb:
     image: mongo:7
+    ***REMOVED*** WiredTiger cache 锁定为 256MB，且禁用 Journal 和连接心跳日志，实现硬盘静默
+    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
+    environment:
+      - MONGO_INITDB_DATABASE=bukan
     volumes:
-      - mongodb-data:/data/db ***REMOVED*** 数据持久化
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   mongodb-data:
     driver: local
-  kerkerker-cache:
-    driver: local  ***REMOVED*** 使用 Docker 命名卷可自动对齐容器权限，完美规避群晖等系统的 Permission Denied 挂载问题
-```
-
-> 💡 **针对群晖 (Synology) / 反向代理 (Lucky 等) 部署的优化说明**：
-> * **极致空闲写盘压制**：修改了 MongoDB 启动策略，在群晖 Docker 运行时自动禁用预写 Journal (`--nojournal`) 并启用静默模式 (`--quiet`) 压制无意义的网络连接心跳日志；同时，清理合并了本地 Node.js 代理服务的高频 TS 切片控制台标准输出（防止 Docker stdout 持续重定向产生大量系统日志写入），使空闲状态下的硬盘写盘动作趋于静默，极大地保护硬盘寿命并有利于群晖休眠。
-> * **本地 CPU 负载与公网带宽释放**：实现了 **视频切片智能分片直连机制**。对于 TS 等大流量视频切片，系统在重写 M3U8 文件时动态将地址解析为直接面向 CDN 源地址的跳转，从而使用户直接跟源站连接。群晖本地服务器的 CPU 负载和公网下行带宽占用几乎降为 0，不再经历 Node.js 代理中转。
-> * **容器物理内存硬限制**：强制限制 MongoDB wiredTiger 引擎的最大 Cache 内存为 256MB，防止其因无限膨胀导致群晖宿主机内存耗尽。同时修复了播放器组件销毁后的全局监听器残留，保障长时间页面挂载不发生浏览器内存泄漏。
-> * **安全与沙箱边界加固**：全面修复了 `image-proxy` 对外代理服务等接口可能遭遇的路径穿越（Directory Traversal）任意敏感文件泄露隐患，保障宿主机的数据资产安全。
-> * **持久化命名卷**：生产部署必须挂载 `/app/public/cache` 卷。使用 Docker 命名卷（Named Volume）可以免去在群晖宿主机上手动赋予非 root 运行容器（UID 1001）写权限的繁琐步骤，完全防范权限拒绝错误。
-> * **缓存自愈能力**：系统内置了图片缓存存在性抽查，即使您手动删除了卷，第一次访问页面时，服务端也会自动触发数据重同步并重新在后台下载海报图片进行自愈，防范 500 裂图。
-> * **混合协议与回环网络兼容**：
->   * **混合内容拦截 (Mixed Content)**：当使用外网 HTTPS（如 Lucky 端口映射）访问时，播放器对所有的 HTTP 视频源会自动采用本地域名 HTTPS 代理中转，并基于 `Referer` 头自适应解析外网域名（无需在 Lucky 反代中配置复杂的 `X-Forwarded-*` 头），彻底防止浏览器拦截播放。
->   * **容器内回环 (Loopback) 检索**：流式匹配视频源在生产环境会强制通过 `127.0.0.1:3000` 本地地址请求自身接口，避免容器因局域网限制或反代策略导致请求自身域名超时失败，确保 22 个源流畅检索。
-
-***REMOVED******REMOVED******REMOVED******REMOVED*** 常用命令
-
-```bash
-docker-compose up -d       ***REMOVED*** 后台启动
-docker-compose down        ***REMOVED*** 停止服务
-docker-compose logs -f     ***REMOVED*** 查看日志
-docker-compose restart     ***REMOVED*** 重启服务
-docker-compose pull        ***REMOVED*** 更新镜像
+  bukan-cache:
+    driver: local
 ```
 
 ---
 
-***REMOVED******REMOVED******REMOVED*** 方式三：VPS 一键部署
+***REMOVED******REMOVED******REMOVED*** 方式二：Vercel 一键云端托管
+无需服务器，免费托管，配合 MongoDB Atlas 等云数据库可实现 0 开销全网流畅运行：
 
-在任何装有 Docker 的服务器上执行：
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yqxie1991/bukan)
 
+---
+
+***REMOVED******REMOVED******REMOVED*** 方式三：VPS 一键 cURL 安装
+适用于带有 Docker 和 cURL 环境的 Linux 宿主机：
 ```bash
-***REMOVED*** 使用 curl
+***REMOVED*** 使用 curl 自动拉取环境并构建运行
 curl -fsSL https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | bash
-
-***REMOVED*** 使用 wget
-wget -qO- https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | bash
-```
-
-**部署后管理：**
-
-```bash
-cd ~/kerkerker
-./kerkerker.sh start     ***REMOVED*** 启动
-./kerkerker.sh stop      ***REMOVED*** 停止
-./kerkerker.sh restart   ***REMOVED*** 重启
-./kerkerker.sh logs      ***REMOVED*** 日志
-./kerkerker.sh update    ***REMOVED*** 更新
-./kerkerker.sh backup    ***REMOVED*** 备份
 ```
 
 ---
@@ -181,96 +135,57 @@ cd ~/kerkerker
 ***REMOVED******REMOVED*** ⚙️ 环境变量
 
 ***REMOVED******REMOVED******REMOVED*** 必需变量
-
-| 变量名        | 说明               | 示例                                             |
-| ------------- | ------------------ | ------------------------------------------------ |
-| `MONGODB_URI` | MongoDB 连接字符串 | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
+| 变量名 | 说明 | 示例 |
+| :--- | :--- | :--- |
+| `MONGODB_URI` | MongoDB 数据库连接串 | `mongodb://mongodb:27017/bukan` 或 MongoDB Atlas 串 |
 
 ***REMOVED******REMOVED******REMOVED*** 可选变量
-
-| 变量名                        | 说明           | 默认值                               |
-| ----------------------------- | -------------- | ------------------------------------ |
-| `ADMIN_PASSWORD`              | 后台管理密码   | `bukan`                           |
-| `MONGODB_DB_NAME`             | 数据库名称     | `kerkerker`                          |
-| `NEXT_PUBLIC_DANMU_API_URL`   | 弹幕 API 地址  | `https://danmuapi1-eight.vercel.app` |
-| `NEXT_PUBLIC_DANMU_API_TOKEN` | 弹幕 API Token | -                                    |
-
-***REMOVED******REMOVED******REMOVED*** MongoDB URI 示例
-
-```bash
-***REMOVED*** Docker 内部（docker-compose 自动配置）
-MONGODB_URI=mongodb://mongodb:27017/kerkerker
-
-***REMOVED*** 本地 MongoDB
-MONGODB_URI=mongodb://localhost:27017/kerkerker
-
-***REMOVED*** MongoDB Atlas（云端）
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/kerkerker
-```
+| 变量名 | 说明 | 默认值 |
+| :--- | :--- | :--- |
+| `ADMIN_PASSWORD` | 后台管理密码 (`/login`) | `bukan` |
+| `MONGODB_DB_NAME` | 数据库库名 | `bukan` |
+| `NEXT_PUBLIC_DANMU_API_URL` | 弹幕接口地址 | `https://danmuapi1-eight.vercel.app` |
 
 ---
 
 ***REMOVED******REMOVED*** 💻 本地开发
 
-***REMOVED******REMOVED******REMOVED*** 使用 Docker（推荐）
-
+***REMOVED******REMOVED******REMOVED*** 使用 Docker 开发环境
 ```bash
-***REMOVED*** 启动开发环境（包含 MongoDB）
+***REMOVED*** 启动热重载开发环境（含独立 MongoDB 容器）
 npm run docker:dev
 
-***REMOVED*** 停止服务
+***REMOVED*** 停止开发环境
 docker-compose -f docker-compose.dev.yml down
 ```
 
-***REMOVED******REMOVED******REMOVED*** 不使用 Docker
-
+***REMOVED******REMOVED******REMOVED*** 裸机直接运行
 ```bash
-***REMOVED*** 1. 安装依赖
+***REMOVED*** 1. 安装项目依赖
 npm install
 
 ***REMOVED*** 2. 配置环境变量
-cp .env.example .env
-***REMOVED*** 编辑 .env，设置 MONGODB_URI
+cp .env.example .env ***REMOVED*** 随后编辑配置正确的 MONGODB_URI
 
-***REMOVED*** 3. 启动开发服务器
+***REMOVED*** 3. 运行开发服务器
 npm run dev
-
-***REMOVED*** 4. 访问
-open http://localhost:3000
 ```
-
-***REMOVED******REMOVED******REMOVED*** 脚本说明
-
-| 命令                  | 说明                      |
-| --------------------- | ------------------------- |
-| `npm run dev`         | 启动开发服务器            |
-| `npm run build`       | 构建生产版本              |
-| `npm run docker:dev`  | Docker 开发环境（热重载） |
-| `npm run docker:prod` | 构建并推送 Docker 镜像    |
 
 ---
 
-***REMOVED******REMOVED*** 📁 项目结构
+***REMOVED******REMOVED*** 📁 核心项目结构
+```
+bukan/
+├── app/                    ***REMOVED*** Next.js App Router (含 API 路由与播放路由)
+├── components/             ***REMOVED*** UI 与功能组件
+│   ├── home/               ***REMOVED*** 主页卡片、轮播及导航适配
+│   └── player/             ***REMOVED*** Artplayer 与弹幕加载内核
+├── hooks/                  ***REMOVED*** 自定义状态管理（如滚动、历史记录等）
+├── lib/                    ***REMOVED*** 数据库连接池与通用工具库
+└── docker-compose.yml      ***REMOVED*** 优化级生产环境部署模板
+```
 
-```
-bukan/                      ***REMOVED*** 本地项目目录
-├── app/                    ***REMOVED*** Next.js App Router
-├── components/             ***REMOVED*** React 组件
-│   └── player/             ***REMOVED*** 播放器组件
-│       ├── LocalHlsPlayer.tsx  ***REMOVED*** 本地 HLS 播放器
-│       └── DanmakuPanel.tsx    ***REMOVED*** 弹幕搜索面板
-├── lib/                    ***REMOVED*** 工具库
-│   ├── cache.ts            ***REMOVED*** 内存缓存
-│   ├── db.ts               ***REMOVED*** MongoDB 连接
-│   └── player/             ***REMOVED*** 播放器工具
-│       └── danmaku-service.ts  ***REMOVED*** 弹幕服务
-├── scripts/                ***REMOVED*** 部署脚本
-│   └── install.sh          ***REMOVED*** 一键部署脚本
-├── docker-compose.yml      ***REMOVED*** 生产环境
-├── docker-compose.dev.yml  ***REMOVED*** 开发环境
-└── docker-compose.server.yml
-```
+---
 
 ***REMOVED******REMOVED*** 📄 License
-
-MIT License © 2026
+Released under the [MIT License](LICENSE) © 2026.
