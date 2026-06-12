@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getShortsSourcesFromDB,
   getAllShortsSourcesFromDB,
+  saveShortsSourceToDB,
   saveShortsSourcesToDB,
   getSelectedShortsSourceFromDB,
   saveSelectedShortsSourceToDB,
@@ -61,7 +62,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { sources, selected } = body;
+    const { sources, selected, source } = body;
+    
+    // 兼容保存/添加单条短剧源
+    if (source && !sources) {
+      if (!source.key || !source.name || !source.api) {
+        return NextResponse.json(
+          { code: 400, message: '短剧源缺少必要字段（key、name、api）', data: null },
+          { status: 400 }
+        );
+      }
+      await saveShortsSourceToDB(source as ShortDramaSource);
+      return NextResponse.json({
+        code: 200,
+        message: '保存成功',
+        data: null,
+      });
+    }
     
     if (!Array.isArray(sources)) {
       return NextResponse.json(

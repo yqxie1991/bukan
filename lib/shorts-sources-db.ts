@@ -97,6 +97,39 @@ export async function saveShortsSourcesToDB(sources: ShortDramaSource[]) {
   }
 }
 
+// 添加或更新单个短剧源
+export async function saveShortsSourceToDB(
+  source: ShortDramaSource & { enabled?: boolean; sortOrder?: number }
+) {
+  const db = await getDatabase();
+  const collection = db.collection<ShortDramaSourceDoc>(
+    COLLECTIONS.SHORTS_SOURCES
+  );
+  const now = new Date().toISOString();
+
+  const doc: Omit<ShortDramaSourceDoc, "_id" | "created_at"> & {
+    created_at?: string;
+  } = {
+    key: source.key,
+    name: source.name,
+    api: source.api,
+    type_id: source.typeId,
+    priority: source.priority ?? 0,
+    enabled: source.enabled !== undefined ? source.enabled : true,
+    sort_order: source.sortOrder || 0,
+    updated_at: now,
+  };
+
+  await collection.updateOne(
+    { key: source.key },
+    {
+      $set: doc,
+      $setOnInsert: { created_at: now },
+    },
+    { upsert: true }
+  );
+}
+
 // 删除短剧源
 export async function deleteShortsSourceFromDB(key: string) {
   const db = await getDatabase();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getVodSourcesFromDB,
   getAllVodSourcesFromDB,
+  saveVodSourceToDB,
   saveVodSourcesToDB,
   getSelectedVodSourceFromDB,
   saveSelectedVodSourceToDB,
@@ -61,7 +62,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { sources, selected } = body;
+    const { sources, selected, source } = body;
+    
+    // 兼容保存/添加单条视频源
+    if (source && !sources) {
+      if (!source.key || !source.name || !source.api || !source.type) {
+        return NextResponse.json(
+          { code: 400, message: '视频源缺少必要字段（key、name、api、type）', data: null },
+          { status: 400 }
+        );
+      }
+      await saveVodSourceToDB(source as VodSource);
+      return NextResponse.json({
+        code: 200,
+        message: '保存成功',
+        data: null,
+      });
+    }
     
     if (!Array.isArray(sources)) {
       return NextResponse.json(
