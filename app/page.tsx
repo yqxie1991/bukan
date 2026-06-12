@@ -40,7 +40,7 @@ export default function HomePage() {
   useScrollRestoration("home", { delay: 100 });
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 导航栏 */}
       <Navbar scrolled={scrolled} onSearchOpen={() => setShowSearch(true)} />
 

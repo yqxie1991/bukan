@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Home, Calendar, Film, Tv, Clock, Video, History } from "lucide-react";
+import { Menu, X, Home, Calendar, Film, Tv, Clock, Video, History, Sun, Moon, Monitor } from "lucide-react";
 import { HistoryPopup } from "./HistoryPopup"; //  加上花括号就对了！
+import { useTheme } from "@/components/providers/theme-provider";
 interface NavbarProps {
   scrolled: boolean;
   onSearchOpen: () => void;
@@ -13,6 +14,8 @@ interface NavbarProps {
 export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // 防止移动端菜单打开时页面滚动
   useEffect(() => {
@@ -25,6 +28,20 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === "system") {
+      setTheme("light");
+    } else if (theme === "light") {
+      setTheme("dark");
+    } else {
+      setTheme("system");
+    }
+  };
 
   const navItems: any[] = [
     { href: "/", label: "首页", icon: Home },
@@ -51,8 +68,8 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-black"
-            : "bg-gradient-to-b from-black/80 to-transparent"
+            ? "bg-white/95 dark:bg-black/95 border-b border-gray-200/50 dark:border-zinc-800/50 shadow-sm dark:shadow-none"
+            : "bg-gradient-to-b from-white/80 to-transparent dark:from-black/80 dark:to-transparent"
         }`}
       >
         <div className="px-4 md:px-12 py-3 md:py-4 flex items-center justify-between">
@@ -61,13 +78,13 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             {/* 汉堡菜单按钮 - 仅移动端 */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="md:hidden p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
               aria-label="菜单"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-white" />
+                <X className="w-6 h-6 text-gray-800 dark:text-white" />
               ) : (
-                <Menu className="w-6 h-6 text-white" />
+                <Menu className="w-6 h-6 text-gray-800 dark:text-white" />
               )}
             </button>
 
@@ -103,7 +120,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     onMouseEnter={() => setOpenDropdown(item.label)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    <button className="text-gray-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1 py-2">
+                    <button className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium flex items-center gap-1 py-2">
                       {item.label}
                       <svg
                         className={`w-3 h-3 transition-transform duration-200 ${
@@ -124,14 +141,14 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     {/* 下拉菜单 - 使用 pt-2 创建无缝hover区域 */}
                     {openDropdown === item.label && (
                       <div className="absolute top-full left-0 pt-1">
-                        <div className="py-2 bg-zinc-900 rounded-lg shadow-2xl border border-zinc-800 min-w-[140px] overflow-hidden">
+                        <div className="py-2 bg-white dark:bg-zinc-900 rounded-lg shadow-2xl border border-gray-200 dark:border-zinc-800 min-w-[140px] overflow-hidden">
                           {/* 顶部红色装饰线 - Netflix风格 */}
                           <div className="absolute top-1 left-0 right-0 h-0.5 bg-red-600" />
                           {item.children.map((child:any) => (
                             <Link
                               key={child.href}
                               href={child.href}
-                              className="block px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-red-600/20 transition-colors"
+                              className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-red-50 dark:hover:bg-red-600/20 transition-colors"
                             >
                               {child.label}
                             </Link>
@@ -145,7 +162,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     key={item.href}
                     href={item.href!}
                     target={item.external ? "_blank" : undefined}
-                    className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium"
                   >
                     {item.label}
                   </Link>
@@ -156,14 +173,28 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
           {/* 右侧功能区 */}
           <div className="flex items-center space-x-1 md:space-x-2">
+            {/* 主题切换按钮 */}
+            {mounted && (
+              <button
+                onClick={toggleTheme}
+                className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-gray-800 dark:text-white flex items-center justify-center relative group"
+                aria-label="切换主题"
+                title={theme === "system" ? "主题: 自动" : theme === "light" ? "主题: 浅色" : "主题: 深色"}
+              >
+                {theme === "system" && <Monitor className="w-5 h-5 md:w-6 md:h-6" />}
+                {theme === "light" && <Sun className="w-5 h-5 md:w-6 md:h-6" />}
+                {theme === "dark" && <Moon className="w-5 h-5 md:w-6 md:h-6" />}
+              </button>
+            )}
+
             {/* 搜索按钮 */}
             <button
               onClick={onSearchOpen}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-gray-800 dark:text-white"
               aria-label="搜索"
             >
               <svg
-                className="w-5 h-5 md:w-6 md:h-6 text-white"
+                className="w-5 h-5 md:w-6 md:h-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -199,12 +230,12 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
 
         {/* 侧边栏内容 */}
         <div
-          className={`absolute top-0 left-0 h-full w-[280px] bg-gradient-to-b from-gray-900 to-black shadow-2xl transform transition-transform duration-300 ease-out ${
+          className={`absolute top-0 left-0 h-full w-[280px] bg-white dark:bg-gradient-to-b dark:from-gray-900 dark:to-black shadow-2xl border-r border-gray-100 dark:border-none transform transition-transform duration-300 ease-out ${
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* 侧边栏头部 */}
-          <div className="p-6 border-b border-gray-800">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2">
               <img className="w-10 h-10" src="/logo.png" alt="logo" />
               <h2 className="text-red-600 text-2xl font-bold tracking-tight">
@@ -220,7 +251,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
               if (item.children) {
                 return (
                   <div key={item.label} className="space-y-1">
-                    <div className="flex items-center space-x-3 px-4 py-3 text-gray-400">
+                    <div className="flex items-center space-x-3 px-4 py-3 text-gray-500 dark:text-gray-400">
                       <Icon className="w-5 h-5" />
                       <span className="text-base font-medium">
                         {item.label}
@@ -231,7 +262,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                         key={child.href}
                         href={child.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                        className="flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200"
                       >
                         <span className="text-sm font-medium">
                           {child.label}
@@ -247,7 +278,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                   href={item.href!}
                   target={item.external ? "_blank" : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 group"
+                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200 group"
                 >
                   <Icon className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
                   <span className="text-base font-medium">{item.label}</span>
@@ -257,7 +288,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           </nav>
 
           {/* 侧边栏底部 */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-800">
+          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 dark:border-gray-800">
             <p className="text-xs text-gray-500 text-center">
                          </p>
           </div>

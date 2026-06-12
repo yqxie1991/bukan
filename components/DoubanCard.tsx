@@ -22,7 +22,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   return (
     <div
       onClick={() => onSelect(movie)}
-      className="group relative cursor-pointer transition-all duration-300 hover:scale-102 hover:z-10"
+      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl hover:shadow-black/60 dark:hover:shadow-black/80"
     >
       {/* 海报图片 */}
       <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-gray-800">
