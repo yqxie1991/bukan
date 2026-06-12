@@ -22,6 +22,7 @@
 | (暂无) | | | | | |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
+* 📦 [navbar-typography-tuning](archive/navbar-typography-tuning/index.md) —— 微调加大导航栏 Navbar 的字体与字重 (Completed: 2026-06-12)
 * 📦 [subset-local-fonts](archive/subset-local-fonts/index.md) —— 移除 Logo 并配置子集化霞鹜文楷与得意黑字体 (Completed: 2026-06-12)
 * 📦 [create-font-tester](archive/create-font-tester/index.md) —— 建立本地交互式字体效果测试首页 (Completed: 2026-06-12)
 * 📦 [rewrite-readme-entirely](archive/rewrite-readme-entirely/index.md) —— 全量删除并重写项目 README.md 说明文档 (Completed: 2026-06-12)
