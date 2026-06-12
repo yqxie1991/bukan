@@ -13,7 +13,7 @@ services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
     ***REMOVED*** 💡 提示：版本号默认为 v2.0，部署前请务必前往 GitHub 查看最新 Release 并修改为最新版本号！
-    image: ghcr.io/yqxie1991/bukan:v2.0   ***REMOVED*** 👈 远程编译好的轻量化生产镜像
+    image: ghcr.io/yqxie1991/bukan:v2.0
     container_name: bukan-app
     ports:
       - "3008:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
@@ -24,12 +24,12 @@ services:
       ***REMOVED*** 强烈建议在部署前修改为您的自定义私有强密码，以防止他人扫描并越权登录您的后台！
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
-      - MONGODB_URI=mongodb://mongodb:27017/bukan   ***REMOVED*** 👈 数据库名称已升级为 bukan
+      - MONGODB_URI=mongodb://mongodb:27017/bukan
       - PORT=3000
     depends_on:
       - mongodb
     volumes:
-      - bukan-cache:/app/public/cache             ***REMOVED*** 👈 缓存卷已升级为 bukan-cache
+      - bukan-cache:/app/public/cache             ***REMOVED*** 缓存卷，防容器重建升级后海报裂图
     networks:
       - bukan-network
     logging:
@@ -45,8 +45,8 @@ services:
     ***REMOVED*** ⚠️【群晖 CPU 兼容防闪退指南】：
     ***REMOVED***    MongoDB 5.0+ (包括 7.0) 要求 CPU 必须支持 AVX 指令集。
     ***REMOVED***    绝大多数群晖 CPU（如 J3455、J4125、N5105 等）不支持 AVX，运行 mongo:7 会发生崩溃闪退！
-    ***REMOVED***    如果您的容器启动后反复重启，请将下方 image 一行修改为：image: mongo:4.4
-    image: mongo:7
+    ***REMOVED***    此处已默认修改为兼容无 AVX 的官方 4.4 稳定版，防止闪退。
+    image: mongo:4.4
     container_name: bukan-mongodb
     ***REMOVED*** 调优参数解释：
     ***REMOVED*** --nojournal: 关闭日志持久化写入，大幅减少空闲时磁盘写入量，免去磁头咔哒噪音并保护硬盘寿命。
@@ -57,10 +57,10 @@ services:
     ports:
       - "27018:27017"            ***REMOVED*** 外部连接数据库端口（可选，不需要可注释掉）
     environment:
-      - MONGO_INITDB_DATABASE=bukan               ***REMOVED*** 👈 数据库初始化名称已升级为 bukan
+      - MONGO_INITDB_DATABASE=bukan
     volumes:
-      - mongodb-data:/data/db                     ***REMOVED*** 👈 数据库数据卷
-      - mongodb-config:/data/configdb
+      - bukan-mongodb-data-v1:/data/db            ***REMOVED*** 👈 已升级卷名，防范旧数据导致的 WiredTiger 冲突报错
+      - bukan-mongodb-config-v1:/data/configdb
     logging:
       driver: "json-file"
       options:
@@ -71,14 +71,14 @@ services:
     restart: unless-stopped
 
 networks:
-  bukan-network:                                  ***REMOVED*** 👈 独立网络已升级为 bukan-network
+  bukan-network:
     driver: bridge
 
 volumes:
   ***REMOVED*** 👈 在底部注册这些新命名的 bukan 数据卷
-  mongodb-data:
+  bukan-mongodb-data-v1:
     driver: local  ***REMOVED*** 数据库持久化卷
-  mongodb-config:
+  bukan-mongodb-config-v1:
     driver: local  ***REMOVED*** 数据库配置卷
   bukan-cache:
     driver: local  ***REMOVED*** 图片海报缓存卷
