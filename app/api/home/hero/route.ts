@@ -18,6 +18,12 @@ export async function GET() {
     try {
       // 熔断降级：本地数据库不可用时，直接直连远程微服务拉取
       const data = await getHeroMovies();
+      try {
+        const { MEMORY_CACHE } = await import("@/lib/home-cache-db");
+        MEMORY_CACHE["hero"] = { data, updatedAt: Date.now() };
+      } catch (memErr) {
+        console.error("写入内存缓存失败:", memErr);
+      }
       return NextResponse.json({ code: 200, message: "获取成功 (降级直连模式)", data });
     } catch (fallbackError) {
       return NextResponse.json(

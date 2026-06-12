@@ -8,6 +8,10 @@ import crypto from "crypto";
 const IMAGE_CACHE_DIR = path.join(process.cwd(), "public", "cache", "images");
 let isCronStarted = false;
 
+// 首页二级内存缓存防线，防止数据库响应慢或者数据库挂掉时频繁穿透慢速豆瓣微服务
+export const MEMORY_CACHE: Record<string, { data: any; updatedAt: number }> = {};
+export const MEMORY_CACHE_TTL = 30 * 60 * 1000; // 30分钟内存有效缓存
+
 /**
  * 确保本地图片缓存文件夹存在
  */
@@ -76,39 +80,54 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
   }
 }
 
-/**
- * 从本地数据库读取缓存数据
- * @param key 'hero' | 'categories'
- */
 export async function getHomeCache(key: "hero" | "categories") {
+  // 1. 优先从内存缓存中获取，且在 TTL 内秒回
+  const now = Date.now();
+  const memCached = MEMORY_CACHE[key];
+  if (memCached && (now - memCached.updatedAt) < MEMORY_CACHE_TTL) {
+    console.log(`⚡ [Home Cache] 内存缓存秒开命中 [key: ${key}]`);
+    return memCached.data;
+  }
+
   try {
     const db = await getDatabase();
+    if (!db) throw new Error("Database connection not ready");
+
     const collection = db.collection(COLLECTIONS.HOME_CACHE);
-
     const cache = await collection.findOne({ key });
-    if (!cache) return null;
-
-    // 校验是否已经跨天（判定是否跨过 0 点）
-    const updatedAtDate = new Date(cache.updated_at);
-    const nowDate = new Date();
     
-    const isExpired =
-      updatedAtDate.getFullYear() !== nowDate.getFullYear() ||
-      updatedAtDate.getMonth() !== nowDate.getMonth() ||
-      updatedAtDate.getDate() !== nowDate.getDate();
+    if (cache && cache.data) {
+      // 写入内存缓存
+      MEMORY_CACHE[key] = { data: cache.data, updatedAt: now };
 
-    if (isExpired) {
-      console.log(`⏰ [Home Cache] 检测到本地缓存 [${key}] 已过0点，判定为失效`);
-      return null;
+      // 校验是否已经跨天（判定是否跨过 0 点）
+      const updatedAtDate = new Date(cache.updated_at);
+      const nowDate = new Date();
+      
+      const isExpired =
+        updatedAtDate.getFullYear() !== nowDate.getFullYear() ||
+        updatedAtDate.getMonth() !== nowDate.getMonth() ||
+        updatedAtDate.getDate() !== nowDate.getDate();
+
+      if (isExpired) {
+        console.log(`⏰ [Home Cache] 检测到数据库缓存 [${key}] 已过0点，将在后台异步刷新同步，不阻塞当前返回`);
+        // 异步同步，不阻塞当前响应
+        syncHomeData(key).catch((err) => {
+          console.error(`后台异步刷新首屏缓存失败 [key: ${key}]:`, err);
+        });
+      }
+
+      return cache.data;
     }
 
-    // 提示：已移除本地图片物理文件校验。
-    // 在无状态的 Vercel 部署环境中，由于运行期写入的物理文件无法持久化，该校验每次访问都会判定失效，从而触发极其耗时的 syncHomeData 阻塞拉取动作。
-    // 由于我们在 /api/image-proxy 中已经内置了正则自愈机制，即使物理文件不存在，前端请求代理图片时也会智能回源获取，因此无需重复同步，直接返回数据库元数据即可。
-
-    return cache.data;
+    return null;
   } catch (error) {
-    console.error(`读取缓存失败 [key: ${key}]:`, error);
+    console.error(`读取数据库缓存失败，尝试使用陈旧的内存缓存进行容灾 [key: ${key}]:`, error);
+    // 容灾兜底：如果数据库挂了，且内存中有过期数据，直接用内存数据返回，防止雪崩
+    if (memCached) {
+      console.log(`🛡️ [Home Cache] 内存缓存容灾兜底成功 [key: ${key}]`);
+      return memCached.data;
+    }
     return null;
   }
 }
@@ -283,6 +302,9 @@ export async function syncHomeData(key: "hero" | "categories") {
     },
     { upsert: true }
   );
+
+  // 1.5 同步更新内存缓存，使后续请求能立即获取最新数据
+  MEMORY_CACHE[key] = { data: freshData, updatedAt: Date.now() };
 
   // 2. 异步触发孤立海报清理（在后台静默执行，不阻碍 API 的响应）
   cleanOrphanImages().catch(console.error);

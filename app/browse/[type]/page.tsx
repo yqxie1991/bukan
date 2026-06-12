@@ -487,16 +487,18 @@ export default function BrowsePage() {
 
       {/* Hero 区域 */}
       <div className="relative pt-24 pb-4 px-4 md:px-12 overflow-hidden">
-        {/* 装饰性背景 */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-r ${config.gradient}`}
-        />
-        <div
-          className={`absolute top-0 right-0 w-96 h-96 ${config.bgColor1} rounded-full blur-3xl`}
-        />
-        <div
-          className={`absolute bottom-0 left-0 w-96 h-96 ${config.bgColor2} rounded-full blur-3xl`}
-        />
+        {/* 装饰性背景 - 仅在暗黑模式下开启以提供霓虹氛围，在明亮模式下关闭以保持干净白底 */}
+        <div className="absolute inset-0 pointer-events-none hidden dark:block">
+          <div
+            className={`absolute inset-0 bg-gradient-to-r ${config.gradient}`}
+          />
+          <div
+            className={`absolute top-0 right-0 w-96 h-96 ${config.bgColor1} rounded-full blur-3xl`}
+          />
+          <div
+            className={`absolute bottom-0 left-0 w-96 h-96 ${config.bgColor2} rounded-full blur-3xl`}
+          />
+        </div>
 
         <div className="relative">
           <div className="flex items-center gap-4 mb-4">
