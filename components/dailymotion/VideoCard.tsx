@@ -11,9 +11,9 @@ export function VideoCard({ video, onClick, formatTimeAgo }: VideoCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer transition-transform hover:scale-[1.01] duration-200"
+      className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08),0_0_15px_rgba(0,0,0,0.02)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(229,9,20,0.15)] rounded-xl"
     >
-      <div className="relative aspect-2/3 rounded-xl overflow-hidden bg-black">
+      <div className="relative aspect-2/3 rounded-xl overflow-hidden bg-black border border-black/5 dark:border-white/5">
         {/* Background: Blurred thumbnail */}
         <img
           src={video.thumbnail}

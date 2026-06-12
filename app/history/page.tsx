@@ -228,16 +228,17 @@ export default function HistoryPage() {
           </div>
         ) : (
           /* 历史列表 */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-            {filteredHistory.map((item) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 py-4 -my-4">
+            {filteredHistory.map((item, index) => (
               <div
                 key={item.id}
                 onClick={() => handlePlay(item)}
-                className={`cursor-pointer group/card relative ${
+                className={`cursor-pointer group/card relative animate-fade-in ${
                   isSelectMode && selectedIds.has(item.id)
                     ? "ring-2 ring-red-500 rounded-lg"
                     : ""
                 }`}
+                style={{ animationDelay: `${Math.min(index, 24) * 25}ms`, animationFillMode: 'both' }}
               >
                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 shadow-lg transition-all duration-300 group-hover/card:shadow-xl group-hover/card:shadow-red-500/20 group-hover/card:scale-105">
                   {/* 封面图 */}

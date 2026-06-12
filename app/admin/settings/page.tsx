@@ -142,60 +142,61 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-[***REMOVED***141414]">
-      {/* Header - Netflix Style */}
-      <div className="bg-[***REMOVED***141414] border-b border-[***REMOVED***333]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <h1 
-              className="text-2xl font-bold text-[***REMOVED***E50914]"
-              style={{ fontFamily: '"Smiley Sans", sans-serif' }}
+    <div className="dark">
+      <div className="min-h-screen bg-[***REMOVED***141414] text-foreground transition-colors duration-300">
+        {/* Header - Netflix Style */}
+        <div className="bg-[***REMOVED***141414] border-b border-[***REMOVED***333] transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <h1 
+                className="text-2xl font-bold text-[***REMOVED***E50914]"
+                style={{ fontFamily: '"Smiley Sans", sans-serif' }}
+              >
+                不看
+              </h1>
+              <span className="text-white text-lg font-medium">系统设置</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-[***REMOVED***333] hover:bg-[***REMOVED***444] text-white border border-transparent rounded transition-colors"
             >
-              不看
-            </h1>
-            <span className="text-white text-lg">系统设置</span>
+              退出登录
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-[***REMOVED***333] hover:bg-[***REMOVED***444] text-white rounded transition-colors"
-          >
-            退出登录
-          </button>
         </div>
-      </div>
 
-      {/* Tabs Navigation - Netflix Style */}
-      <div className="bg-[***REMOVED***181818] border-b border-[***REMOVED***333]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`px-6 py-4 text-sm font-medium transition-all relative ${
-                    activeTab === tab.id
-                      ? "text-white"
-                      : "text-[***REMOVED***808080] hover:text-white"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Icon size={18} strokeWidth={1.5} />
-                    <span>{tab.name}</span>
-                  </span>
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[***REMOVED***E50914]" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+        {/* Tabs Navigation - Netflix Style */}
+        <div className="bg-[***REMOVED***181818] border-b border-[***REMOVED***333] transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex space-x-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`px-6 py-4 text-sm font-medium transition-all relative ${
+                      activeTab === tab.id
+                        ? "text-white font-semibold"
+                        : "text-[***REMOVED***808080] hover:text-white"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon size={18} strokeWidth={1.5} />
+                      <span>{tab.name}</span>
+                    </span>
+                    {activeTab === tab.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[***REMOVED***E50914]" />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "sources" && (
           <VodSourcesTab
             sources={sources}
@@ -269,6 +270,7 @@ function SettingsContent() {
           danger={confirm.danger}
         />
       )}
+      </div>
     </div>
   );
 }

@@ -429,7 +429,7 @@ function SearchContent() {
         ) : searched || searchResults.length > 0 ? (
           searchResults.length > 0 ? (
             <div className="animate-fade-in">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-8 gap-x-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-8 gap-x-4 py-4 -my-4">
                 {searchResults
                   .filter(
                     (drama) =>
@@ -452,7 +452,8 @@ function SearchContent() {
                     return (
                       <div
                         key={`${drama.source.key}-${drama.id}-${index}`}
-                        className="relative group z-0 hover:z-50"
+                        className="relative group z-0 hover:z-50 animate-fade-in"
+                        style={{ animationDelay: `${Math.min(index, 24) * 25}ms`, animationFillMode: 'both' }}
                       >
                         <div className="absolute top-2 left-2 z-40 flex gap-1 pointer-events-none">
                           <div className="bg-black/60 backdrop-blur-md border border-white/10 text-white text-[10px] px-2 py-0.5 rounded-md shadow-xl">

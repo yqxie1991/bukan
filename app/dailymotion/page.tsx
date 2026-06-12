@@ -191,14 +191,19 @@ function DailymotionContent() {
       <div className="px-3 md:px-6 lg:px-10 py-4">
         <h2 className="text-lg md:text-xl font-semibold mb-4 px-1">推荐短剧</h2>
         {/* Video Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-10 gap-3 md:gap-4">
-          {channelData.videos.map((video) => (
-            <VideoCard
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-10 gap-3 md:gap-4 py-4 -my-4">
+          {channelData.videos.map((video, index) => (
+            <div 
               key={video.id}
-              video={video}
-              onClick={() => handleVideoClick(video)}
-              formatTimeAgo={formatTimeAgo}
-            />
+              className="animate-fade-in"
+              style={{ animationDelay: `${Math.min(index, 20) * 25}ms`, animationFillMode: 'both' }}
+            >
+              <VideoCard
+                video={video}
+                onClick={() => handleVideoClick(video)}
+                formatTimeAgo={formatTimeAgo}
+              />
+            </div>
           ))}
         </div>
 

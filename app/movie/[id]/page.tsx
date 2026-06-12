@@ -793,25 +793,26 @@ export default function MovieDetailPage() {
           {movieDetail?.recommendations &&
             movieDetail.recommendations.length > 0 && (
               <div className="mt-12">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
                   <Film className="w-6 h-6 text-red-500" />
                   相关推荐
                 </h2>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                  {movieDetail.recommendations.map((rec) => (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 py-4 -my-4">
+                  {movieDetail.recommendations.map((rec, index) => (
                     <Link
                       key={rec.id}
                       href={`/movie/${rec.id}`}
-                      className="group"
+                      className="group animate-fade-in"
+                      style={{ animationDelay: `${Math.min(index, 12) * 25}ms`, animationFillMode: 'both' }}
                     >
-                      <div className="aspect-2/3 rounded-xl overflow-hidden bg-white/5 mb-2 border border-white/5 group-hover:border-red-500/50 transition-colors">
+                      <div className="aspect-2/3 rounded-xl overflow-hidden bg-foreground/5 mb-2 border border-black/5 dark:border-white/5 group-hover:border-red-500/50 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(229,9,20,0.15)] group-hover:scale-105 transition-all duration-300">
                         <img
                           src={getImageUrl(rec.cover)}
                           alt={rec.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                         />
                       </div>
-                      <h3 className="text-sm text-white font-medium line-clamp-1 group-hover:text-red-400 transition-colors">
+                      <h3 className="text-sm text-foreground font-medium line-clamp-1 group-hover:text-red-400 transition-colors">
                         {rec.title}
                       </h3>
                       {rec.rate && (

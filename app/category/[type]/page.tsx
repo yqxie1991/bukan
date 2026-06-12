@@ -154,7 +154,7 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark:bg-gradient-to-b dark:from-black dark:via-gray-950 dark:to-black transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 顶部导航栏 */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-md border-b border-gray-200 dark:border-neutral-800/50 transition-colors duration-300">
         <div className="px-4 md:px-12 py-5">
@@ -254,13 +254,18 @@ export default function CategoryPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 md:gap-4 lg:gap-5">
-              {movies.map((movie) => (
-                <DoubanCard
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 md:gap-4 lg:gap-5 py-4 -my-4">
+              {movies.map((movie, index) => (
+                <div 
                   key={movie.id}
-                  movie={movie}
-                  onSelect={handleMovieClick}
-                />
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${Math.min(index, 24) * 25}ms`, animationFillMode: 'both' }}
+                >
+                  <DoubanCard
+                    movie={movie}
+                    onSelect={handleMovieClick}
+                  />
+                </div>
               ))}
             </div>
 
