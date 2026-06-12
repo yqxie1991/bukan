@@ -69,7 +69,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-white/95 dark:bg-black/95 border-b border-gray-200/50 dark:border-zinc-800/50 shadow-sm dark:shadow-none"
-            : "bg-gradient-to-b from-white/80 to-transparent dark:from-black/80 dark:to-transparent"
+            : "bg-gradient-to-b from-black/80 to-transparent"
         }`}
       >
         <div className="px-4 md:px-12 py-3 md:py-4 flex items-center justify-between">
@@ -82,9 +82,9 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
               aria-label="菜单"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-gray-800 dark:text-white" />
+                <X className={`w-6 h-6 ${scrolled ? "text-gray-800 dark:text-white" : "text-white"}`} />
               ) : (
-                <Menu className="w-6 h-6 text-gray-800 dark:text-white" />
+                <Menu className={`w-6 h-6 ${scrolled ? "text-gray-800 dark:text-white" : "text-white"}`} />
               )}
             </button>
 
@@ -95,7 +95,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
               className="flex items-center gap-1"
             >
               <img
-                className="w-8 h-8 md:w-10 md:h-10"
+                className={`w-8 h-8 md:w-10 md:h-10 transition-all ${
+                  scrolled 
+                    ? "dark:invert-0 invert hue-rotate-180" 
+                    : ""
+                }`}
                 src="/logo.png"
                 alt="logo"
               />
@@ -120,7 +124,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     onMouseEnter={() => setOpenDropdown(item.label)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    <button className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium flex items-center gap-1 py-2">
+                    <button className={`transition-colors text-sm font-medium flex items-center gap-1 py-2 ${
+                      scrolled
+                        ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                        : "text-zinc-300 hover:text-white"
+                    }`}>
                       {item.label}
                       <svg
                         className={`w-3 h-3 transition-transform duration-200 ${
@@ -162,7 +170,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     key={item.href}
                     href={item.href!}
                     target={item.external ? "_blank" : undefined}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-medium"
+                    className={`transition-colors text-sm font-medium ${
+                      scrolled
+                        ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                        : "text-zinc-300 hover:text-white"
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -177,7 +189,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             {mounted && (
               <button
                 onClick={toggleTheme}
-                className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-gray-800 dark:text-white flex items-center justify-center relative group"
+                className={`p-2 rounded-full transition-colors flex items-center justify-center relative group ${
+                  scrolled
+                    ? "text-gray-800 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                    : "text-white hover:bg-white/10"
+                }`}
                 aria-label="切换主题"
                 title={theme === "system" ? "主题: 自动" : theme === "light" ? "主题: 浅色" : "主题: 深色"}
               >
@@ -190,7 +206,11 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             {/* 搜索按钮 */}
             <button
               onClick={onSearchOpen}
-              className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-gray-800 dark:text-white"
+              className={`p-2 rounded-full transition-colors ${
+                scrolled
+                  ? "text-gray-800 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                  : "text-white hover:bg-white/10"
+              }`}
               aria-label="搜索"
             >
               <svg
@@ -237,7 +257,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           {/* 侧边栏头部 */}
           <div className="p-6 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2">
-              <img className="w-10 h-10" src="/logo.png" alt="logo" />
+              <img className="w-10 h-10 dark:invert-0 invert hue-rotate-180" src="/logo.png" alt="logo" />
               <h2 className="text-red-600 text-2xl font-bold tracking-tight">
                 不看
               </h2>
