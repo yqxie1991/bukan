@@ -19,6 +19,8 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: 订阅自动后台同步与前端链接管理面板' (Protocol in workflow.md)
 
 ***REMOVED******REMOVED*** Phase 4: 分类行样式与 Hover 透传修复
-- [ ] 任务 4.1: 修正 `CategoryRow.tsx` (或其他非首页分类列表卡片) 外层误用的 `group` 属性，解决 Hover 状态失效问题
-- [ ] 任务 4.2: 统一检查并修复各页面 Hover 缩放/渐变阴影的不协调问题，符合 Netflix 视觉规范
+- [x] 任务 4.1: 修正 `CategoryRow.tsx` (或其他非首页分类列表卡片) 外层误用的 `group` 属性，解决 Hover 状态失效问题 753672d
+- [x] 任务 4.2: 统一检查并修复各页面 Hover 缩放/渐变阴影的不协调问题，符合 Netflix 视觉规范 753672d
+- [x] 任务 4.3: 为 saveImageToLocal 的 fetch 添加超时机制，防止拉取挂起导致 Vercel 504 超时 753672d
+- [x] 任务 4.4: 在 image-proxy 接口中增加针对 /cache/images/ 失效缓存路径的正则自愈获取机制 753672d
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: 分类行样式与 Hover 透传修复' (Protocol in workflow.md)
