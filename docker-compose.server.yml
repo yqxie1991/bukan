@@ -30,7 +30,7 @@ services:
   mongodb:
     image: mongo:7
     container_name: kerkerker-mongodb
-    command: mongod --nojournal --quiet --setParameter diagnosticDataCollectionEnabled=false
+    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
     environment:
       - MONGO_INITDB_DATABASE=kerkerker
     volumes:

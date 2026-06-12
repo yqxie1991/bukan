@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Play, Star } from 'lucide-react';
 import { DoubanMovie } from '@/types/douban';
+import { getImageUrl } from '@/lib/utils/image-utils';
 
 interface DoubanCardProps {
   movie: DoubanMovie;
@@ -16,7 +17,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   const [isLoading, setIsLoading] = useState(true);
  
   // 豆瓣图片使用代理
-  const imageUrl = `/api/image-proxy?url=${encodeURIComponent(movie.cover)}`;
+  const imageUrl = getImageUrl(movie.cover);
 
   return (
     <div

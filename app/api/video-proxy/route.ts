@@ -220,9 +220,18 @@ function rewriteM3U8(content: string, baseUrl: string, proxyOrigin: string): str
     
     // 处理资源 URL（.ts 片段等）
     const resourceUrl = resolveUrl(line.trim());
-    const proxiedUrl = `${proxyOrigin}/api/video-proxy?url=${encodeURIComponent(resourceUrl)}`;
     
-    return proxiedUrl;
+    // 智能决策是否直连：
+    // 1. 如果本地服务外网部署为 HTTPS 协议，而视频切片源为 HTTP 协议，为了防范浏览器混合内容 (Mixed Content) 拦截，必须走服务器代理。
+    // 2. 其他情况下 (如切片源本身为 HTTPS 或本地部署为 HTTP 环境)，完全可以让客户端直连 CDN 下载分片，群晖带宽开销直接降为 0！
+    const isHttpsProxy = proxyOrigin.startsWith('https:');
+    const isHttpResource = resourceUrl.startsWith('http:');
+    
+    if (isHttpsProxy && isHttpResource) {
+      return `${proxyOrigin}/api/video-proxy?url=${encodeURIComponent(resourceUrl)}`;
+    }
+    
+    return resourceUrl;
   });
   
   return rewrittenLines.join('\n');
