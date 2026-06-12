@@ -62,7 +62,7 @@
 
 > 无需服务器，免费托管，自动 HTTPS
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/unilei/kerkerker)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/unilei/bukan)
 
 **步骤：**
 
@@ -84,7 +84,7 @@
 
 ```bash
 ***REMOVED*** 1. 克隆项目
-git clone https://github.com/unilei/kerkerker.git bukan
+git clone https://github.com/unilei/bukan.git
 cd bukan
 
 ***REMOVED*** 2. 创建配置文件
@@ -158,10 +158,10 @@ docker-compose pull        ***REMOVED*** 更新镜像
 
 ```bash
 ***REMOVED*** 使用 curl
-curl -fsSL https://raw.githubusercontent.com/unilei/kerkerker/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/unilei/bukan/master/scripts/install.sh | bash
 
 ***REMOVED*** 使用 wget
-wget -qO- https://raw.githubusercontent.com/unilei/kerkerker/master/scripts/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/unilei/bukan/master/scripts/install.sh | bash
 ```
 
 **部署后管理：**
