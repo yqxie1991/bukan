@@ -572,7 +572,7 @@ export default function BrowsePage() {
               const categoryMovies = category.data.map(convertToDoubanMovie);
 
               return (
-                <div key={index} className="group">
+                <div key={index}>
                   <div className="flex items-center justify-between mb-4 mt-2">
                     <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
                       <span>{getCategoryIcon(category.name)}</span>
@@ -586,12 +586,11 @@ export default function BrowsePage() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-3 md:gap-4 lg:gap-5">
                     {categoryMovies.map((movie) => (
-                      <div
+                      <DoubanCard
                         key={movie.id}
-                        className="transform transition-all duration-300 hover:scale-105"
-                      >
-                        <DoubanCard movie={movie} onSelect={handleMovieClick} />
-                      </div>
+                        movie={movie}
+                        onSelect={handleMovieClick}
+                      />
                     ))}
                   </div>
                 </div>
@@ -626,12 +625,11 @@ export default function BrowsePage() {
               {movies.map((item, index) => {
                 const movie = convertToDoubanMovie(item);
                 return (
-                  <div
+                  <DoubanCard
                     key={`${movie.id}-${index}`}
-                    className="transform transition-all duration-300 hover:scale-105"
-                  >
-                    <DoubanCard movie={movie} onSelect={handleMovieClick} />
-                  </div>
+                    movie={movie}
+                    onSelect={handleMovieClick}
+                  />
                 );
               })}
             </div>

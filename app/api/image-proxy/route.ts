@@ -10,12 +10,12 @@ const PROXY_POOL = [
   {
     name: 'wsrv.link0.me',
     url: (imgUrl: string) => `https://wsrv.link0.me/?url=${encodeURIComponent(imgUrl)}&output=webp&q=85`,
-    timeout: 8000,
+    timeout: 2500,
   },
   {
     name: 'images.weserv.nl',
     url: (imgUrl: string) => `https://images.weserv.nl/?url=${encodeURIComponent(imgUrl)}&output=webp&q=85`,
-    timeout: 8000,
+    timeout: 2500,
   } 
 ];
 
@@ -55,40 +55,16 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
   try {
     return await Promise.any(fastPromises);
   } catch {
-    console.log('⚠ 前2个代理都失败，尝试剩余代理...');
+    console.log('⚠ 前2个代理都失败，尝试直接访问...');
   }
 
-  // 策略 2: 如果前2个都失败，依次尝试剩余代理
-  const remainingProxies = PROXY_POOL.slice(2);
-  for (const proxy of remainingProxies) {
-    try {
-      const proxyUrl = proxy.url(url);
-      
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        },
-        signal: AbortSignal.timeout(proxy.timeout),
-      });
-
-      if (response.ok) {
-        console.log(`✓ ${proxy.name} 成功`);
-        return response;
-      }
-    } catch {
-      console.log(`✗ ${proxy.name} 失败`);
-    }
-    
-    await delay(500); // 短暂延迟
-  }
-
-  // 策略 3: 所有代理都失败，尝试直接访问
+  // 策略 2: 直接访问（防盗链 Referer）
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       'Referer': 'https://movie.douban.com/',
     },
-    signal: AbortSignal.timeout(10000),
+    signal: AbortSignal.timeout(2500),
   });
 
   if (response.ok) {
@@ -100,7 +76,7 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
 
 export async function GET(request: NextRequest) {
   try {
-    const url = request.nextUrl.searchParams.get('url');
+    let url = request.nextUrl.searchParams.get('url');
     
     if (!url) {
       return NextResponse.json({ error: 'URL parameter is required' }, { status: 400 });
@@ -129,7 +105,52 @@ export async function GET(request: NextRequest) {
         });
       } catch (err) {
         console.error('Failed to read local cached image:', err);
-        // 读取失败则退回，继续走 fetch 代理池
+        // 自愈逻辑：解析文件名以查找豆瓣原始图片 URL
+        const match = url.match(/\/cache\/images\/(\d+)_(cover|horizontal|vertical)_[a-f0-9]+/);
+        if (match) {
+          const id = match[1];
+          const type = match[2];
+          let originalImgUrl = '';
+          
+          // 1. 如果是横版/竖版海报，优先从 hero movies 中寻找
+          if (type === 'horizontal' || type === 'vertical') {
+            try {
+              const { getHeroMovies } = await import('@/lib/douban-service');
+              const heroes = await getHeroMovies();
+              const hero = heroes.find(h => String(h.id) === id);
+              if (hero) {
+                originalImgUrl = type === 'horizontal' ? hero.poster_horizontal : hero.poster_vertical;
+              }
+            } catch (e) {
+              console.error('Failed to get hero movies for self-healing:', e);
+            }
+          }
+          
+          // 2. 如果没找到，或者是普通的 cover 类型，优先查询详情
+          if (!originalImgUrl) {
+            try {
+              const { getSubjectDetail, getHeroMovies } = await import('@/lib/douban-service');
+              const detail = await getSubjectDetail(id);
+              if (detail && detail.cover) {
+                originalImgUrl = detail.cover;
+              } else {
+                // 降级到 hero 中寻找 cover
+                const heroes = await getHeroMovies();
+                const hero = heroes.find(h => String(h.id) === id);
+                if (hero && hero.cover) {
+                  originalImgUrl = hero.cover;
+                }
+              }
+            } catch (e) {
+              console.error('Failed to get subject detail for self-healing:', e);
+            }
+          }
+
+          if (originalImgUrl) {
+            console.log(`[Self-Healing] Reconstructed origin URL for ${url} -> ${originalImgUrl}`);
+            url = originalImgUrl;
+          }
+        }
       }
     }
 

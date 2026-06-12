@@ -51,12 +51,13 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
       // 本地不存在，继续下载
     }
 
-    // 2. 发起下载（需注入 Referer 绕过豆瓣防盗链）
+    // 2. 发起下载（需注入 Referer 绕过豆瓣防盗链，加入超时避免挂起）
     const response = await fetch(imageUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Referer": "https://movie.douban.com/",
       },
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!response.ok) {

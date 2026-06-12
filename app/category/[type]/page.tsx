@@ -254,12 +254,11 @@ export default function CategoryPage() {
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 md:gap-4 lg:gap-5">
               {movies.map((movie) => (
-                <div
+                <DoubanCard
                   key={movie.id}
-                  className="transform transition-all duration-300 hover:scale-105"
-                >
-                  <DoubanCard movie={movie} onSelect={handleMovieClick} />
-                </div>
+                  movie={movie}
+                  onSelect={handleMovieClick}
+                />
               ))}
             </div>
 
