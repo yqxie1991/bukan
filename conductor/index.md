@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `generate-new-logo` | 设计并为“不看”生成全新的项目 Logo 图标 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/generate-new-logo/plan.md) |
 | `rewrite-readme-entirely` | 全量删除并重写项目 README.md 说明文档 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/rewrite-readme-entirely/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
