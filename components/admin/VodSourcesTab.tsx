@@ -164,8 +164,8 @@ export function VodSourcesTab({
       return;
     }
 
-    // 3. 若非合法 JSON，且没有密码，则无法进行加密包解密
-    if (!importPassword) {
+    // 3. 若非合法 JSON，且没有密码，且【不是订阅 URL】，则无法进行加密包解密
+    if (!importPassword && !isSubscriptionUrl(importData)) {
       setDecryptError("未识别为合法的明文 JSON 配置，如果是加密配置请输入解密密码");
       setIsDecrypting(false);
       return;
@@ -178,7 +178,7 @@ export function VodSourcesTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           isSubscriptionUrl(importData)
-            ? { password: importPassword, subscriptionUrl: importData }
+            ? { password: importPassword || "", subscriptionUrl: importData }
             : { password: importPassword, encryptedData: importData }
         ),
       });
@@ -186,25 +186,53 @@ export function VodSourcesTab({
       const result = await response.json();
 
       if (result.code !== 200) {
-        throw new Error(result.message || "解密失败");
+        throw new Error(result.message || "解密或代理获取失败");
       }
 
       const payload = result.data;
 
-      // 构建统一预览对象
+      // 构建统一预览对象（复用前面的解析逻辑以兼容各种明文/解密后的格式）
       const preview: UnifiedImportPreview = {};
-      if (payload.vodSources && payload.vodSources.length > 0) {
-        preview.vodSources = payload.vodSources;
-        setImportPreview(payload.vodSources);
+      
+      // 格式 A: 标准打包格式
+      if (payload.vodSources || payload.shortsSources || payload.dailymotionChannels) {
+        if (payload.vodSources && Array.isArray(payload.vodSources)) {
+          preview.vodSources = payload.vodSources;
+          setImportPreview(payload.vodSources);
+        }
+        if (payload.shortsSources && Array.isArray(payload.shortsSources)) {
+          preview.shortsSources = payload.shortsSources;
+        }
+        if (payload.dailymotionChannels && Array.isArray(payload.dailymotionChannels)) {
+          preview.dailymotionChannels = payload.dailymotionChannels;
+        }
       }
-      if (payload.shortsSources && payload.shortsSources.length > 0) {
-        preview.shortsSources = payload.shortsSources;
+      // 格式 B: 单页导出的 sources 字段
+      else if (payload.sources && Array.isArray(payload.sources)) {
+        preview.vodSources = payload.sources;
+        setImportPreview(payload.sources);
       }
-      if (
-        payload.dailymotionChannels &&
-        payload.dailymotionChannels.length > 0
-      ) {
-        preview.dailymotionChannels = payload.dailymotionChannels;
+      // 格式 C: 兼容 TVBox 的 sites 字段
+      else if (payload.sites && Array.isArray(payload.sites)) {
+        const mappedSources = payload.sites.map((site: any) => ({
+          key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
+          name: site.name || '未命名视频源',
+          api: site.api || '',
+          playUrl: site.playUrl || '',
+          priority: 0,
+          type: "json" as const,
+          usePlayUrl: true
+        })).filter((s: any) => s.api);
+
+        if (mappedSources.length > 0) {
+          preview.vodSources = mappedSources;
+          setImportPreview(mappedSources);
+        }
+      }
+      // 格式 D: 纯数组格式 (直接是列表)
+      else if (Array.isArray(payload)) {
+        preview.vodSources = payload;
+        setImportPreview(payload);
       }
 
       if (Object.keys(preview).length === 0) {
@@ -213,7 +241,7 @@ export function VodSourcesTab({
         setUnifiedPreview(preview);
       }
     } catch (error) {
-      setDecryptError(error instanceof Error ? error.message : "解密失败");
+      setDecryptError(error instanceof Error ? error.message : "解密/代理获取失败");
     } finally {
       setIsDecrypting(false);
     }

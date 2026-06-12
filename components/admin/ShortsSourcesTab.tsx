@@ -120,8 +120,8 @@ export function ShortsSourcesTab({
       return;
     }
 
-    // 3. 若非合法 JSON，且没有密码，则无法进行加密包解密
-    if (!importPassword) {
+    // 3. 若非合法 JSON，且没有密码，且【不是订阅 URL】，则无法进行加密包解密
+    if (!importPassword && !isSubscriptionUrl(importData)) {
       setDecryptError("未识别为合法的明文 JSON 配置，如果是加密配置请输入解密密码");
       setIsDecrypting(false);
       return;
@@ -134,7 +134,7 @@ export function ShortsSourcesTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           isSubscriptionUrl(importData)
-            ? { password: importPassword, subscriptionUrl: importData }
+            ? { password: importPassword || "", subscriptionUrl: importData }
             : { password: importPassword, encryptedData: importData }
         ),
       });
@@ -142,18 +142,27 @@ export function ShortsSourcesTab({
       const result = await response.json();
 
       if (result.code !== 200) {
-        throw new Error(result.message || "解密失败");
+        throw new Error(result.message || "解密或代理获取失败");
       }
 
       const payload = result.data;
 
-      if (payload.shortsSources && payload.shortsSources.length > 0) {
-        setImportPreview(payload.shortsSources);
+      let shortsSourcesList: any[] = [];
+      if (payload.shortsSources && Array.isArray(payload.shortsSources)) {
+        shortsSourcesList = payload.shortsSources;
+      } else if (payload.sources && Array.isArray(payload.sources)) {
+        shortsSourcesList = payload.sources;
+      } else if (Array.isArray(payload)) {
+        shortsSourcesList = payload;
+      }
+
+      if (shortsSourcesList.length > 0) {
+        setImportPreview(shortsSourcesList);
       } else {
-        setDecryptError("配置中没有短剧源数据");
+        setDecryptError("配置中没有找到有效的短剧源配置");
       }
     } catch (error) {
-      setDecryptError(error instanceof Error ? error.message : "解密失败");
+      setDecryptError(error instanceof Error ? error.message : "解密/代理获取失败");
     } finally {
       setIsDecrypting(false);
     }

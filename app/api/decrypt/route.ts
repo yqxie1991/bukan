@@ -147,38 +147,92 @@ function parseEncryptedString(input: string): EncryptedPackage {
   }
 }
 
-// POST - 解密配置
+// POST - 解密配置或代理拉取订阅配置
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { password, encryptedData, subscriptionUrl } = body;
 
-    if (!password) {
-      return NextResponse.json(
-        { code: 400, message: '缺少解密密码', data: null },
-        { status: 400 }
-      );
-    }
-
-    let encryptedPackage: EncryptedPackage;
+    let parsedPayload: any = null;
 
     if (subscriptionUrl) {
-      // 从 URL 获取加密配置
-      const response = await fetch(subscriptionUrl);
+      // 1. 从 URL 获取配置内容
+      const response = await fetch(subscriptionUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        }
+      });
       if (!response.ok) {
-        throw new Error(`获取配置失败: ${response.status}`);
+        throw new Error(`获取订阅配置失败，HTTP 状态码: ${response.status}`);
       }
 
-      const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        encryptedPackage = await response.json();
+      const text = (await response.text()).trim();
+      let parsedJson: any = null;
+      let isJson = false;
+
+      // 尝试解析为明文 JSON
+      try {
+        parsedJson = JSON.parse(text);
+        isJson = true;
+      } catch {
+        // 尝试 Base64 解码后再解析
+        try {
+          const decoded = Buffer.from(text, 'base64').toString('utf8').trim();
+          parsedJson = JSON.parse(decoded);
+          isJson = true;
+        } catch {
+          // 均解析失败
+        }
+      }
+
+      if (!isJson) {
+        throw new Error('订阅内容格式不正确，未识别为有效的配置数据');
+      }
+
+      // 判断是否为加密包
+      const isEncrypted = parsedJson && typeof parsedJson === 'object' && parsedJson.version && parsedJson.algorithm && parsedJson.data;
+
+      if (isEncrypted) {
+        if (!password) {
+          throw new Error('该订阅配置已加密，请输入解密密码');
+        }
+        // 解密
+        parsedPayload = await decryptConfigServer(parsedJson, password);
       } else {
-        const text = await response.text();
-        encryptedPackage = parseEncryptedString(text.trim());
+        // 明文，直接透传
+        parsedPayload = parsedJson;
       }
     } else if (encryptedData) {
-      // 直接解析加密数据
-      encryptedPackage = parseEncryptedString(encryptedData);
+      // 2. 直接解析加密数据 (或者是粘贴的明文)
+      let isEncrypted = false;
+      let encryptedPackage: EncryptedPackage | null = null;
+
+      try {
+        encryptedPackage = parseEncryptedString(encryptedData);
+        isEncrypted = !!(encryptedPackage && encryptedPackage.version && encryptedPackage.algorithm && encryptedPackage.data);
+      } catch {
+        // 尝试解析为普通明文 JSON
+        try {
+          parsedPayload = JSON.parse(encryptedData.trim());
+        } catch {
+          // 尝试 Base64 编码的明文 JSON
+          try {
+            const decoded = Buffer.from(encryptedData.trim(), 'base64').toString('utf8').trim();
+            parsedPayload = JSON.parse(decoded);
+          } catch {
+            throw new Error('无效的配置数据格式');
+          }
+        }
+      }
+
+      if (isEncrypted && encryptedPackage) {
+        if (!password) {
+          throw new Error('该配置已加密，请输入解密密码');
+        }
+        parsedPayload = await decryptConfigServer(encryptedPackage, password);
+      } else if (!parsedPayload) {
+        throw new Error('未识别为合法的配置数据');
+      }
     } else {
       return NextResponse.json(
         { code: 400, message: '缺少加密数据或订阅 URL', data: null },
@@ -186,20 +240,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 解密
-    const payload = await decryptConfigServer(encryptedPackage, password);
-
     return NextResponse.json({
       code: 200,
       message: 'Success',
-      data: payload,
+      data: parsedPayload,
     });
   } catch (error) {
-    console.error('❌ 解密失败:', error);
+    console.error('❌ 解密或代理拉取失败:', error);
     return NextResponse.json(
       {
         code: 500,
-        message: error instanceof Error ? error.message : '解密失败',
+        message: error instanceof Error ? error.message : '解析或解密失败',
         data: null,
       },
       { status: 500 }

@@ -122,8 +122,8 @@ export function DailymotionChannelsTab({
       return;
     }
 
-    // 3. 若非合法 JSON，且没有密码，则无法进行加密包解密
-    if (!importPassword) {
+    // 3. 若非合法 JSON，且没有密码，且【不是订阅 URL】，则无法进行加密包解密
+    if (!importPassword && !isSubscriptionUrl(importData)) {
       setDecryptError("未识别为合法的明文 JSON 配置，如果是加密配置请输入解密密码");
       setIsDecrypting(false);
       return;
@@ -137,7 +137,7 @@ export function DailymotionChannelsTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           isSubscriptionUrl(importData)
-            ? { password: importPassword, subscriptionUrl: importData }
+            ? { password: importPassword || "", subscriptionUrl: importData }
             : { password: importPassword, encryptedData: importData }
         ),
       });
@@ -145,21 +145,29 @@ export function DailymotionChannelsTab({
       const result = await response.json();
 
       if (result.code !== 200) {
-        throw new Error(result.message || "解密失败");
+        throw new Error(result.message || "解密或代理获取失败");
       }
 
       const payload = result.data;
 
-      if (
-        payload.dailymotionChannels &&
-        payload.dailymotionChannels.length > 0
-      ) {
-        setImportPreview(payload.dailymotionChannels);
+      let dailymotionChannelsList: any[] = [];
+      if (payload.dailymotionChannels && Array.isArray(payload.dailymotionChannels)) {
+        dailymotionChannelsList = payload.dailymotionChannels;
+      } else if (payload.channels && Array.isArray(payload.channels)) {
+        dailymotionChannelsList = payload.channels;
+      } else if (payload.sources && Array.isArray(payload.sources)) {
+        dailymotionChannelsList = payload.sources;
+      } else if (Array.isArray(payload)) {
+        dailymotionChannelsList = payload;
+      }
+
+      if (dailymotionChannelsList.length > 0) {
+        setImportPreview(dailymotionChannelsList);
       } else {
-        setDecryptError("配置中没有 Dailymotion 频道数据");
+        setDecryptError("配置中没有找到有效的 Dailymotion 频道配置");
       }
     } catch (error) {
-      setDecryptError(error instanceof Error ? error.message : "解密失败");
+      setDecryptError(error instanceof Error ? error.message : "解密/代理获取失败");
     } finally {
       setIsDecrypting(false);
     }
