@@ -117,7 +117,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     onMouseEnter={() => setOpenDropdown(item.label)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    <button className={`transition-colors text-sm font-medium flex items-center gap-1 py-2 ${
+                    <button className={`transition-colors text-base font-semibold flex items-center gap-1 py-2 ${
                       scrolled
                         ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         : "text-zinc-300 hover:text-white"
@@ -163,7 +163,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                     key={item.href}
                     href={item.href!}
                     target={item.external ? "_blank" : undefined}
-                    className={`transition-colors text-sm font-medium ${
+                    className={`transition-colors text-base font-semibold ${
                       scrolled
                         ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                         : "text-zinc-300 hover:text-white"
@@ -266,7 +266,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                   <div key={item.label} className="space-y-1">
                     <div className="flex items-center space-x-3 px-4 py-3 text-gray-500 dark:text-gray-400">
                       <Icon className="w-5 h-5" />
-                      <span className="text-base font-medium">
+                      <span className="text-lg font-semibold">
                         {item.label}
                       </span>
                     </div>
@@ -277,7 +277,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200"
                       >
-                        <span className="text-sm font-medium">
+                        <span className="text-base font-semibold">
                           {child.label}
                         </span>
                       </Link>
@@ -294,7 +294,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-200 group"
                 >
                   <Icon className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
-                  <span className="text-base font-medium">{item.label}</span>
+                  <span className="text-lg font-semibold">{item.label}</span>
                 </Link>
               );
             })}
