@@ -19,9 +19,9 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `update-github-owner-url` | 更新 README.md 中的 GitHub 用户名由 unilei 为 yqxie1991 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/update-github-owner-url/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
+* 📦 [update-github-owner-url](archive/update-github-owner-url/index.md) —— 更新 README.md 中的 GitHub 用户名由 unilei 为 yqxie1991 (Completed: 2026-06-12)
 * 📦 [update-github-repo-url](archive/update-github-repo-url/index.md) —— 更新 README.md 中的 GitHub 仓库链接与部署地址为 bukan (Completed: 2026-06-12)
 * 📦 [rename-project-readme](archive/rename-project-readme/index.md) —— 修正主 README.md 文档中的项目名称为“不看” (Completed: 2026-06-12)
 * 📦 [update-readme](archive/update-readme/index.md) —— 更新项目 README.md 说明文档匹配当前方案 (Completed: 2026-06-12)
