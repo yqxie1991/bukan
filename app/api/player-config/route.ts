@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/db';
 import { COLLECTIONS } from '@/lib/constants/db';
+import { validateSession } from '@/lib/auth';
 
 export interface PlayerConfig {
   mode: 'iframe' | 'local' | 'auto'; // 播放器模式
@@ -150,6 +151,14 @@ export async function GET() {
 // 更新配置
 export async function POST(request: NextRequest) {
   try {
+    // 验证会话权限
+    if (!(await validateSession())) {
+      return NextResponse.json(
+        { code: 401, msg: '未授权访问' },
+        { status: 401 }
+      );
+    }
+
     const config: Partial<PlayerConfig> = await request.json();
 
     // 验证配置格式

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MongoClient } from 'mongodb';
+import { validateSession } from '@/lib/auth';
 
 /**
  * 数据库连接测试 API
@@ -8,6 +9,14 @@ import { MongoClient } from 'mongodb';
  * 创建新连接进行测试，不影响现有连接池
  */
 export async function POST() {
+  // 验证会话权限
+  if (!(await validateSession())) {
+    return NextResponse.json(
+      { code: 401, error: '未授权访问' },
+      { status: 401 }
+    );
+  }
+
   const startTime = Date.now();
   const uri = process.env.MONGODB_URI;
   

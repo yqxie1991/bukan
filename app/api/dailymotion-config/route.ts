@@ -6,6 +6,7 @@ import {
   deleteDailymotionChannelFromDB,
   setDefaultDailymotionChannelInDB,
 } from '@/lib/dailymotion-config-db';
+import { validateSession } from '@/lib/auth';
 
 // GET - 获取所有频道配置（带 Redis 缓存）
 export async function GET() {
@@ -32,6 +33,14 @@ export async function GET() {
 // POST - 更新配置（使用 MongoDB + Redis 缓存）
 export async function POST(request: NextRequest) {
   try {
+    // 验证会话权限
+    if (!(await validateSession())) {
+      return NextResponse.json(
+        { code: 401, message: '未授权访问', data: null },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     if (body.action === 'add') {
