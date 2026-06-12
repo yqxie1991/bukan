@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🎬 代理视频请求: ${videoUrl}`);
+    // 移除高频代理请求日志，防止 Docker 频繁刷盘写日志
+    // console.log(`🎬 代理视频请求: ${videoUrl}`);
 
     // 准备请求头 - 模拟真实浏览器
     const fetchHeaders: HeadersInit = {
@@ -47,7 +48,8 @@ export async function GET(request: NextRequest) {
       fetchHeaders['Range'] = rangeHeader;
     }
     
-    console.log('🔧 请求headers:', JSON.stringify(fetchHeaders, null, 2));
+    // 移除高频 Headers 打印，防止 Docker 频繁刷盘写日志
+    // console.log('🔧 请求headers:', JSON.stringify(fetchHeaders, null, 2));
     
     const videoResponse = await fetch(videoUrl, {
       headers: fetchHeaders,

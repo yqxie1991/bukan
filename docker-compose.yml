@@ -29,7 +29,7 @@ services:
   mongodb:
     image: mongo:7
     container_name: kerkerker-mongodb
-    command: mongod --setParameter diagnosticDataCollectionEnabled=false
+    command: mongod --nojournal --quiet --setParameter diagnosticDataCollectionEnabled=false
     ports:
       - "27018:27017"
     environment:
