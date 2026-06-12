@@ -11,7 +11,7 @@
 
 **极简主义、高性能影视资源聚合平台** —— 智能分片直连、豆瓣自愈匹配、自动与手动多态主题切换、群晖 Docker 极致写盘压制优化。
 
-🌐 **在线演示**: [https://bukan.vercel.app](https://bukan.vercel.app)
+🌐 **在线演示**: [https://bukan8.vercel.app/](https://bukan8.vercel.app/)
 
 [核心设计哲学](***REMOVED***-核心设计哲学) • [功能特性](***REMOVED***-功能特性) • [快速部署](***REMOVED***-快速部署) • [环境变量](***REMOVED***-环境变量) • [本地开发](***REMOVED***-本地开发)
 
