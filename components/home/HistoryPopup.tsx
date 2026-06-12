@@ -9,7 +9,11 @@ import { History, ChevronRight, Play } from "lucide-react";
 // Popup 显示的最大数量
 const MAX_POPUP_ITEMS = 5;
 
-export function HistoryPopup() {
+interface HistoryPopupProps {
+  scrolled?: boolean;
+}
+
+export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
   const router = useRouter();
   const { history, isLoading } = useWatchHistory();
   const [isOpen, setIsOpen] = useState(false);
@@ -67,7 +71,11 @@ export function HistoryPopup() {
       {/* 触发按钮 */}
       <button
         onClick={handleButtonClick}
-        className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors relative text-gray-800 dark:text-white"
+        className={`p-2 rounded-full transition-colors relative ${
+          scrolled
+            ? "text-gray-800 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+            : "text-white hover:bg-white/10"
+        }`}
         aria-label="历史记录"
         aria-haspopup={!isMobile}
         aria-expanded={isOpen}

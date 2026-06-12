@@ -48,7 +48,12 @@ function LoginForm() {
         <div className="bg-[***REMOVED***1a1a1a] rounded-lg shadow-2xl p-10 border border-[***REMOVED***333]">
           {/* Netflix Logo Style */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-[***REMOVED***E50914] mb-2">不看</h1>
+            <h1 
+              className="text-4xl font-bold text-[***REMOVED***E50914] mb-2"
+              style={{ fontFamily: '"Smiley Sans", sans-serif' }}
+            >
+              不看
+            </h1>
             <p className="text-[***REMOVED***808080] text-lg">后台管理系统</p>
           </div>
 

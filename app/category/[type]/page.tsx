@@ -180,7 +180,10 @@ export default function CategoryPage() {
               </div>
               <span className="text-sm md:text-base font-medium">返回</span>
             </button>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
+            <h1 
+              className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent"
+              style={{ fontFamily: '"Smiley Sans", sans-serif' }}
+            >
               不看
             </h1>
           </div>

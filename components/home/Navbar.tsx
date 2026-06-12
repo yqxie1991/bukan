@@ -222,7 +222,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             </button>
 
             {/* 历史记录弹出 */}
-            <HistoryPopup />
+            <HistoryPopup scrolled={scrolled} />
           </div>
         </div>
       </nav>

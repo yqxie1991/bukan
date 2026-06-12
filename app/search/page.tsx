@@ -242,6 +242,7 @@ function SearchContent() {
               <h1
                 className="text-xl font-bold tracking-tight cursor-pointer hidden sm:block"
                 onClick={goBack}
+                style={{ fontFamily: '"Smiley Sans", sans-serif' }}
               >
                 <span className="text-red-600">不看</span>
                 <span className="text-white ml-1">搜索</span>
