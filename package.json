@@ -16,6 +16,7 @@
     "artplayer-plugin-danmuku": "^5.2.0",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
+    "cn-fontsource-lxgw-wen-kai-gb-screen": "^1.0.6",
     "dotenv": "^17.2.3",
     "hls.js": "^1.5.20",
     "lucide-react": "^0.553.0",

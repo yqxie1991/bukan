@@ -71,6 +71,7 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
             ? "bg-white/95 dark:bg-black/95 border-b border-gray-200/50 dark:border-zinc-800/50 shadow-sm dark:shadow-none"
             : "bg-gradient-to-b from-black/80 to-transparent"
         }`}
+        style={{ fontFamily: '"LXGW WenKai GB Screen", sans-serif' }}
       >
         <div className="px-4 md:px-12 py-3 md:py-4 flex items-center justify-between">
           {/* 左侧：汉堡菜单（移动端）+ Logo */}
@@ -94,21 +95,13 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center gap-1"
             >
-              <img
-                className={`w-8 h-8 md:w-10 md:h-10 transition-all ${
-                  scrolled 
-                    ? "dark:invert-0 invert hue-rotate-180" 
-                    : ""
-                }`}
-                src="/logo.png"
-                alt="logo"
-              />
               <h1
                 onClick={() => {
                   router.push("/");
                   setIsMobileMenuOpen(false);
                 }}
                 className="text-red-600 text-xl md:text-2xl lg:text-3xl font-bold tracking-tight cursor-pointer hover:text-red-500 transition-colors"
+                style={{ fontFamily: '"Smiley Sans", sans-serif' }}
               >
                 不看
               </h1>
@@ -253,12 +246,12 @@ export function Navbar({ scrolled, onSearchOpen }: NavbarProps) {
           className={`absolute top-0 left-0 h-full w-[280px] bg-white dark:bg-gradient-to-b dark:from-gray-900 dark:to-black shadow-2xl border-r border-gray-100 dark:border-none transform transition-transform duration-300 ease-out ${
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          style={{ fontFamily: '"LXGW WenKai GB Screen", sans-serif' }}
         >
           {/* 侧边栏头部 */}
           <div className="p-6 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2">
-              <img className="w-10 h-10 dark:invert-0 invert hue-rotate-180" src="/logo.png" alt="logo" />
-              <h2 className="text-red-600 text-2xl font-bold tracking-tight">
+              <h2 className="text-red-600 text-2xl font-bold tracking-tight" style={{ fontFamily: '"Smiley Sans", sans-serif' }}>
                 不看
               </h2>
             </div>

@@ -1,6 +1,9 @@
 export function Footer() {
   return (
-    <footer className="mt-20 border-t border-gray-200 dark:border-gray-800 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black dark:to-gray-950 transition-all duration-300">
+    <footer 
+      className="mt-20 border-t border-gray-200 dark:border-gray-800 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black dark:to-gray-950 transition-all duration-300"
+      style={{ fontFamily: '"LXGW WenKai GB Screen", sans-serif' }}
+    >
       <div className="mx-auto px-4 md:px-12 py-12">
         {/* 免责声明 */}
         <div className="mb-8">
