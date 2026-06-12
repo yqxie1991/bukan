@@ -22,6 +22,7 @@
 | (暂无) | | | | | |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
+* 📦 [docker-synology-deployment-optimization](archive/docker-synology-deployment-optimization/index.md) —— Docker 部署配置升级与群晖兼容性优化 (Completed: 2026-06-12)
 * 📦 [secure-admin-api-endpoints](archive/secure-admin-api-endpoints/index.md) —— 加固后台敏感设置 API 接口的权限验证 (Completed: 2026-06-12)
 * 📦 [history-icon-smiley-sans-adaptation](archive/history-icon-smiley-sans-adaptation/index.md) —— 修复历史记录图标颜色切换逻辑与适配全站品牌字形 (Completed: 2026-06-12)
 * 📦 [navbar-typography-tuning](archive/navbar-typography-tuning/index.md) —— 微调加大导航栏 Navbar 的字体与字重 (Completed: 2026-06-12)
