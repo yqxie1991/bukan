@@ -25,14 +25,14 @@ export function CategoryRow({
     <div className="px-4 md:px-12">
       {/* 标题和查看更多 */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           {icon}
           <span>{title}</span>
         </h2>
         {hasMore && (
           <button
             onClick={onViewMore}
-            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center space-x-1 group"
+            className="text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center space-x-1 group"
           >
             <span>查看全部</span>
             <svg

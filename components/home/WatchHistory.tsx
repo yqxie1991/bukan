@@ -38,13 +38,13 @@ export function WatchHistory() {
     <div className="px-4 md:px-12">
       {/* 标题和查看全部 */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <History className="w-6 h-6 text-red-500" />
           <span>继续观看</span>
         </h2>
         <Link
           href="/history"
-          className="text-sm text-gray-400 hover:text-white transition-colors flex items-center space-x-1 group"
+          className="text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center space-x-1 group"
         >
           <span>{hasMore ? `查看全部 (${history.length})` : "管理历史"}</span>
           <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
