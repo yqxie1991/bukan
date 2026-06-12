@@ -23,6 +23,6 @@
 - [x] 任务 4.2: 统一检查并修复各页面 Hover 缩放/渐变阴影的不协调问题，符合 Netflix 视觉规范 753672d
 - [x] 任务 4.3: 为 saveImageToLocal 的 fetch 添加超时机制，防止拉取挂起导致 Vercel 504 超时 753672d
 - [x] 任务 4.4: 在 image-proxy 接口中增加针对 /cache/images/ 失效缓存路径的正则自愈获取机制 753672d
-- [x] 任务 4.5: 移除 `getHomeCache` 中本地物理图片文件的检测，消除 Vercel 无状态 Serverless 下反复触发阻塞同步导致的首页卡顿 ca1f2aa
-- [x] 任务 4.6: 重构所有子页面的最外层容器与主元素样式，将硬编码暗黑样式替换为主题自适应 CSS 变量，确保 Light 模式全局生效 ca1f2aa & a6570f8
+- [x] 任务 4.5: 移除 `getHomeCache` 中本地物理图片文件的检测，消除 Vercel 无状态 Serverless 下反复触发阻塞同步导致的首页卡顿 ca1f2aa & 260eb0b
+- [x] 任务 4.6: 重构所有子页面的最外层容器与主元素样式，将硬编码暗黑样式替换为主题自适应 CSS 变量，确保 Light 模式全局生效 ca1f2aa & a6570f8 & 260eb0b
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: 分类行样式与 Hover 透传修复' (Protocol in workflow.md)
