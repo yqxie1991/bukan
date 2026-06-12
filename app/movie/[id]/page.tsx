@@ -360,28 +360,28 @@ export default function MovieDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[***REMOVED***0a0a0a] text-white font-sans selection:bg-red-500/30">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-red-500/30 transition-colors duration-300">
       {/* 沉浸式背景 - 调整透明度以保持整体暗黑风格一致性 */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[***REMOVED***0a0a0a] z-0" />
+        <div className="absolute inset-0 bg-background z-0 transition-colors duration-300" />
         <img
           src={getImageUrl(cover)}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-110"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-[***REMOVED***0a0a0a] via-[***REMOVED***0a0a0a]/80 to-transparent z-10" />
-        <div className="absolute inset-0 bg-linear-to-r from-[***REMOVED***0a0a0a] via-[***REMOVED***0a0a0a]/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/80 to-transparent z-10 transition-colors duration-300" />
+        <div className="absolute inset-0 bg-linear-to-r from-background via-background/60 to-transparent z-10 transition-colors duration-300" />
       </div>
 
       {/* 导航栏 */}
-      <nav className="sticky top-0 left-0 right-0 z-50 bg-[***REMOVED***0a0a0a]/95 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-black/50">
+      <nav className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-[***REMOVED***0a0a0a]/95 backdrop-blur-xl border-b border-gray-200 dark:border-neutral-800/50 shadow-md transition-colors duration-300">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={goBack}
-              className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors group"
+              className="p-2 -ml-2 rounded-full hover:bg-foreground/10 transition-colors group"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+              <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-foreground transition-colors" />
             </button>
             <h1
               className="text-xl font-bold tracking-tight cursor-pointer hidden sm:block"

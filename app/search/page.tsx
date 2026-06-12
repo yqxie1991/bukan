@@ -214,19 +214,19 @@ function SearchContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[***REMOVED***0a0a0a] text-white selection:bg-red-500/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-red-500/30 transition-colors duration-300">
       {/* 顶部导航栏 */}
-      <div className="sticky top-0 left-0 right-0 z-50 bg-[***REMOVED***0a0a0a]/95 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-black/50">
+      <div className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-xl border-b border-gray-200 dark:border-neutral-800/50 shadow-lg transition-colors duration-300">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             {/* 返回按钮和Logo */}
             <div className="flex items-center gap-4 shrink-0">
               <button
                 onClick={goBack}
-                className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors group"
+                className="p-2 -ml-2 rounded-full hover:bg-foreground/10 transition-colors group"
               >
                 <svg
-                  className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors"
+                  className="w-5 h-5 text-gray-400 group-hover:text-foreground transition-colors"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -548,7 +548,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center transition-colors duration-300">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-red-600 mx-auto mb-4" />
             <p className="text-gray-300 text-lg font-medium">加载中...</p>

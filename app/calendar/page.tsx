@@ -136,7 +136,7 @@ function CalendarCard({
 
       {/* 标题 */}
       <div className="mt-2">
-        <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-red-500 transition-colors">
+        <h3 className="text-foreground font-medium text-sm line-clamp-2 group-hover:text-red-500 transition-colors">
           {displayName}
         </h3>
         {entry.episode_name && entry.episode_name !== displayName && (
@@ -166,7 +166,7 @@ function CalendarDaySection({
       {/* 日期标题 */}
       <div className="flex items-center gap-3 mb-4">
         <div className={`w-2 h-2 rounded-full ${dateInfo.isToday ? 'bg-red-500' : dateInfo.isTomorrow ? 'bg-yellow-500' : 'bg-gray-500'}`} />
-        <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
           {dateInfo.isToday && <span className="text-red-500">今天</span>}
           {dateInfo.isTomorrow && <span className="text-yellow-500">明天</span>}
           <span>{dateInfo.main}</span>
@@ -295,7 +295,7 @@ export default function CalendarPage() {
   const currentRegion = REGIONS.find(r => r.code === region);
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 导航栏 */}
       <Navbar scrolled={scrolled} onSearchOpen={() => setShowSearch(true)} />
 
@@ -303,12 +303,12 @@ export default function CalendarPage() {
       <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
       {/* Hero 区域 */}
-      <div className="relative w-full pt-16 pb-8 md:pt-20 md:pb-12 bg-gradient-to-b from-gray-900 to-black">
+      <div className="relative w-full pt-16 pb-8 md:pt-20 md:pb-12 bg-gradient-to-b from-background/90 to-background border-b border-gray-200 dark:border-neutral-800/50 transition-colors duration-300">
         <div className="px-4 md:px-12 lg:px-16">
           {/* 标题行 */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground flex items-center gap-3">
                 <Calendar className="w-8 h-8 md:w-10 md:h-10 text-red-500" />
                 追剧日历
               </h1>
@@ -324,10 +324,10 @@ export default function CalendarPage() {
                 <select
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="appearance-none bg-white/10 text-white px-4 py-2.5 pr-10 rounded-xl text-sm cursor-pointer hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10"
+                  className="appearance-none bg-foreground/5 text-foreground px-4 py-2.5 pr-10 rounded-xl text-sm cursor-pointer hover:bg-foreground/10 transition-colors backdrop-blur-sm border border-gray-200 dark:border-white/10"
                 >
                   {REGIONS.map((r) => (
-                    <option key={r.code} value={r.code} className="bg-gray-900 text-white">
+                    <option key={r.code} value={r.code} className="bg-background text-foreground">
                       {r.emoji} {r.label}
                     </option>
                   ))}
@@ -340,16 +340,16 @@ export default function CalendarPage() {
                 <button
                   onClick={() => setWeekOffset((prev) => prev - 1)}
                   disabled={weekOffset <= -2}
-                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10"
+                  className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-gray-200 dark:border-white/10"
                 >
-                  <ChevronLeft className="w-5 h-5 text-white" />
+                  <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
                 <button
                   onClick={() => setWeekOffset(0)}
                   className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     weekOffset === 0
                       ? 'bg-red-600 text-white'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/10'
+                      : 'bg-foreground/5 text-foreground/80 hover:bg-foreground/10 border border-gray-200 dark:border-white/10'
                   }`}
                 >
                   本周
@@ -357,9 +357,9 @@ export default function CalendarPage() {
                 <button
                   onClick={() => setWeekOffset((prev) => prev + 1)}
                   disabled={weekOffset >= 2}
-                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10"
+                  className="p-2.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-gray-200 dark:border-white/10"
                 >
-                  <ChevronRight className="w-5 h-5 text-white" />
+                  <ChevronRight className="w-5 h-5 text-foreground" />
                 </button>
               </div>
             </div>

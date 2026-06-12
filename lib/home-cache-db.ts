@@ -102,43 +102,9 @@ export async function getHomeCache(key: "hero" | "categories") {
       return null;
     }
 
-    // 校验本地图片文件是否存在（防止容器重建导致 public/cache 目录下的非持久化图片丢失）
-    if (cache.data) {
-      let filesExist = true;
-      const checkPaths = (obj: any): string[] => {
-        const paths: string[] = [];
-        const extract = (item: any) => {
-          if (!item) return;
-          if (typeof item === 'string' && item.startsWith('/cache/images/')) {
-            paths.push(item);
-          } else if (Array.isArray(item)) {
-            item.forEach(extract);
-          } else if (typeof item === 'object') {
-            Object.values(item).forEach(extract);
-          }
-        };
-        extract(obj);
-        return paths;
-      };
-      
-      const cachedImagePaths = checkPaths(cache.data);
-      // 抽查前 3 个图片文件是否存在
-      const samplePaths = cachedImagePaths.slice(0, 3);
-      for (const imgPath of samplePaths) {
-        try {
-          const filePath = path.join(process.cwd(), 'public', imgPath);
-          await fs.access(filePath);
-        } catch {
-          console.log(`⚠️ 检测到本地缓存图片 [${imgPath}] 丢失，判定缓存失效，将触发重新同步以自愈`);
-          filesExist = false;
-          break;
-        }
-      }
-      
-      if (!filesExist) {
-        return null;
-      }
-    }
+    // 提示：已移除本地图片物理文件校验。
+    // 在无状态的 Vercel 部署环境中，由于运行期写入的物理文件无法持久化，该校验每次访问都会判定失效，从而触发极其耗时的 syncHomeData 阻塞拉取动作。
+    // 由于我们在 /api/image-proxy 中已经内置了正则自愈机制，即使物理文件不存在，前端请求代理图片时也会智能回源获取，因此无需重复同步，直接返回数据库元数据即可。
 
     return cache.data;
   } catch (error) {

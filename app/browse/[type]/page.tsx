@@ -449,16 +449,16 @@ export default function BrowsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-950 to-black text-white">
+    <div className="min-h-screen bg-background text-foreground dark:bg-gradient-to-b dark:from-black dark:via-gray-950 dark:to-black transition-colors duration-300">
       {/* 顶部导航栏 */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-gray-800/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-md border-b border-gray-200 dark:border-neutral-800/50 transition-colors duration-300">
         <div className="px-4 md:px-12 py-5">
           <div className="flex items-center justify-between">
             <button
               onClick={goBack}
-              className="flex items-center gap-2 text-white/80 hover:text-white transition-all group"
+              className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-all group"
             >
-              <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+              <div className="p-1.5 rounded-full bg-foreground/5 group-hover:bg-foreground/10 transition-colors">
                 <svg
                   className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"
                   fill="none"
@@ -574,11 +574,9 @@ export default function BrowsePage() {
               return (
                 <div key={index}>
                   <div className="flex items-center justify-between mb-4 mt-2">
-                    <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+                    <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
                       <span>{getCategoryIcon(category.name)}</span>
-                      <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        {category.name}
-                      </span>
+                      <span>{category.name}</span>
                     </h2>
                     <div className="text-sm text-gray-500">
                       {categoryMovies.length} 部

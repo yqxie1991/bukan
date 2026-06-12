@@ -90,19 +90,19 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 顶部导航 */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
+      <header className="sticky top-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-sm border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
         <div className="px-4 md:px-12 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-2 hover:bg-foreground/10 rounded-full transition-colors"
               aria-label="返回"
             >
-              <ArrowLeft className="w-5 h-5 text-white" />
+              <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
-            <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
               <History className="w-6 h-6 text-red-500" />
               <span>观看历史</span>
               {history.length > 0 && (
@@ -175,12 +175,12 @@ export default function HistoryPage() {
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder="搜索历史记录…"
-                className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 bg-foreground/5 border border-gray-200 dark:border-white/10 rounded-lg text-foreground placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-colors"
               />
               {searchKeyword && (
                 <button
                   onClick={() => setSearchKeyword("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-foreground/10 rounded-full transition-colors"
                 >
                   <X className="w-4 h-4 text-gray-400" />
                 </button>
@@ -204,7 +204,7 @@ export default function HistoryPage() {
             <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
               <History className="w-12 h-12 text-gray-600" />
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               暂无观看历史
             </h2>
             <p className="text-gray-400 mb-6">开始观看视频后，历史记录将显示在这里</p>
@@ -219,7 +219,7 @@ export default function HistoryPage() {
           /* 搜索无结果 */
           <div className="flex flex-col items-center justify-center py-20">
             <Search className="w-12 h-12 text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               未找到相关记录
             </h2>
             <p className="text-gray-400">

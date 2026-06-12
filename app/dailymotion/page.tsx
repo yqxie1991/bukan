@@ -142,10 +142,10 @@ function DailymotionContent() {
 
   if (error || !channelData) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-8">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-8 transition-colors duration-300">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-white text-2xl font-bold mb-2">
+          <h2 className="text-foreground text-2xl font-bold mb-2">
             {error || "Failed to load channel data"}
           </h2>
           <p className="text-gray-400">请稍后再试或检查频道名称</p>
@@ -155,7 +155,7 @@ function DailymotionContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <style jsx global>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -167,7 +167,7 @@ function DailymotionContent() {
       `}</style>
 
       {/* Top Navigation */}
-      <div className="px-3 md:px-6 lg:px-10 py-3 border-b border-neutral-900">
+      <div className="px-3 md:px-6 lg:px-10 py-3 border-b border-gray-200 dark:border-neutral-900 transition-colors duration-300">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-red-600 transition-colors text-sm group"
