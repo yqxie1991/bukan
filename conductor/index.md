@@ -19,6 +19,7 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `update-readme` | 更新项目 README.md 说明文档匹配当前方案 | `[~] 进行中` | `Low` | 2026-06-12 | [plan.md](tracks/update-readme/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
 * 📦 [system-resource-optimization](archive/system-resource-optimization/index.md) —— 群晖系统资源占用优化、空闲写盘压制与安全漏洞修复 (Completed: 2026-06-11)
