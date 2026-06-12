@@ -19,10 +19,10 @@
 
 | 任务轨道 ID | 任务轨道名称 | 当前状态 | 优先级 | 创建日期 | 关联 Plan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `generate-new-logo` | 设计并为“不看”生成全新的项目 Logo 图标 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/generate-new-logo/plan.md) |
 | `rewrite-readme-entirely` | 全量删除并重写项目 README.md 说明文档 | `[~] 进行中` | `Medium` | 2026-06-12 | [plan.md](tracks/rewrite-readme-entirely/plan.md) |
 
 ***REMOVED******REMOVED*** 4. 历史归档轨道 (Archived Tracks)
+* 📦 [generate-new-logo](archive/generate-new-logo/index.md) —— 设计并为“不看”生成全新的项目 Logo 图标 (Completed: 2026-06-12)
 * 📦 [update-github-owner-url](archive/update-github-owner-url/index.md) —— 更新 README.md 中的 GitHub 用户名由 unilei 为 yqxie1991 (Completed: 2026-06-12)
 * 📦 [update-github-repo-url](archive/update-github-repo-url/index.md) —— 更新 README.md 中的 GitHub 仓库链接与部署地址为 bukan (Completed: 2026-06-12)
 * 📦 [rename-project-readme](archive/rename-project-readme/index.md) —— 修正主 README.md 文档中的项目名称为“不看” (Completed: 2026-06-12)
