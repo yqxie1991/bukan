@@ -12,10 +12,10 @@ version: '3.8'
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v2.0
+    image: ghcr.io/yqxie1991/bukan:v1.0-lite
     container_name: bukan-app
     ports:
-      - "3008:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
+      - "3009:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
     environment:
       - NODE_ENV=production
       

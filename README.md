@@ -67,7 +67,7 @@ services:
     image: ghcr.io/yqxie1991/bukan:v2.0   ***REMOVED*** 👈 极致精简版生产镜像
     container_name: bukan-app
     ports:
-      - "3008:3000"              ***REMOVED*** 外部访问端口， Lucky 反代等可直接指向此 3008 端口
+      - "3009:3000"              ***REMOVED*** 外部访问端口， Lucky 反代等可直接指向此 3009 端口
     environment:
       - NODE_ENV=production
       
@@ -115,7 +115,7 @@ docker-compose up -d
    * 将上方提供的 **极致精简版 docker-compose.yml** 里的内容全量复制粘贴到文本框中。
    * ⚠️ 强烈建议将配置文件中的 `ADMIN_PASSWORD` 从默认值 `bukan` 修改为您自定义的强密码，防止被他人扫后台越权登录。
 5. **部署并运行**：点击下一步，根据向导点击“完成”。Container Manager 会自动从 GitHub 下载镜像，自动初始化图片缓存及数据持久化卷。
-6. **配置 Lucky 反代**：服务运行在群晖内网的 `3008` 端口。请在您的 Lucky 反代后台新建一条 Web 服务反代规则，将您的外网 HTTPS 域名直接反代指向 `http://群晖局域网内网IP:3008` 即可安全访问。
+6. **配置 Lucky 反代**：服务运行在群晖内网的 `3009` 端口。请在您的 Lucky 反代后台新建一条 Web 服务反代规则，将您的外网 HTTPS 域名直接反代指向 `http://群晖局域网内网IP:3009` 即可安全访问。
 
 ---
 
