@@ -266,14 +266,14 @@ export async function syncHomeData(key: "hero" | "categories") {
       rawCategories.map(async (cat) => {
         const slicedData = cat.data.slice(0, 20);
         slicedData.forEach((item) => {
-          const typedItem = item as Record<string, unknown>;
+          const typedItem = item as unknown as Record<string, unknown>;
           if (typedItem.id && !doubanIdsToSync.includes(String(typedItem.id))) {
             doubanIdsToSync.push(String(typedItem.id));
           }
         });
         const localizedData = await Promise.all(
           slicedData.map(async (item) => {
-            const typedItem = item as Record<string, unknown>;
+            const typedItem = item as unknown as Record<string, unknown>;
             const localCover = await saveImageToLocal(
               String(typedItem.cover || ""),
               `${typedItem.id}_cover`
