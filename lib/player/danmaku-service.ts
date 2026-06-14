@@ -134,7 +134,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
 
     return [];
   } catch (error) {
-    console.error("搜索动漫出错:", error);
+    console.warn("搜索动漫出错 (可能网络连接失败或接口失效):", error);
     return [];
   }
 }
@@ -160,7 +160,7 @@ export async function getBangumi(animeId: number): Promise<Bangumi | null> {
 
     return null;
   } catch (error) {
-    console.error("获取动漫详情出错:", error);
+    console.warn("获取动漫详情出错 (可能网络连接失败或接口失效):", error);
     return null;
   }
 }
@@ -186,7 +186,7 @@ export async function getComments(episodeId: number): Promise<DanmakuItem[]> {
 
     return [];
   } catch (error) {
-    console.error("获取弹幕出错:", error);
+    console.warn("获取弹幕出错 (可能网络连接失败或接口失效):", error);
     return [];
   }
 }
@@ -218,7 +218,7 @@ export async function matchAnime(
     const data: MatchResponse = await response.json();
     return data;
   } catch (error) {
-    console.error("自动匹配出错:", error);
+    console.warn("自动匹配出错 (可能网络连接失败或接口失效):", error);
     return null;
   }
 }
