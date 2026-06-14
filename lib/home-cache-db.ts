@@ -9,7 +9,7 @@ const CACHE_FILE = 'home-cache.json';
 let isCronStarted = false;
 
 // 首页二级内存缓存防线，防止频繁穿透慢速豆瓣微服务
-export const MEMORY_CACHE: Record<string, { data: any; updatedAt: number }> = {};
+export const MEMORY_CACHE: Record<string, { data: unknown; updatedAt: number }> = {};
 export const MEMORY_CACHE_TTL = 30 * 60 * 1000; // 30分钟内存有效缓存
 
 /**
@@ -18,7 +18,7 @@ export const MEMORY_CACHE_TTL = 30 * 60 * 1000; // 30分钟内存有效缓存
 async function ensureImageDir() {
   try {
     await fs.mkdir(IMAGE_CACHE_DIR, { recursive: true });
-  } catch (err) {
+  } catch {
     // 目录已存在
   }
 }
@@ -75,8 +75,8 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
 /**
  * 底层通用获取原生缓存文档接口（供内部及影片详情API使用）
  */
-export async function getHomeCacheRaw(key: string): Promise<{ key: string; data: any; updated_at: string } | null> {
-  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
+export async function getHomeCacheRaw(key: string): Promise<{ key: string; data: unknown; updated_at: string } | null> {
+  const cache = readStore<Record<string, { data: unknown; updated_at: string }>>(CACHE_FILE, {});
   const item = cache[key];
   if (!item) return null;
   return {
@@ -89,8 +89,8 @@ export async function getHomeCacheRaw(key: string): Promise<{ key: string; data:
 /**
  * 底层通用写入原生缓存文档接口
  */
-export async function saveHomeCacheRaw(key: string, data: any): Promise<void> {
-  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
+export async function saveHomeCacheRaw(key: string, data: unknown): Promise<void> {
+  const cache = readStore<Record<string, { data: unknown; updated_at: string }>>(CACHE_FILE, {});
   cache[key] = {
     data,
     updated_at: new Date().toISOString(),
@@ -172,10 +172,10 @@ export function startCronJob() {
  * 扫描全部激活的本地缓存图片相对路径
  */
 async function getAllActiveImagePaths(): Promise<Set<string>> {
-  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
+  const cache = readStore<Record<string, { data: unknown; updated_at: string }>>(CACHE_FILE, {});
   const activePaths = new Set<string>();
 
-  const extractPaths = (obj: any) => {
+  const extractPaths = (obj: unknown) => {
     if (!obj) return;
     if (typeof obj === "string" && obj.startsWith("/cache/images/")) {
       activePaths.add(obj);
@@ -229,7 +229,7 @@ async function cleanOrphanImages() {
  * 强制同步微服务最新数据，下载海报并更新本地存储
  */
 export async function syncHomeData(key: "hero" | "categories") {
-  let freshData: any;
+  let freshData: unknown;
   const doubanIdsToSync: string[] = [];
 
   if (key === "hero") {
@@ -265,19 +265,21 @@ export async function syncHomeData(key: "hero" | "categories") {
     freshData = await Promise.all(
       rawCategories.map(async (cat) => {
         const slicedData = cat.data.slice(0, 20);
-        slicedData.forEach((item: any) => {
-          if (item.id && !doubanIdsToSync.includes(String(item.id))) {
-            doubanIdsToSync.push(String(item.id));
+        slicedData.forEach((item) => {
+          const typedItem = item as Record<string, unknown>;
+          if (typedItem.id && !doubanIdsToSync.includes(String(typedItem.id))) {
+            doubanIdsToSync.push(String(typedItem.id));
           }
         });
         const localizedData = await Promise.all(
           slicedData.map(async (item) => {
+            const typedItem = item as Record<string, unknown>;
             const localCover = await saveImageToLocal(
-              item.cover,
-              `${item.id}_cover`
+              String(typedItem.cover || ""),
+              `${typedItem.id}_cover`
             );
             return {
-              ...item,
+              ...typedItem,
               cover: localCover,
             };
           })

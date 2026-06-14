@@ -4,7 +4,7 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), 'data');
 
 // 进程级内存缓存，避免高频读磁盘
-const memoryCache = new Map<string, { data: any; mtime: number }>();
+const memoryCache = new Map<string, { data: unknown; mtime: number }>();
 
 // 确保 data 目录存在
 function ensureDataDir() {
@@ -27,7 +27,7 @@ export function readStore<T>(filename: string, defaultValue: T): T {
     try {
       const stat = fs.statSync(filePath);
       if (stat.mtimeMs === cached.mtime) {
-        return cached.data;
+        return cached.data as T;
       }
     } catch {
       // 文件可能被删除，清空缓存并走默认逻辑
