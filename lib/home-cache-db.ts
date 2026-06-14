@@ -1,14 +1,14 @@
-import { getDatabase } from "./db";
+import { readStore, writeStore } from "./json-store";
 import { getHeroMovies, getNewContent } from "./douban-service";
-import { COLLECTIONS } from "./constants/db";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
 const IMAGE_CACHE_DIR = path.join(process.cwd(), "public", "cache", "images");
+const CACHE_FILE = 'home-cache.json';
 let isCronStarted = false;
 
-// 首页二级内存缓存防线，防止数据库响应慢或者数据库挂掉时频繁穿透慢速豆瓣微服务
+// 首页二级内存缓存防线，防止频繁穿透慢速豆瓣微服务
 export const MEMORY_CACHE: Record<string, { data: any; updatedAt: number }> = {};
 export const MEMORY_CACHE_TTL = 30 * 60 * 1000; // 30分钟内存有效缓存
 
@@ -25,9 +25,6 @@ async function ensureImageDir() {
 
 /**
  * 下载豆瓣原始图片并保存至本地静态目录
- * @param imageUrl 豆瓣 CDN 图片地址
- * @param prefix 图片命名的文件前缀 (比如 影片ID_类型)
- * @returns 返回本地访问 of 的相对 URL，如 '/cache/images/1292052_cover_f90b.jpg'
  */
 async function saveImageToLocal(imageUrl: string, prefix: string): Promise<string> {
   if (!imageUrl) return "";
@@ -36,18 +33,15 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
   try {
     const urlObj = new URL(imageUrl);
     let ext = path.extname(urlObj.pathname) || ".jpg";
-    // 规范化文件后缀
     if (![".jpg", ".jpeg", ".png", ".webp"].includes(ext.toLowerCase())) {
       ext = ".jpg";
     }
 
-    // 利用图片 URL 的 MD5 校验和确保文件名唯一性且避免重复下载
     const hash = crypto.createHash("md5").update(imageUrl).digest("hex").substring(0, 8);
     const fileName = `${prefix}_${hash}${ext}`;
     const filePath = path.join(IMAGE_CACHE_DIR, fileName);
     const localUrl = `/cache/images/${fileName}`;
 
-    // 1. 如果图片已存在，则直接返回本地 URL
     try {
       await fs.access(filePath);
       return localUrl;
@@ -55,7 +49,6 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
       // 本地不存在，继续下载
     }
 
-    // 2. 发起下载（需注入 Referer 绕过豆瓣防盗链，加入超时避免挂起）
     const response = await fetch(imageUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -75,13 +68,40 @@ async function saveImageToLocal(imageUrl: string, prefix: string): Promise<strin
     return localUrl;
   } catch (error) {
     console.error(`✗ 下载图片失败 [${imageUrl}]:`, error);
-    // 智能降级：失败则返回原图链接，利用系统原图代理中转，不让界面裂图
     return imageUrl;
   }
 }
 
+/**
+ * 底层通用获取原生缓存文档接口（供内部及影片详情API使用）
+ */
+export async function getHomeCacheRaw(key: string): Promise<{ key: string; data: any; updated_at: string } | null> {
+  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
+  const item = cache[key];
+  if (!item) return null;
+  return {
+    key,
+    data: item.data,
+    updated_at: item.updated_at,
+  };
+}
+
+/**
+ * 底层通用写入原生缓存文档接口
+ */
+export async function saveHomeCacheRaw(key: string, data: any): Promise<void> {
+  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
+  cache[key] = {
+    data,
+    updated_at: new Date().toISOString(),
+  };
+  writeStore(CACHE_FILE, cache);
+}
+
+/**
+ * 获取首页缓存
+ */
 export async function getHomeCache(key: "hero" | "categories") {
-  // 1. 优先从内存缓存中获取，且在 TTL 内秒回
   const now = Date.now();
   const memCached = MEMORY_CACHE[key];
   if (memCached && (now - memCached.updatedAt) < MEMORY_CACHE_TTL) {
@@ -90,17 +110,11 @@ export async function getHomeCache(key: "hero" | "categories") {
   }
 
   try {
-    const db = await getDatabase();
-    if (!db) throw new Error("Database connection not ready");
-
-    const collection = db.collection(COLLECTIONS.HOME_CACHE);
-    const cache = await collection.findOne({ key });
+    const cache = await getHomeCacheRaw(key);
     
     if (cache && cache.data) {
-      // 写入内存缓存
       MEMORY_CACHE[key] = { data: cache.data, updatedAt: now };
 
-      // 校验是否已经跨天（判定是否跨过 0 点）
       const updatedAtDate = new Date(cache.updated_at);
       const nowDate = new Date();
       
@@ -111,7 +125,6 @@ export async function getHomeCache(key: "hero" | "categories") {
 
       if (isExpired) {
         console.log(`⏰ [Home Cache] 检测到数据库缓存 [${key}] 已过0点，将在后台异步刷新同步，不阻塞当前返回`);
-        // 异步同步，不阻塞当前响应
         syncHomeData(key).catch((err) => {
           console.error(`后台异步刷新首屏缓存失败 [key: ${key}]:`, err);
         });
@@ -123,7 +136,6 @@ export async function getHomeCache(key: "hero" | "categories") {
     return null;
   } catch (error) {
     console.error(`读取数据库缓存失败，尝试使用陈旧的内存缓存进行容灾 [key: ${key}]:`, error);
-    // 容灾兜底：如果数据库挂了，且内存中有过期数据，直接用内存数据返回，防止雪崩
     if (memCached) {
       console.log(`🛡️ [Home Cache] 内存缓存容灾兜底成功 [key: ${key}]`);
       return memCached.data;
@@ -134,7 +146,6 @@ export async function getHomeCache(key: "hero" | "categories") {
 
 /**
  * 启动 0 点自动更新定时任务
- * 每分钟检测一次时间，到 00:00 准时自动在服务端完成元数据与图片的同步
  */
 export function startCronJob() {
   if (isCronStarted) return;
@@ -144,7 +155,6 @@ export function startCronJob() {
 
   setInterval(async () => {
     const now = new Date();
-    // 当本地时间的 时 和 分 均为 00:00 时触发更新
     if (now.getHours() === 0 && now.getMinutes() === 0) {
       console.log("⏰ [Home Cache] 检测到当前时间为 00:00，开始自动同步首屏数据并缓存本地图片...");
       try {
@@ -155,17 +165,14 @@ export function startCronJob() {
         console.error("⏰ [Home Cache] 0 点自动更新缓存失败:", err);
       }
     }
-  }, 60000); // 1 分钟检测一次
+  }, 60000);
 }
 
 /**
- * 递归深度搜索数据库缓存数据中所有被激活的本地缓存图片相对路径
+ * 扫描全部激活的本地缓存图片相对路径
  */
 async function getAllActiveImagePaths(): Promise<Set<string>> {
-  const db = await getDatabase();
-  const collection = db.collection(COLLECTIONS.HOME_CACHE);
-  
-  const allCaches = await collection.find({}).toArray();
+  const cache = readStore<Record<string, { data: any; updated_at: string }>>(CACHE_FILE, {});
   const activePaths = new Set<string>();
 
   const extractPaths = (obj: any) => {
@@ -179,15 +186,15 @@ async function getAllActiveImagePaths(): Promise<Set<string>> {
     }
   };
 
-  allCaches.forEach((cache) => {
-    extractPaths(cache.data);
+  Object.values(cache).forEach((item) => {
+    extractPaths(item.data);
   });
 
   return activePaths;
 }
 
 /**
- * 异步扫描并清理不再在最新缓存中的孤立历史海报图片，避免占用磁盘空间
+ * 异步扫描并清理不再在最新缓存中的孤立历史海报图片
  */
 async function cleanOrphanImages() {
   try {
@@ -196,7 +203,7 @@ async function cleanOrphanImages() {
     try {
       await fs.access(IMAGE_CACHE_DIR);
     } catch {
-      return; // 目录不存在无需清理
+      return;
     }
 
     const files = await fs.readdir(IMAGE_CACHE_DIR);
@@ -219,14 +226,9 @@ async function cleanOrphanImages() {
 }
 
 /**
- * 强制同步微服务最新数据，下载海报并更新本地 MongoDB
- * @param key 'hero' | 'categories'
+ * 强制同步微服务最新数据，下载海报并更新本地存储
  */
 export async function syncHomeData(key: "hero" | "categories") {
-  const db = await getDatabase();
-  const collection = db.collection(COLLECTIONS.HOME_CACHE);
-  const now = new Date().toISOString();
-
   let freshData: any;
   const doubanIdsToSync: string[] = [];
 
@@ -235,7 +237,6 @@ export async function syncHomeData(key: "hero" | "categories") {
     rawHero.forEach((h) => {
       if (h.id) doubanIdsToSync.push(String(h.id));
     });
-    // 本地化 Banner 横竖版海报及封面
     freshData = await Promise.all(
       rawHero.map(async (hero) => {
         const localHorizontal = await saveImageToLocal(
@@ -261,10 +262,9 @@ export async function syncHomeData(key: "hero" | "categories") {
     );
   } else {
     const rawCategories = await getNewContent();
-    // 本地化各分类行前 20 条数据的封面图片
     freshData = await Promise.all(
       rawCategories.map(async (cat) => {
-        const slicedData = cat.data.slice(0, 20); // 截取前20条
+        const slicedData = cat.data.slice(0, 20);
         slicedData.forEach((item: any) => {
           if (item.id && !doubanIdsToSync.includes(String(item.id))) {
             doubanIdsToSync.push(String(item.id));
@@ -290,26 +290,16 @@ export async function syncHomeData(key: "hero" | "categories") {
     );
   }
 
-  // 1. 存入 MongoDB 集合
-  await collection.updateOne(
-    { key },
-    {
-      $set: {
-        key,
-        data: freshData,
-        updated_at: now,
-      },
-    },
-    { upsert: true }
-  );
+  // 1. 存入本地 JSON 缓存
+  await saveHomeCacheRaw(key, freshData);
 
-  // 1.5 同步更新内存缓存，使后续请求能立即获取最新数据
+  // 1.5 同步更新内存缓存
   MEMORY_CACHE[key] = { data: freshData, updatedAt: Date.now() };
 
-  // 2. 异步触发孤立海报清理（在后台静默执行，不阻碍 API 的响应）
+  // 2. 异步触发孤立海报清理
   cleanOrphanImages().catch(console.error);
 
-  // 3. 异步触发前 20 部影片的完整详情本地刮削缓存（不阻塞 API 响应）
+  // 3. 异步触发前 20 部影片的完整详情本地刮削缓存
   if (doubanIdsToSync.length > 0) {
     syncAllDetailsAsync(doubanIdsToSync).catch(console.error);
   }
@@ -318,12 +308,10 @@ export async function syncHomeData(key: "hero" | "categories") {
 }
 
 /**
- * 异步批量同步影片的详情数据到本地 MongoDB 缓存，限流并发以防止触发豆瓣微服务封锁
+ * 异步批量同步影片的详情数据到本地缓存，限流并发
  */
 async function syncAllDetailsAsync(doubanIds: string[]) {
   try {
-    const db = await getDatabase();
-    const collection = db.collection(COLLECTIONS.HOME_CACHE);
     const { getSubjectDetail } = await import("./douban-service");
     
     console.log(`⏰ [Home Cache] 开始在后台异步刮削并缓存 ${doubanIds.length} 部影片的详情元数据...`);
@@ -336,28 +324,16 @@ async function syncAllDetailsAsync(doubanIds: string[]) {
           try {
             const detail = await getSubjectDetail(id);
             if (detail) {
-              const now = new Date().toISOString();
-              await collection.updateOne(
-                { key: `detail_${id}` },
-                {
-                  $set: {
-                    key: `detail_${id}`,
-                    data: detail,
-                    updated_at: now,
-                  },
-                },
-                { upsert: true }
-              );
+              await saveHomeCacheRaw(`detail_${id}`, detail);
             }
           } catch (err) {
             console.error(`✗ 后台同步影片详情失败 [id: ${id}]:`, err);
           }
         })
       );
-      // 小段延迟以降低豆瓣微服务访问频次压力
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
-    console.log(`✓ [Home Cache] 前台首屏 ${doubanIds.length} 部影片的完整详情数据均已在本地数据库缓存成功。`);
+    console.log(`✓ [Home Cache] 前台首屏 ${doubanIds.length} 部影片的完整详情数据均已在本地缓存成功。`);
   } catch (error) {
     console.error("后台同步批量影片详情整体出错:", error);
   }

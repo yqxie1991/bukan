@@ -1,10 +1,7 @@
-import { getDatabase } from "./db";
+import { readStore, writeStore } from "./json-store";
 import { ShortDramaSource } from "@/types/shorts-source";
-import { COLLECTIONS } from "./constants/db";
-import type { AnyBulkWriteOperation } from "mongodb";
 
 export interface ShortDramaSourceDoc {
-  _id?: string;
   key: string;
   name: string;
   api: string;
@@ -18,11 +15,12 @@ export interface ShortDramaSourceDoc {
 
 // 短剧源选择配置类型
 export interface ShortDramaSourceSelection {
-  _id?: string;
-  id: number;
   selected_key?: string;
   updated_at: string;
 }
+
+const SOURCES_FILE = 'shorts-sources.json';
+const SELECTION_FILE = 'shorts-selection.json';
 
 // 将数据库文档转换为 ShortDramaSource 类型
 function docToShortDramaSource(doc: ShortDramaSourceDoc): ShortDramaSource {
@@ -35,46 +33,34 @@ function docToShortDramaSource(doc: ShortDramaSourceDoc): ShortDramaSource {
   };
 }
 
+// 排序辅助函数
+function sortShorts(a: ShortDramaSourceDoc, b: ShortDramaSourceDoc): number {
+  const priorityA = a.priority ?? 0;
+  const priorityB = b.priority ?? 0;
+  if (priorityA !== priorityB) {
+    return priorityA - priorityB;
+  }
+  return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+}
+
 // 获取所有启用的短剧源（按 priority 排序）
 export async function getShortsSourcesFromDB(): Promise<ShortDramaSource[]> {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
-
-  const docs = await collection
-    .find({ enabled: true })
-    .sort({ priority: 1, sort_order: 1, _id: 1 })
-    .toArray();
-
-  return docs.map(docToShortDramaSource);
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
+  return docs
+    .filter(doc => doc.enabled)
+    .sort(sortShorts)
+    .map(docToShortDramaSource);
 }
 
 // 获取所有短剧源（包括禁用的）
-export async function getAllShortsSourcesFromDB(): Promise<
-  ShortDramaSourceDoc[]
-> {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
-
-  const docs = await collection
-    .find()
-    .sort({ priority: 1, sort_order: 1, _id: 1 })
-    .toArray();
-
-  return docs;
+export async function getAllShortsSourcesFromDB(): Promise<ShortDramaSourceDoc[]> {
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
+  return docs.sort(sortShorts);
 }
 
 // 批量保存短剧源
-export async function saveShortsSourcesToDB(sources: ShortDramaSource[]) {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
+export async function saveShortsSourcesToDB(sources: ShortDramaSource[]): Promise<void> {
   const now = new Date().toISOString();
-
   const docs: ShortDramaSourceDoc[] = sources.map((source, index) => ({
     key: source.key,
     name: source.name,
@@ -87,29 +73,18 @@ export async function saveShortsSourcesToDB(sources: ShortDramaSource[]) {
     updated_at: now,
   }));
 
-  const operations: AnyBulkWriteOperation<ShortDramaSourceDoc>[] = [
-    { deleteMany: { filter: {} } },
-    ...docs.map((doc) => ({ insertOne: { document: doc } })),
-  ];
-
-  if (operations.length >= 1) {
-    await collection.bulkWrite(operations, { ordered: true });
-  }
+  writeStore(SOURCES_FILE, docs);
 }
 
 // 添加或更新单个短剧源
 export async function saveShortsSourceToDB(
   source: ShortDramaSource & { enabled?: boolean; sortOrder?: number }
-) {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
+): Promise<void> {
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
   const now = new Date().toISOString();
+  const index = docs.findIndex(doc => doc.key === source.key);
 
-  const doc: Omit<ShortDramaSourceDoc, "_id" | "created_at"> & {
-    created_at?: string;
-  } = {
+  const doc: ShortDramaSourceDoc = {
     key: source.key,
     name: source.name,
     api: source.api,
@@ -117,100 +92,55 @@ export async function saveShortsSourceToDB(
     priority: source.priority ?? 0,
     enabled: source.enabled !== undefined ? source.enabled : true,
     sort_order: source.sortOrder || 0,
+    created_at: index >= 0 ? docs[index].created_at : now,
     updated_at: now,
   };
 
-  await collection.updateOne(
-    { key: source.key },
-    {
-      $set: doc,
-      $setOnInsert: { created_at: now },
-    },
-    { upsert: true }
-  );
+  if (index >= 0) {
+    docs[index] = doc;
+  } else {
+    docs.push(doc);
+  }
+
+  writeStore(SOURCES_FILE, docs);
 }
 
 // 删除短剧源
-export async function deleteShortsSourceFromDB(key: string) {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
-  await collection.deleteOne({ key });
+export async function deleteShortsSourceFromDB(key: string): Promise<void> {
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
+  const filtered = docs.filter(doc => doc.key !== key);
+  writeStore(SOURCES_FILE, filtered);
 }
 
 // 获取选中的短剧源（默认返回第一个）
 export async function getSelectedShortsSourceFromDB(): Promise<ShortDramaSource | null> {
-  const db = await getDatabase();
-  const selectionCollection = db.collection<ShortDramaSourceSelection>(
-    COLLECTIONS.SHORTS_SOURCE_SELECTION
-  );
-  const shortsSourcesCollection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
-
-  // 获取选中的 key
-  const selection = await selectionCollection.findOne({ id: 1 });
+  const selection = readStore<ShortDramaSourceSelection | null>(SELECTION_FILE, null);
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
+  const enabledDocs = docs.filter(doc => doc.enabled).sort(sortShorts);
 
   if (selection?.selected_key) {
-    const doc = await shortsSourcesCollection.findOne({
-      key: selection.selected_key,
-      enabled: true,
-    });
-    if (doc) {
-      return docToShortDramaSource(doc);
+    const matched = enabledDocs.find(doc => doc.key === selection.selected_key);
+    if (matched) {
+      return docToShortDramaSource(matched);
     }
   }
 
   // 如果没有选中的或选中的源不存在，尝试返回第一个启用的源
-  const firstDoc = await shortsSourcesCollection
-    .find({ enabled: true })
-    .sort({ sort_order: 1, _id: 1 })
-    .limit(1)
-    .toArray();
-
-  if (firstDoc.length > 0) {
-    return docToShortDramaSource(firstDoc[0]);
-  }
-
-  return null;
+  return enabledDocs.length > 0 ? docToShortDramaSource(enabledDocs[0]) : null;
 }
 
 // 根据 key 获取短剧源
-export async function getShortsSourceByKey(
-  key: string
-): Promise<ShortDramaSource | null> {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceDoc>(
-    COLLECTIONS.SHORTS_SOURCES
-  );
-
-  const doc = await collection.findOne({ key, enabled: true });
-
-  if (doc) {
-    return docToShortDramaSource(doc);
-  }
-
-  return null;
+export async function getShortsSourceByKey(key: string): Promise<ShortDramaSource | null> {
+  const docs = readStore<ShortDramaSourceDoc[]>(SOURCES_FILE, []);
+  const doc = docs.find(d => d.key === key && d.enabled);
+  return doc ? docToShortDramaSource(doc) : null;
 }
 
 // 保存选中的短剧源
-export async function saveSelectedShortsSourceToDB(key: string) {
-  const db = await getDatabase();
-  const collection = db.collection<ShortDramaSourceSelection>(
-    COLLECTIONS.SHORTS_SOURCE_SELECTION
-  );
-  const now = new Date().toISOString();
-
-  await collection.updateOne(
-    { id: 1 },
-    {
-      $set: {
-        id: 1,
-        selected_key: key,
-        updated_at: now,
-      },
-    },
-    { upsert: true }
-  );
+export async function saveSelectedShortsSourceToDB(key: string): Promise<void> {
+  const selection: ShortDramaSourceSelection = {
+    selected_key: key,
+    updated_at: new Date().toISOString(),
+  };
+  writeStore(SELECTION_FILE, selection);
 }

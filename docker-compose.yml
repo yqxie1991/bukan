@@ -1,10 +1,10 @@
 ***REMOVED*** =====================================================================
-***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 生产部署专用配置
+***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 极致精简版部署配置
 ***REMOVED*** =====================================================================
 ***REMOVED*** 💡 提示：
-***REMOVED***    1. 本配置已针对群晖进行了极致调优（控制空闲磁盘写盘、限制内存占用为 256MB）。
-***REMOVED***    2. 使用已打包的远程镜像部署，无需在群晖本地进行高负载的编译打包。
-***REMOVED***    3. 全面适配了最新更名的 bukan 命名空间与独立卷，干净整洁。
+***REMOVED***    1. 本配置为去数据库极致精简版，已彻底移除 MongoDB 数据库服务。
+***REMOVED***    2. 整个系统仅包含一个 App 容器，内存占用极低（几毫瓦/几十MB），磁盘几乎完全静默。
+***REMOVED***    3. 配置数据持久化在本地 JSON 文件中（挂载在 bukan-data 卷）。
 ***REMOVED*** =====================================================================
 
 version: '3.8'
@@ -12,7 +12,6 @@ version: '3.8'
 services:
   ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    ***REMOVED*** 💡 提示：版本号默认为 v2.0，部署前请务必前往 GitHub 查看最新 Release 并修改为最新版本号！
     image: ghcr.io/yqxie1991/bukan:v2.0
     container_name: bukan-app
     ports:
@@ -24,14 +23,10 @@ services:
       ***REMOVED*** 强烈建议在部署前修改为您的自定义私有强密码，以防止他人扫描并越权登录您的后台！
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
       
-      - MONGODB_URI=mongodb://mongodb:27017/bukan
       - PORT=3000
-    depends_on:
-      - mongodb
     volumes:
       - bukan-cache:/app/public/cache             ***REMOVED*** 缓存卷，防容器重建升级后海报裂图
-    networks:
-      - bukan-network
+      - bukan-data:/app/data                      ***REMOVED*** 数据持久化卷，保存视频源、短剧源、播放器配置等
     logging:
       driver: "json-file"
       options:
@@ -39,46 +34,8 @@ services:
         max-file: "3"
     restart: unless-stopped
 
-  ***REMOVED*** 🍃 Database 服务：MongoDB 数据库
-  ***REMOVED*** 🛠️ 针对群晖机械硬盘进行了极致优化：关闭 Journal、关闭诊断收集、锁定内存，防咔哒声并保护硬盘寿命
-  mongodb:
-    ***REMOVED*** ⚠️【群晖 CPU 兼容防闪退指南】：
-    ***REMOVED***    MongoDB 5.0+ (包括 7.0) 要求 CPU 必须支持 AVX 指令集。
-    ***REMOVED***    绝大多数群晖 CPU（如 J3455、J4125、N5105 等）不支持 AVX，运行 mongo:7 会发生崩溃闪退！
-    ***REMOVED***    此处已默认修改为兼容无 AVX 的官方 4.4 稳定版，防止闪退。
-    image: mongo:4.4
-    container_name: bukan-mongodb
-    ***REMOVED*** 调优参数解释：
-    ***REMOVED*** --nojournal: 关闭日志持久化写入，大幅减少空闲时磁盘写入量，免去磁头咔哒噪音并保护硬盘寿命。
-    ***REMOVED*** --quiet: 压制冗余日志，保持后台安静。
-    ***REMOVED*** --wiredTigerCacheSizeGB 0.25: 将 WiredTiger 缓存限制在 256MB，防止其无节制吃满主机内存。
-    ***REMOVED*** --setParameter diagnosticDataCollectionEnabled=false: 彻底禁用后台定期数据诊断收集，消灭后台高频微写盘。
-    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
-    ports:
-      - "27018:27017"            ***REMOVED*** 外部连接数据库端口（可选，不需要可注释掉）
-    environment:
-      - MONGO_INITDB_DATABASE=bukan
-    volumes:
-      - bukan-mongodb-data-v1:/data/db            ***REMOVED*** 👈 已升级卷名，防范旧数据导致的 WiredTiger 冲突报错
-      - bukan-mongodb-config-v1:/data/configdb
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - bukan-network
-    restart: unless-stopped
-
-networks:
-  bukan-network:
-    driver: bridge
-
 volumes:
-  ***REMOVED*** 👈 在底部注册这些新命名的 bukan 数据卷
-  bukan-mongodb-data-v1:
-    driver: local  ***REMOVED*** 数据库持久化卷
-  bukan-mongodb-config-v1:
-    driver: local  ***REMOVED*** 数据库配置卷
   bukan-cache:
     driver: local  ***REMOVED*** 图片海报缓存卷
+  bukan-data:
+    driver: local  ***REMOVED*** 极致精简版 JSON 数据持久化卷

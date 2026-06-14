@@ -1,10 +1,7 @@
-import { getDatabase } from "./db";
+import { readStore, writeStore } from "./json-store";
 import { VodSource } from "@/types/drama";
-import { COLLECTIONS } from "./constants/db";
-import type { AnyBulkWriteOperation } from "mongodb";
 
 export interface VodSourceDoc {
-  _id?: string;
   key: string;
   name: string;
   api: string;
@@ -24,11 +21,12 @@ export interface VodSourceDoc {
 
 // VOD 源选择配置类型
 export interface VodSourceSelection {
-  _id?: string;
-  id: number;
   selected_key?: string;
   updated_at: string;
 }
+
+const SOURCES_FILE = 'vod-sources.json';
+const SELECTION_FILE = 'vod-selection.json';
 
 // 将数据库文档转换为 VodSource 类型
 function docToVodSource(doc: VodSourceDoc): VodSource {
@@ -47,43 +45,40 @@ function docToVodSource(doc: VodSourceDoc): VodSource {
   };
 }
 
+// 排序辅助函数
+function sortSources(a: VodSourceDoc, b: VodSourceDoc): number {
+  const priorityA = a.priority ?? 0;
+  const priorityB = b.priority ?? 0;
+  if (priorityA !== priorityB) {
+    return priorityA - priorityB;
+  }
+  return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+}
+
 // 获取所有启用的视频源（按 priority 排序，数值越小优先级越高）
 export async function getVodSourcesFromDB(): Promise<VodSource[]> {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
-
-  const docs = await collection
-    .find({ enabled: true })
-    .sort({ priority: 1, sort_order: 1, _id: 1 })
-    .toArray();
-
-  return docs.map(docToVodSource);
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  return docs
+    .filter(doc => doc.enabled)
+    .sort(sortSources)
+    .map(docToVodSource);
 }
 
 // 获取所有视频源（包括禁用的，按 priority 排序）
 export async function getAllVodSourcesFromDB(): Promise<VodSourceDoc[]> {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
-
-  const docs = await collection
-    .find()
-    .sort({ priority: 1, sort_order: 1, _id: 1 })
-    .toArray();
-
-  return docs;
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  return docs.sort(sortSources);
 }
 
 // 添加或更新视频源
 export async function saveVodSourceToDB(
   source: VodSource & { enabled?: boolean; sortOrder?: number }
-) {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
+): Promise<void> {
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
   const now = new Date().toISOString();
+  const index = docs.findIndex(doc => doc.key === source.key);
 
-  const doc: Omit<VodSourceDoc, "_id" | "created_at"> & {
-    created_at?: string;
-  } = {
+  const doc: VodSourceDoc = {
     key: source.key,
     name: source.name,
     api: source.api,
@@ -97,26 +92,22 @@ export async function saveVodSourceToDB(
     type: source.type,
     enabled: source.enabled !== undefined ? source.enabled : true,
     sort_order: source.sortOrder || 0,
+    created_at: index >= 0 ? docs[index].created_at : now,
     updated_at: now,
   };
 
-  await collection.updateOne(
-    { key: source.key },
-    {
-      $set: doc,
-      $setOnInsert: { created_at: now },
-    },
-    { upsert: true }
-  );
+  if (index >= 0) {
+    docs[index] = doc;
+  } else {
+    docs.push(doc);
+  }
+
+  writeStore(SOURCES_FILE, docs);
 }
 
-// 批量保存视频源（原子操作）
-export async function saveVodSourcesToDB(sources: VodSource[]) {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
+// 批量保存视频源（覆盖写入）
+export async function saveVodSourcesToDB(sources: VodSource[]): Promise<void> {
   const now = new Date().toISOString();
-
-  // 构建文档列表
   const docs: VodSourceDoc[] = sources.map((source, index) => ({
     key: source.key,
     name: source.name,
@@ -135,84 +126,49 @@ export async function saveVodSourcesToDB(sources: VodSource[]) {
     updated_at: now,
   }));
 
-  // 使用 bulkWrite 顺序执行（ordered: true）
-  // 注意：失败时停止后续操作，但已执行操作不会回滚
-  const operations: AnyBulkWriteOperation<VodSourceDoc>[] = [
-    { deleteMany: { filter: {} } },
-    ...docs.map((doc) => ({ insertOne: { document: doc } })),
-  ];
-
-  if (operations.length >= 1) {
-    await collection.bulkWrite(operations, { ordered: true });
-  }
+  writeStore(SOURCES_FILE, docs);
 }
 
 // 删除视频源
-export async function deleteVodSourceFromDB(key: string) {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
-  await collection.deleteOne({ key });
+export async function deleteVodSourceFromDB(key: string): Promise<void> {
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  const filtered = docs.filter(doc => doc.key !== key);
+  writeStore(SOURCES_FILE, filtered);
 }
 
 // 启用/禁用视频源
-export async function toggleVodSourceEnabled(key: string, enabled: boolean) {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceDoc>(COLLECTIONS.VOD_SOURCES);
-  const now = new Date().toISOString();
-
-  await collection.updateOne({ key }, { $set: { enabled, updated_at: now } });
+export async function toggleVodSourceEnabled(key: string, enabled: boolean): Promise<void> {
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  const index = docs.findIndex(doc => doc.key === key);
+  if (index >= 0) {
+    docs[index].enabled = enabled;
+    docs[index].updated_at = new Date().toISOString();
+    writeStore(SOURCES_FILE, docs);
+  }
 }
 
 // 获取选中的视频源
 export async function getSelectedVodSourceFromDB(): Promise<VodSource | null> {
-  const db = await getDatabase();
-  const selectionCollection = db.collection<VodSourceSelection>(
-    COLLECTIONS.VOD_SOURCE_SELECTION
-  );
-  const vodSourcesCollection = db.collection<VodSourceDoc>(
-    COLLECTIONS.VOD_SOURCES
-  );
-
-  // 获取选中的 key
-  const selection = await selectionCollection.findOne({ id: 1 });
+  const selection = readStore<VodSourceSelection | null>(SELECTION_FILE, null);
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  const enabledDocs = docs.filter(doc => doc.enabled).sort(sortSources);
 
   if (selection?.selected_key) {
-    const doc = await vodSourcesCollection.findOne({
-      key: selection.selected_key,
-      enabled: true,
-    });
-    if (doc) {
-      return docToVodSource(doc);
+    const matched = enabledDocs.find(doc => doc.key === selection.selected_key);
+    if (matched) {
+      return docToVodSource(matched);
     }
   }
 
-  // 如果没有选中的或选中的源不存在，返回第一个启用的源
-  const firstDoc = await vodSourcesCollection
-    .find({ enabled: true })
-    .sort({ sort_order: 1, _id: 1 })
-    .limit(1)
-    .toArray();
-
-  return firstDoc.length > 0 ? docToVodSource(firstDoc[0]) : null;
+  // 如果没有选中的或选中的源不存在/不可用，返回第一个启用的源
+  return enabledDocs.length > 0 ? docToVodSource(enabledDocs[0]) : null;
 }
 
 // 保存选中的视频源
-export async function saveSelectedVodSourceToDB(key: string) {
-  const db = await getDatabase();
-  const collection = db.collection<VodSourceSelection>(
-    COLLECTIONS.VOD_SOURCE_SELECTION
-  );
-  const now = new Date().toISOString();
-
-  await collection.updateOne(
-    { id: 1 },
-    {
-      $set: {
-        id: 1,
-        selected_key: key,
-        updated_at: now,
-      },
-    },
-    { upsert: true }
-  );
+export async function saveSelectedVodSourceToDB(key: string): Promise<void> {
+  const selection: VodSourceSelection = {
+    selected_key: key,
+    updated_at: new Date().toISOString(),
+  };
+  writeStore(SELECTION_FILE, selection);
 }

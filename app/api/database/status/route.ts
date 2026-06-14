@@ -1,53 +1,59 @@
 import { NextResponse } from 'next/server';
-import { getDatabase, getMongoClient } from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * 数据库状态 API
+ * 数据库状态 API (去数据库轻量版)
  * GET /api/database/status
  * 
- * 返回数据库连接状态、延迟、基本信息
+ * 返回本地 JSON 文件存储状态
  */
 export async function GET() {
   const startTime = Date.now();
+  const dataDir = path.join(process.cwd(), 'data');
   
   try {
-    const db = await getDatabase();
-    const client = getMongoClient();
+    // 检查 data 目录是否存在及可写性
+    let connected = false;
+    let errorMsg = undefined;
     
-    // 执行 ping 命令测试连接
-    await db.admin().ping();
+    try {
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      // 写入测试文件并删除，测试写权限
+      const testFile = path.join(dataDir, '.write-test');
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      connected = true;
+    } catch (err) {
+      errorMsg = err instanceof Error ? err.message : 'No write permission to data directory';
+    }
     
     const latency = Date.now() - startTime;
     
-    // 获取数据库基本信息
-    const collections = await db.listCollections().toArray();
-    const dbName = db.databaseName;
-    
-    // 获取服务器信息
-    let serverInfo = null;
-    try {
-      const adminDb = client?.db().admin();
-      if (adminDb) {
-        const buildInfo = await adminDb.command({ buildInfo: 1 });
-        serverInfo = {
-          version: buildInfo.version,
-          gitVersion: buildInfo.gitVersion?.substring(0, 8),
-        };
-      }
-    } catch {
-      // 权限不足时忽略
+    // 获取已有的 json 数据库文件列表
+    let collections: string[] = [];
+    if (connected && fs.existsSync(dataDir)) {
+      collections = fs.readdirSync(dataDir)
+        .filter(file => file.endsWith('.json'))
+        .map(file => file.replace('.json', ''));
     }
     
     return NextResponse.json({
       code: 200,
       data: {
-        connected: true,
+        connected,
         latency,
-        database: dbName,
-        collections: collections.map(c => c.name),
+        database: 'JSON File Storage',
+        collections,
         collectionCount: collections.length,
-        serverInfo,
-        uri: maskUri(process.env.MONGODB_URI || ''),
+        serverInfo: {
+          version: '1.0.0',
+          gitVersion: 'lightweight',
+        },
+        uri: 'data/*.json',
+        error: errorMsg,
         timestamp: new Date().toISOString(),
       },
     });
@@ -60,27 +66,9 @@ export async function GET() {
         connected: false,
         latency,
         error: error instanceof Error ? error.message : 'Unknown error',
-        uri: maskUri(process.env.MONGODB_URI || ''),
+        uri: 'data/*.json',
         timestamp: new Date().toISOString(),
       },
     });
-  }
-}
-
-/**
- * 隐藏 URI 中的敏感信息
- */
-function maskUri(uri: string): string {
-  if (!uri) return '(未配置)';
-  
-  try {
-    // 匹配 mongodb://user:password@host 或 mongodb+srv://user:password@host
-    const masked = uri.replace(
-      /^(mongodb(?:\+srv)?:\/\/)([^:]+):([^@]+)@/,
-      '$1$2:****@'
-    );
-    return masked;
-  } catch {
-    return '(格式错误)';
   }
 }

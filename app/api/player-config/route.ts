@@ -1,7 +1,6 @@
 // 播放器配置管理API
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
-import { COLLECTIONS } from '@/lib/constants/db';
+import { readStore, writeStore } from '@/lib/json-store';
 import { validateSession } from '@/lib/auth';
 
 export interface PlayerConfig {
@@ -24,11 +23,6 @@ export interface LocalPlayerSettings {
   autoSaveProgress: boolean; // 自动保存进度
   progressSaveInterval: number; // 进度保存间隔（秒）
   theme: string; // 主题颜色
-}
-
-// MongoDB文档类型（包含_id字段）
-interface PlayerConfigDocument extends PlayerConfig {
-  _id: string;
 }
 
 // 默认配置
@@ -100,36 +94,13 @@ const DEFAULT_CONFIG: PlayerConfig = {
   },
 };
 
+const CONFIG_FILE = 'player-config.json';
+
 // 获取配置
 export async function GET() {
   try {
-    const db = await getDatabase();
-    const configCollection = db.collection<PlayerConfigDocument>(COLLECTIONS.PLAYER_CONFIG);
-
-    // 从数据库获取配置
-    const configDoc = await configCollection.findOne({ _id: 'player_config' });
-
-    // 如果数据库中没有配置，返回默认配置并保存
-    if (!configDoc) {
-      const newDoc: PlayerConfigDocument = {
-        _id: 'player_config',
-        ...DEFAULT_CONFIG,
-      };
-      await configCollection.insertOne(newDoc);
-      return NextResponse.json({
-        code: 200,
-        data: DEFAULT_CONFIG,
-        msg: '获取配置成功（使用默认配置）',
-      });
-    }
-
-    // 构造返回对象（排除_id字段）
-    const config: PlayerConfig = {
-      mode: configDoc.mode,
-      enableProxy: configDoc.enableProxy,
-      iframePlayers: configDoc.iframePlayers,
-      localPlayerSettings: configDoc.localPlayerSettings,
-    };
+    // 从 JSON 文件读取配置（如果文件不存在，会自动创建并保存 DEFAULT_CONFIG）
+    const config = readStore<PlayerConfig>(CONFIG_FILE, DEFAULT_CONFIG);
 
     return NextResponse.json({
       code: 200,
@@ -172,22 +143,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = await getDatabase();
-    const configCollection = db.collection<PlayerConfigDocument>(COLLECTIONS.PLAYER_CONFIG);
-
     // 获取现有配置
-    const existingConfigDoc = await configCollection.findOne({ _id: 'player_config' });
-
-    // 从文档中提取配置（排除_id）
-    let existingConfig: PlayerConfig | null = null;
-    if (existingConfigDoc) {
-      existingConfig = {
-        mode: existingConfigDoc.mode,
-        enableProxy: existingConfigDoc.enableProxy,
-        iframePlayers: existingConfigDoc.iframePlayers,
-        localPlayerSettings: existingConfigDoc.localPlayerSettings,
-      };
-    }
+    const existingConfig = readStore<PlayerConfig>(CONFIG_FILE, DEFAULT_CONFIG);
 
     // 合并配置
     const mergedConfig: PlayerConfig = {
@@ -196,17 +153,8 @@ export async function POST(request: NextRequest) {
       ...config,
     };
 
-    // 保存到数据库（包含_id）
-    const docToSave: PlayerConfigDocument = {
-      _id: 'player_config',
-      ...mergedConfig,
-    };
-
-    await configCollection.updateOne(
-      { _id: 'player_config' },
-      { $set: docToSave },
-      { upsert: true }
-    );
+    // 保存到 JSON 文件
+    writeStore(CONFIG_FILE, mergedConfig);
 
     return NextResponse.json({
       code: 200,

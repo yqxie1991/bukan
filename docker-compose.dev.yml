@@ -1,17 +1,15 @@
 services:
-  ***REMOVED*** Next.js 应用（开发环境 - 热重载）
+  ***REMOVED*** Next.js 应用（开发环境 - 热重载 - 极致精简版）
   app-dev:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: kerkerker-app-dev
+    container_name: bukan-app-dev
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - MONGODB_URI=mongodb://mongodb:27017/kerkerker
-      - NEXT_PUBLIC_DOUBAN_API_URL=${NEXT_PUBLIC_DOUBAN_API_URL}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -19,10 +17,7 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
-    depends_on:
-      - mongodb
-    networks:
-      - kerkerker-network
+      - ./data:/app/data                      ***REMOVED*** 数据挂载
     stdin_open: true
     tty: true
     logging:
@@ -30,31 +25,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-  ***REMOVED*** MongoDB 数据库服务（开发环境）
-  mongodb:
-    image: mongo:7
-    container_name: kerkerker-mongodb-dev
-    command: mongod --nojournal --quiet --wiredTigerCacheSizeGB 0.25 --setParameter diagnosticDataCollectionEnabled=false
-    environment:
-      - MONGO_INITDB_DATABASE=kerkerker
-    volumes:
-      - mongodb-data-dev:/data/db
-      - mongodb-config-dev:/data/configdb
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - kerkerker-network
-
-networks:
-  kerkerker-network:
-    driver: bridge
-
-volumes:
-  mongodb-data-dev:
-    driver: local
-  mongodb-config-dev:
-    driver: local

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * 健康检查 API
+ * 健康检查 API (去数据库轻量版)
  * GET /api/health
  * 
  * 用于 Docker 容器健康检查和监控
@@ -13,7 +14,7 @@ export async function GET() {
     timestamp: string;
     services: {
       api: 'ok';
-      mongodb?: 'ok' | 'error';
+      json_store?: 'ok' | 'error';
     };
     errors?: string[];
   } = {
@@ -26,21 +27,24 @@ export async function GET() {
 
   const errors: string[] = [];
 
-  // 检查 MongoDB 连接
-  if (process.env.MONGODB_URI) {
-    try {
-      const db = await getDatabase();
-      await db.admin().ping();
-      status.services.mongodb = 'ok';
-    } catch (error) {
-      status.services.mongodb = 'error';
-      errors.push(`MongoDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  // 检查 JSON 本地存储读写权限
+  const dataDir = path.join(process.cwd(), 'data');
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
     }
+    const testFile = path.join(dataDir, '.health-test');
+    fs.writeFileSync(testFile, 'ok');
+    fs.unlinkSync(testFile);
+    status.services.json_store = 'ok';
+  } catch (error) {
+    status.services.json_store = 'error';
+    errors.push(`JSON Store: ${error instanceof Error ? error.message : 'No write permission'}`);
   }
 
   // 设置总体状态
   if (errors.length > 0) {
-    status.status = 'degraded';
+    status.status = 'error';
     status.errors = errors;
   }
 

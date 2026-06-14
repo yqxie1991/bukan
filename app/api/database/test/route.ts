@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { MongoClient } from 'mongodb';
 import { validateSession } from '@/lib/auth';
 
 /**
- * 数据库连接测试 API
+ * 数据库连接测试 API (去数据库轻量版)
  * POST /api/database/test
  * 
- * 创建新连接进行测试，不影响现有连接池
+ * 在轻量模式下，直接返回测试成功（因为不依赖外部数据库进程）
  */
 export async function POST() {
   // 验证会话权限
@@ -16,67 +15,14 @@ export async function POST() {
       { status: 401 }
     );
   }
-
-  const startTime = Date.now();
-  const uri = process.env.MONGODB_URI;
   
-  if (!uri) {
-    return NextResponse.json({
-      code: 400,
-      data: {
-        success: false,
-        latency: 0,
-        error: 'MONGODB_URI 环境变量未配置',
-      },
-    });
-  }
-  
-  let testClient: MongoClient | null = null;
-  
-  try {
-    // 创建临时连接进行测试
-    testClient = new MongoClient(uri, {
-      connectTimeoutMS: 10000,
-      serverSelectionTimeoutMS: 10000,
-    });
-    
-    await testClient.connect();
-    
-    // 执行 ping 测试
-    const db = testClient.db();
-    await db.admin().ping();
-    
-    const latency = Date.now() - startTime;
-    
-    return NextResponse.json({
-      code: 200,
-      data: {
-        success: true,
-        latency,
-        message: '连接测试成功',
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    const latency = Date.now() - startTime;
-    
-    return NextResponse.json({
-      code: 500,
-      data: {
-        success: false,
-        latency,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } finally {
-    // 确保关闭测试连接
-    if (testClient) {
-      try {
-        await testClient.close();
-      } catch {
-        // 忽略关闭错误
-      }
-    }
-  }
+  return NextResponse.json({
+    code: 200,
+    data: {
+      success: true,
+      latency: 0,
+      message: '本地 JSON 文件存储测试成功（轻量极简版免外置数据库连接）',
+      timestamp: new Date().toISOString(),
+    },
+  });
 }

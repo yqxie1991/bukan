@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
-import { COLLECTIONS } from '@/lib/constants/db';
+import { getHomeCacheRaw, saveHomeCacheRaw } from '@/lib/home-cache-db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,12 +10,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ code: 400, message: 'Missing subject ID' }, { status: 400 });
     }
 
-    const db = await getDatabase();
-    const collection = db.collection(COLLECTIONS.HOME_CACHE);
-
-    // 1. 优先尝试从本地缓存获取
     const cacheKey = `detail_${id}`;
-    const cache = await collection.findOne({ key: cacheKey });
+    
+    // 1. 优先尝试从本地缓存获取
+    const cache = await getHomeCacheRaw(cacheKey);
 
     if (cache) {
       const updatedAtDate = new Date(cache.updated_at);
@@ -40,19 +37,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ code: 404, message: '未找到影片详情' }, { status: 404 });
     }
 
-    // 3. 写入本地 MongoDB 缓存
-    const now = new Date().toISOString();
-    await collection.updateOne(
-      { key: cacheKey },
-      {
-        $set: {
-          key: cacheKey,
-          data: detail,
-          updated_at: now,
-        },
-      },
-      { upsert: true }
-    );
+    // 3. 写入本地缓存
+    await saveHomeCacheRaw(cacheKey, detail);
 
     return NextResponse.json({ code: 200, message: '获取成功', data: detail });
 
