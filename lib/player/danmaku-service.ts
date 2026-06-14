@@ -1,5 +1,8 @@
 "use client";
 
+// 弹幕开关：暂时关闭，后续找到合适接口后只需将其设为 true
+const DANMU_ENABLED = false;
+
 // 弹幕 API 配置
 const DANMU_API_URL =
   process.env.NEXT_PUBLIC_DANMU_API_URL || "https://danmuapi1-eight.vercel.app";
@@ -111,6 +114,7 @@ function getApiBaseUrl(): string {
  * 搜索动漫
  */
 export async function searchAnime(keyword: string): Promise<Anime[]> {
+  if (!DANMU_ENABLED) return [];
   if (!keyword || keyword.trim() === "") {
     return [];
   }
@@ -143,6 +147,7 @@ export async function searchAnime(keyword: string): Promise<Anime[]> {
  * 获取动漫详情（包含剧集列表）
  */
 export async function getBangumi(animeId: number): Promise<Bangumi | null> {
+  if (!DANMU_ENABLED) return null;
   try {
     const url = `${getApiBaseUrl()}/api/v2/bangumi/${animeId}`;
     const response = await fetch(url);
@@ -169,6 +174,7 @@ export async function getBangumi(animeId: number): Promise<Bangumi | null> {
  * 获取弹幕数据
  */
 export async function getComments(episodeId: number): Promise<DanmakuItem[]> {
+  if (!DANMU_ENABLED) return [];
   try {
     const url = `${getApiBaseUrl()}/api/v2/comment/${episodeId}?format=json`;
     const response = await fetch(url);
@@ -197,6 +203,7 @@ export async function getComments(episodeId: number): Promise<DanmakuItem[]> {
 export async function matchAnime(
   fileName: string
 ): Promise<MatchResponse | null> {
+  if (!DANMU_ENABLED) return null;
   try {
     const url = `${getApiBaseUrl()}/api/v2/match`;
     const response = await fetch(url, {
@@ -307,6 +314,13 @@ export interface AutoLoadResult {
  * 根据视频标题自动匹配动漫和剧集，然后加载弹幕
  */
 export async function autoLoadDanmaku(videoTitle: string): Promise<AutoLoadResult> {
+  if (!DANMU_ENABLED) {
+    return {
+      success: false,
+      danmaku: [],
+      message: "弹幕功能已暂时屏蔽",
+    };
+  }
   if (!videoTitle || videoTitle.trim() === "") {
     return {
       success: false,
