@@ -11,10 +11,8 @@
     "docker:prod": "bash scripts/prod.sh"
   },
   "dependencies": {
-    "@octokit/rest": "^22.0.1",
     "artplayer": "^5.3.0",
     "artplayer-plugin-danmuku": "^5.2.0",
-    "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "cn-fontsource-lxgw-wen-kai-gb-screen": "^1.0.6",
     "dotenv": "^17.2.3",

@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' ***REMOVED*** No Color
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}   Kerkerker 开发环境启动脚本${NC}"
+echo -e "${BLUE}   Bukan 开发环境启动脚本${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
@@ -69,12 +69,11 @@ echo -e "${BLUE}📝 常用命令：${NC}"
 echo -e "  查看日志:  ${YELLOW}docker-compose -f docker-compose.dev.yml logs -f app-dev${NC}"
 echo -e "  停止服务:  ${YELLOW}docker-compose -f docker-compose.dev.yml down${NC}"
 echo -e "  重启服务:  ${YELLOW}docker-compose -f docker-compose.dev.yml restart${NC}"
-echo -e "  进入容器:  ${YELLOW}docker exec -it kerkerker-app-dev sh${NC}"
+echo -e "  进入容器:  ${YELLOW}docker exec -it bukan-app-dev sh${NC}"
 echo ""
 echo -e "${BLUE}🌐 访问地址：${NC}"
 echo -e "  应用:     ${GREEN}http://localhost:3000${NC}"
 echo -e "  健康检查:  ${GREEN}http://localhost:3000/api/health${NC}"
-echo -e "  MongoDB:  ${GREEN}localhost:27017${NC}"
 echo ""
 echo -e "${YELLOW}💡 提示：代码修改会自动热重载${NC}"
 echo ""
