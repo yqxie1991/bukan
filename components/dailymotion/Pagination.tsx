@@ -14,8 +14,8 @@ export function Pagination({ currentPage, hasMore, onPageChange }: PaginationPro
         disabled={currentPage === 1}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
           currentPage === 1
-            ? 'bg-neutral-900 text-gray-600 cursor-not-allowed'
-            : 'bg-neutral-900 text-white hover:bg-neutral-800'
+            ? 'bg-foreground/5 text-muted-foreground cursor-not-allowed'
+            : 'bg-foreground/10 text-foreground hover:bg-foreground/20'
         }`}
       >
         <ChevronLeft size={16} />
@@ -31,8 +31,8 @@ export function Pagination({ currentPage, hasMore, onPageChange }: PaginationPro
         disabled={!hasMore}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
           !hasMore
-            ? 'bg-neutral-900 text-gray-600 cursor-not-allowed'
-            : 'bg-neutral-900 text-white hover:bg-neutral-800'
+            ? 'bg-foreground/5 text-muted-foreground cursor-not-allowed'
+            : 'bg-foreground/10 text-foreground hover:bg-foreground/20'
         }`}
       >
         <span>下一页</span>

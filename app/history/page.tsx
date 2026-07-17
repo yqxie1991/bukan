@@ -106,7 +106,7 @@ export default function HistoryPage() {
               <History className="w-6 h-6 text-red-500" />
               <span>观看历史</span>
               {history.length > 0 && (
-                <span className="text-sm font-normal text-gray-400">
+                <span className="text-sm font-normal text-muted-foreground">
                   ({history.length})
                 </span>
               )}
@@ -120,7 +120,7 @@ export default function HistoryPage() {
                 <>
                   <button
                     onClick={toggleSelectAll}
-                    className="px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
+                    className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {selectedIds.size === filteredHistory.length
                       ? "取消全选"
@@ -139,7 +139,7 @@ export default function HistoryPage() {
                       setIsSelectMode(false);
                       setSelectedIds(new Set());
                     }}
-                    className="px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
+                    className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     取消
                   </button>
@@ -148,13 +148,13 @@ export default function HistoryPage() {
                 <>
                   <button
                     onClick={() => setIsSelectMode(true)}
-                    className="px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
+                    className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     选择
                   </button>
                   <button
                     onClick={clearAllHistory}
-                    className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors flex items-center gap-1"
                   >
                     <Trash2 className="w-4 h-4" />
                     清空
@@ -169,20 +169,20 @@ export default function HistoryPage() {
         {history.length > 0 && (
           <div className="px-4 md:px-12 pb-4">
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder="搜索历史记录…"
-                className="w-full pl-10 pr-4 py-2.5 bg-foreground/5 border border-gray-200 dark:border-white/10 rounded-lg text-foreground placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-colors"
+                className="w-full pl-10 pr-4 py-2.5 bg-foreground/5 border border-gray-200 dark:border-white/10 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-colors"
               />
               {searchKeyword && (
                 <button
                   onClick={() => setSearchKeyword("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-foreground/10 rounded-full transition-colors"
                 >
-                  <X className="w-4 h-4 text-gray-400" />
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
@@ -195,19 +195,19 @@ export default function HistoryPage() {
         {isLoading ? (
           /* 加载状态 */
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-700 border-t-red-600 mb-4" />
-            <p className="text-gray-400">加载中…</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-foreground/20 border-t-primary mb-4" />
+            <p className="text-muted-foreground">加载中…</p>
           </div>
         ) : history.length === 0 ? (
           /* 空状态 */
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
-              <History className="w-12 h-12 text-gray-600" />
+            <div className="w-24 h-24 bg-foreground/10 rounded-full flex items-center justify-center mb-6">
+              <History className="w-12 h-12 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
               暂无观看历史
             </h2>
-            <p className="text-gray-400 mb-6">开始观看视频后，历史记录将显示在这里</p>
+            <p className="text-muted-foreground mb-6">开始观看视频后，历史记录将显示在这里</p>
             <Link
               href="/"
               className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
@@ -218,11 +218,11 @@ export default function HistoryPage() {
         ) : filteredHistory.length === 0 ? (
           /* 搜索无结果 */
           <div className="flex flex-col items-center justify-center py-20">
-            <Search className="w-12 h-12 text-gray-600 mb-4" />
+            <Search className="w-12 h-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               未找到相关记录
             </h2>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               没有找到包含 "{searchKeyword}" 的历史记录
             </p>
           </div>

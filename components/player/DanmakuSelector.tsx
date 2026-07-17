@@ -179,7 +179,7 @@ export function DanmakuSelector({
       {/* 触发按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all hover:scale-105 text-white text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="弹幕设置"
         aria-expanded={isOpen}
       >

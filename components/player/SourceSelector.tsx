@@ -181,7 +181,7 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all hover:scale-105 text-white text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="切换视频源"
         aria-expanded={isOpen}
       >
@@ -201,7 +201,7 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
         <span className="hidden sm:inline">{sources.length} 个播放源</span>
         <span className="sm:hidden">{sources.length}</span>
         {currentSource && (
-          <span className="hidden md:inline text-gray-400">
+          <span className="hidden md:inline text-muted-foreground">
             · {currentSource.source_name}
           </span>
         )}

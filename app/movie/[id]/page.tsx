@@ -381,7 +381,7 @@ export default function MovieDetailPage() {
               onClick={goBack}
               className="p-2 -ml-2 rounded-full hover:bg-foreground/10 transition-colors group"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-foreground transition-colors" />
+              <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
             <h1
               className="text-xl font-bold tracking-tight cursor-pointer hidden sm:block"
@@ -639,7 +639,7 @@ export default function MovieDetailPage() {
                     <span className="w-1 h-6 bg-red-600 rounded-full" />
                     播放源
                     {searchStatus === "searching" && totalSourceCount > 0 && (
-                      <span className="text-sm font-normal text-gray-400 ml-2 flex items-center gap-2">
+                      <span className="text-sm font-normal text-muted-foreground ml-2 flex items-center gap-2">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         正在搜索... {searchedSourceCount}/{totalSourceCount}
                       </span>
@@ -648,7 +648,7 @@ export default function MovieDetailPage() {
 
                   {/* 统计信息 */}
                   {availableSources.length > 0 && (
-                    <div className="text-sm text-gray-400 bg-foreground/5 px-3 py-1 rounded-full border border-gray-200 dark:border-white/5 transition-colors duration-300">
+                    <div className="text-sm text-muted-foreground bg-foreground/5 px-3 py-1 rounded-full border border-gray-200 dark:border-white/5 transition-colors duration-300">
                       已找到{" "}
                       <span className="text-foreground font-bold">
                         {availableSources.length}
@@ -661,7 +661,7 @@ export default function MovieDetailPage() {
                 {/* 搜索中且无结果 */}
                 {searchStatus === "searching" &&
                   availableSources.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-3">
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
                       <Loader2 className="w-8 h-8 animate-spin text-red-500" />
                       <span>正在全网搜索资源...</span>
                     </div>
@@ -754,7 +754,7 @@ export default function MovieDetailPage() {
                       <p className="text-foreground font-medium mb-2">
                         未配置视频源
                       </p>
-                      <p className="text-sm text-gray-400 max-w-xs">
+                      <p className="text-sm text-muted-foreground max-w-xs">
                         需要先在后台配置视频源才能搜索播放资源
                       </p>
                     </div>

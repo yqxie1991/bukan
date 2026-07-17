@@ -47,7 +47,7 @@ export function Footer() {
         <div className="border-t border-border-color my-8"></div>
 
         {/* 底部信息 */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <span>© 2026 不看</span>
             <span className="text-gray-400 dark:text-gray-700">|</span>
@@ -58,7 +58,7 @@ export function Footer() {
            
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="hover:text-gray-300 transition-colors flex items-center gap-1"
+              className="hover:text-foreground transition-colors flex items-center gap-1"
             >
               <svg
                 className="w-4 h-4"

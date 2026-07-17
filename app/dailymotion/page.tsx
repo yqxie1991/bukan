@@ -148,7 +148,7 @@ function DailymotionContent() {
           <h2 className="text-foreground text-2xl font-bold mb-2">
             {error || "Failed to load channel data"}
           </h2>
-          <p className="text-gray-400">请稍后再试或检查频道名称</p>
+          <p className="text-muted-foreground">请稍后再试或检查频道名称</p>
         </div>
       </div>
     );
@@ -167,10 +167,10 @@ function DailymotionContent() {
       `}</style>
 
       {/* Top Navigation */}
-      <div className="px-3 md:px-6 lg:px-10 py-3 border-b border-gray-200 dark:border-neutral-900 transition-colors duration-300">
+      <div className="px-3 md:px-6 lg:px-10 py-3 border-b border-border-color transition-colors duration-300">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-red-600 transition-colors text-sm group"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm group"
         >
           <Home
             size={18}
