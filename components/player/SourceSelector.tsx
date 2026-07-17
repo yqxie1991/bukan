@@ -93,7 +93,7 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
   // 桌面端 absolute 右对齐下拉（相对按钮，视口足够宽不溢出）
   const menuClassName = isMobile
     ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
-    : 'absolute right-0 mt-3 w-80 z-50 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in';
+    : 'absolute right-0 mt-3 w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
 
   const menu = isOpen ? (
     <div ref={menuRef} className={menuClassName}>
@@ -113,8 +113,8 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
       </div>
 
       {/* 源列表 */}
-      <div className="overflow-y-auto" style={{ maxHeight: isMobile ? 'calc(80vh - 120px)' : '60vh' }}>
-        {sortedSources.map((source, index) => {
+      <div className="overflow-y-auto p-3 space-y-2" style={{ maxHeight: isMobile ? 'calc(80vh - 120px)' : '60vh' }}>
+        {sortedSources.map((source) => {
           const isCurrent = source.source_key === currentSourceKey;
           return (
             <button
@@ -125,10 +125,10 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
                 }
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-3 transition-all ${isCurrent
-                ? 'bg-red-600/20 border-l-4 border-red-600'
-                : 'hover:bg-white/5 border-l-4 border-transparent'
-                } ${index !== sortedSources.length - 1 ? 'border-b border-gray-800/50' : ''}`}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${isCurrent
+                ? 'bg-red-600/30 border border-red-600/50'
+                : 'bg-gray-800/50 hover:bg-gray-800 border border-transparent'
+                }`}
               disabled={isCurrent}
             >
               <div className="flex items-start justify-between gap-3">
@@ -181,12 +181,12 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="切换视频源"
         aria-expanded={isOpen}
       >
         <svg
-          className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-foreground group-hover:text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

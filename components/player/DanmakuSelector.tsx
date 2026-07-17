@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   Loader2,
@@ -55,6 +56,10 @@ export function DanmakuSelector({
 }: DanmakuSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // 是否移动端视口（<768px）。SSR 安全：初始 false，hydration 后按 matchMedia 更新
+  const [isMobile, setIsMobile] = useState(false);
+  // 菜单 ref：移动端 Portal 到 body 后，需单独 ref 用于点击外部关闭判断
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // 搜索状态
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -72,9 +77,12 @@ export function DanmakuSelector({
   // 点击外部关闭下拉菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
@@ -88,6 +96,15 @@ export function DanmakuSelector({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  // 响应式视口判断：SSR 安全，hydration 后按 matchMedia 更新
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // 打开时初始化搜索关键词
   useEffect(() => {
@@ -174,25 +191,31 @@ export function DanmakuSelector({
     }
   };
 
+  // 菜单容器：移动端 fixed 贴底弹层（Portal 到 body），桌面端 absolute 右对齐下拉
+  const menuClassName = isMobile
+    ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
+    : 'absolute right-0 mt-3 w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* 触发按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="弹幕设置"
         aria-expanded={isOpen}
       >
         <DanmakuIcon
-          className={`w-5 h-5 transition-transform ${
+          className={`w-5 h-5 text-foreground group-hover:text-primary transition-transform ${
             isOpen ? "rotate-12" : ""
           }`}
         />
       </button>
 
-      {/* 下拉菜单 */}
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 md:w-96 bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50">
+      {/* 下拉菜单：移动端 Portal 到 body 以绕开 nav 的 backdrop-filter 包含块 */}
+      {isOpen && (() => {
+        const menuEl = (
+          <div ref={menuRef} className={menuClassName}>
           {/* 头部 */}
           <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
             <div className="flex items-center justify-between">
@@ -221,13 +244,13 @@ export function DanmakuSelector({
                   className="w-full px-3 py-2 pr-10 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-red-500/50"
                 />
                 {isSearching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 animate-spin" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
                 )}
               </div>
               <button
                 onClick={handleSearch}
                 disabled={isSearching || !searchKeyword.trim()}
-                className="px-3 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors"
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
               >
                 <Search className="w-4 h-4 text-white" />
               </button>
@@ -235,7 +258,7 @@ export function DanmakuSelector({
           </div>
 
           {/* 内容区域 */}
-          <div className="max-h-[50vh] overflow-y-auto p-3 space-y-3">
+          <div className="max-h-[calc(80vh-120px)] md:max-h-[60vh] overflow-y-auto p-3 space-y-3">
             {/* 错误提示 */}
             {error && (
               <div className="flex items-center gap-2 p-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-xs">
@@ -248,7 +271,7 @@ export function DanmakuSelector({
             {selectedAnime && (
               <button
                 onClick={() => setShowAnimeList(!showAnimeList)}
-                className="w-full flex items-center justify-between p-2 bg-white/10 hover:bg-white/15 rounded-lg transition-colors"
+                className="w-full flex items-center justify-between p-2 bg-gray-800/50 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-2 text-left min-w-0">
                   {selectedAnime.imageUrl && (
@@ -265,15 +288,15 @@ export function DanmakuSelector({
                     <div className="text-white text-xs font-medium truncate">
                       {selectedAnime.animeTitle}
                     </div>
-                    <div className="text-white/50 text-xs">
+                    <div className="text-gray-400 text-xs">
                       {selectedAnime.episodeCount} 集
                     </div>
                   </div>
                 </div>
                 {showAnimeList ? (
-                  <ChevronUp className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 )}
               </button>
             )}
@@ -287,8 +310,8 @@ export function DanmakuSelector({
                     onClick={() => handleSelectAnime(anime)}
                     className={`w-full flex items-center gap-2 p-2 rounded-lg transition-colors ${
                       selectedAnime?.animeId === anime.animeId
-                        ? "bg-red-500/30 border border-red-500/50"
-                        : "bg-white/5 hover:bg-white/10"
+                        ? "bg-red-600/30 border border-red-600/50"
+                        : "bg-gray-800/50 hover:bg-gray-800"
                     }`}
                   >
                     {anime.imageUrl && (
@@ -302,10 +325,10 @@ export function DanmakuSelector({
                       />
                     )}
                     <div className="flex-1 min-w-0 text-left">
-                      <div className="text-white text-xs truncate">
+                      <div className={`text-xs truncate ${selectedAnime?.animeId === anime.animeId ? "text-red-400" : "text-white"}`}>
                         {anime.animeTitle}
                       </div>
-                      <div className="text-white/40 text-xs">
+                      <div className="text-gray-400 text-xs">
                         {anime.episodeCount} 集
                       </div>
                     </div>
@@ -317,12 +340,12 @@ export function DanmakuSelector({
             {/* 剧集选择 */}
             {episodes.length > 0 && (
               <div className="space-y-2">
-                <div className="text-white/70 text-xs font-medium">
+                <div className="text-gray-400 text-xs font-medium">
                   选择剧集
                 </div>
                 {isLoadingEpisodes ? (
                   <div className="flex items-center justify-center py-3">
-                    <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
                   </div>
                 ) : (
                   <div className="grid grid-cols-8 gap-1">
@@ -332,8 +355,8 @@ export function DanmakuSelector({
                         onClick={() => setSelectedEpisode(episode)}
                         className={`px-1.5 py-1 text-xs rounded transition-colors ${
                           selectedEpisode?.episodeId === episode.episodeId
-                            ? "bg-red-500 text-white"
-                            : "bg-white/10 text-white/70 hover:bg-white/20"
+                            ? "bg-red-600 text-white"
+                        : "bg-gray-800/50 text-gray-300 hover:bg-gray-800"
                         }`}
                         title={episode.episodeTitle}
                       >
@@ -350,7 +373,7 @@ export function DanmakuSelector({
               <button
                 onClick={handleLoadDanmaku}
                 disabled={isLoadingDanmaku}
-                className="w-full flex items-center justify-center gap-2 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
               >
                 {isLoadingDanmaku ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -371,7 +394,9 @@ export function DanmakuSelector({
             )}
           </div>
         </div>
-      )}
+        );
+        return isMobile ? createPortal(menuEl, document.body) : menuEl;
+      })()}
     </div>
   );
 }

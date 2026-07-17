@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { PlayerConfig } from "@/app/api/player-config/route";
 import type { VodSource } from "@/types/drama";
 
@@ -23,6 +24,10 @@ export function PlayerSettingsPanel({
 }: PlayerSettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  // 是否移动端视口（<768px）。SSR 安全：初始 false，hydration 后按 matchMedia 更新
+  const [isMobile, setIsMobile] = useState(false);
+  // 菜单 ref：移动端 Portal 到 body 后，需单独 ref 用于点击外部关闭判断
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // 切换到iframe模式时，自动选择视频源的专属播放器
   const handleModeChange = (mode: "iframe" | "local") => {
@@ -39,9 +44,12 @@ export function PlayerSettingsPanel({
   // 点击外部关闭面板
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         panelRef.current &&
-        !panelRef.current.contains(event.target as Node)
+        !panelRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
@@ -72,6 +80,15 @@ export function PlayerSettingsPanel({
       document.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen]);
+
+  // 响应式视口判断：SSR 安全，hydration 后按 matchMedia 更新
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // 检查是否禁用了解析接口（usePlayUrl: false 表示直接播放原始链接）
   const disableParseUrl = vodSource?.usePlayUrl === false;
@@ -106,17 +123,22 @@ export function PlayerSettingsPanel({
     return backupPlayers;
   })();
 
+  // 菜单容器：移动端 fixed 贴底弹层（Portal 到 body），桌面端 absolute 右对齐下拉
+  const menuClassName = isMobile
+    ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
+    : 'absolute right-0 mt-3 w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
+
   return (
     <div className="relative" ref={panelRef}>
       {/* 触发按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+        className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="播放器设置"
         aria-expanded={isOpen}
       >
         <svg
-          className={`w-5 h-5 transition-transform ${
+          className={`w-5 h-5 text-foreground group-hover:text-primary transition-transform ${
             isOpen ? "rotate-90" : ""
           }`}
           fill="none"
@@ -138,9 +160,10 @@ export function PlayerSettingsPanel({
         </svg>
       </button>
 
-      {/* 设置面板 */}
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 md:w-96 bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50 animate-fade-in">
+      {/* 设置面板：移动端 Portal 到 body 以绕开 nav 的 backdrop-filter 包含块 */}
+      {isOpen && (() => {
+        const menuEl = (
+          <div ref={menuRef} className={menuClassName}>
           {/* 标题栏 */}
           <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
             <div className="flex items-center justify-between">
@@ -164,7 +187,7 @@ export function PlayerSettingsPanel({
             </div>
           </div>
 
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="max-h-[calc(80vh-120px)] md:max-h-[60vh] overflow-y-auto">
             {/* 播放器模式选择 */}
             <div className="p-4 border-b border-gray-800">
               <div className="flex items-center justify-between mb-3">
@@ -182,8 +205,8 @@ export function PlayerSettingsPanel({
                   onClick={() => handleModeChange("iframe")}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-all group ${
                     currentMode === "iframe"
-                      ? "bg-red-600 text-white ring-2 ring-red-400 shadow-lg shadow-red-500/20"
-                      : "bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:scale-[1.02]"
+                      ? "bg-red-600 text-white shadow-lg shadow-red-500/20"
+                      : "bg-gray-800/50 text-gray-300 hover:bg-gray-800"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -228,9 +251,9 @@ export function PlayerSettingsPanel({
                   disabled={!playerConfig.enableProxy}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-all group ${
                     currentMode === "local"
-                      ? "bg-red-600 text-white ring-2 ring-red-400 shadow-lg shadow-red-500/20"
+                      ? "bg-red-600 text-white shadow-lg shadow-red-500/20"
                       : playerConfig.enableProxy
-                      ? "bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:scale-[1.02]"
+                      ? "bg-gray-800/50 text-gray-300 hover:bg-gray-800"
                       : "bg-gray-900/50 text-gray-600 cursor-not-allowed opacity-60"
                   }`}
                 >
@@ -425,7 +448,7 @@ export function PlayerSettingsPanel({
                         onClick={() => onIframePlayerChange(index)}
                         className={`w-full text-left px-4 py-2.5 rounded-lg transition-all ${
                           currentIframePlayerIndex === index
-                            ? "bg-red-600 text-white font-medium shadow-md"
+                            ? "bg-red-600 text-white font-medium"
                             : "bg-gray-800/50 text-gray-300 hover:bg-gray-800"
                         }`}
                       >
@@ -514,7 +537,9 @@ export function PlayerSettingsPanel({
             </div>
           </div>
         </div>
-      )}
+        );
+        return isMobile ? createPortal(menuEl, document.body) : menuEl;
+      })()}
     </div>
   );
 }
