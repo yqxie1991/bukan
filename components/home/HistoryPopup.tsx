@@ -73,7 +73,7 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
         onClick={handleButtonClick}
         className={`p-2 rounded-full transition-colors relative ${
           scrolled
-            ? "text-gray-800 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+            ? "text-foreground hover:bg-foreground/5"
             : "text-white hover:bg-white/10"
         }`}
         aria-label="历史记录"
@@ -90,13 +90,13 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
       {/* Popup 弹出层 */}
       {isOpen && (
         <div className="absolute right-0 top-full pt-2 z-50">
-          <div className="w-80 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden">
+          <div className="w-80 bg-card-bg rounded-xl shadow-2xl border border-border-color overflow-hidden">
             {/* 顶部红色装饰线 */}
             <div className="h-0.5 bg-red-600" />
 
             {/* 标题 */}
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-800">
-              <h3 className="text-sm font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+            <div className="px-4 py-3 border-b border-border-color">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <History className="w-4 h-4 text-red-500" />
                 最近观看
               </h3>
@@ -106,13 +106,13 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
             <div className="max-h-80 overflow-y-auto">
               {isLoading ? (
                 <div className="p-6 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-700 border-t-red-600 mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">加载中…</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-border-color border-t-primary mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">加载中…</p>
                 </div>
               ) : history.length === 0 ? (
                 <div className="p-6 text-center">
-                  <History className="w-10 h-10 text-gray-400 dark:text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">暂无观看记录</p>
+                  <History className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">暂无观看记录</p>
                 </div>
               ) : (
                 <div className="py-2">
@@ -120,10 +120,10 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
                     <button
                       key={item.id}
                       onClick={() => handlePlay(item)}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left group"
+                      className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-foreground/5 transition-colors text-left group"
                     >
                       {/* 封面缩略图 */}
-                      <div className="w-12 h-16 rounded overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0 relative">
+                      <div className="w-12 h-16 rounded overflow-hidden bg-foreground/10 flex-shrink-0 relative">
                         {item.cover ? (
                           <img
                             src={item.cover}
@@ -144,29 +144,29 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
 
                       {/* 信息 */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-950 dark:text-white font-medium truncate group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors">
+                        <p className="text-sm text-foreground font-medium truncate group-hover:text-primary transition-colors">
                           {item.name}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             第 {item.episode + 1} 集
                           </span>
                           {item.sourceName && (
                             <>
-                              <span className="text-gray-400 dark:text-gray-600">·</span>
-                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                              <span className="text-muted-foreground">·</span>
+                              <span className="text-xs text-muted-foreground">
                                 {item.sourceName}
                               </span>
                             </>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {formatTime(item.timestamp)}
                         </p>
                       </div>
 
                       {/* 箭头 */}
-                      <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -175,11 +175,11 @@ export function HistoryPopup({ scrolled = false }: HistoryPopupProps) {
 
             {/* 底部查看全部 */}
             {history.length > 0 && (
-              <div className="border-t border-gray-100 dark:border-zinc-800">
+              <div className="border-t border-border-color">
                 <Link
                   href="/history"
                   onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  className="block px-4 py-3 text-center text-sm text-muted-foreground hover:text-primary hover:bg-foreground/5 transition-colors"
                 >
                   {hasMore
                     ? `查看全部 ${history.length} 条记录`

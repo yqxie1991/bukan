@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DoubanMovie } from "@/types/douban";
 import type { NewApiMovie } from "@/types/home";
@@ -14,7 +13,6 @@ import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 
 // Components
 import { Navbar } from "@/components/home/Navbar";
-import { SearchModal } from "@/components/home/SearchModal";
 import { LoadingSkeleton } from "@/components/home/LoadingSkeleton";
 import { ErrorState } from "@/components/home/ErrorState";
 import { EmptyState } from "@/components/home/EmptyState";
@@ -28,7 +26,6 @@ import { getCategoryIcon, getCategoryPath } from "@/lib/utils/category-icons";
 
 export default function HomePage() {
   const router = useRouter();
-  const [showSearch, setShowSearch] = useState(false);
 
   // 使用自定义 hooks
   const scrolled = useScrollState(50);
@@ -42,10 +39,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 导航栏 */}
-      <Navbar scrolled={scrolled} onSearchOpen={() => setShowSearch(true)} />
-
-      {/* 搜索弹窗 */}
-      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      <Navbar scrolled={scrolled} />
 
       {/* 加载状态 */}
       {loading ? (

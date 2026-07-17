@@ -623,7 +623,7 @@ export function VodSourcesTab({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Key (唯一标识)
             </label>
             <input
@@ -633,12 +633,12 @@ export function VodSourcesTab({
                 setFormData({ ...formData, key: e.target.value })
               }
               disabled={!isAddMode}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="例如: rycjapi"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               名称
             </label>
             <input
@@ -647,12 +647,12 @@ export function VodSourcesTab({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="例如: 如意资源站"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               API地址
             </label>
             <input
@@ -661,14 +661,14 @@ export function VodSourcesTab({
               onChange={(e) =>
                 setFormData({ ...formData, api: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="https://..."
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               播放地址{" "}
-              <span className="text-slate-500 font-normal">(可选)</span>
+              <span className="text-muted-foreground font-normal">(可选)</span>
             </label>
             <input
               type="text"
@@ -676,14 +676,14 @@ export function VodSourcesTab({
               onChange={(e) =>
                 setFormData({ ...formData, playUrl: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="留空则直接使用原始播放链接"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               优先级{" "}
-              <span className="text-slate-500 font-normal">
+              <span className="text-muted-foreground font-normal">
                 (数值越小优先级越高)
               </span>
             </label>
@@ -697,7 +697,7 @@ export function VodSourcesTab({
                 })
               }
               min={0}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0"
             />
           </div>
@@ -709,11 +709,11 @@ export function VodSourcesTab({
                 onChange={(e) =>
                   setFormData({ ...formData, usePlayUrl: e.target.checked })
                 }
-                className="w-5 h-5 rounded bg-slate-900/50 border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                className="w-5 h-5 rounded bg-surface border-border-color text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
               />
-              <span className="text-sm text-slate-300">
+              <span className="text-sm text-foreground">
                 使用播放地址解析
-                <span className="text-slate-500 ml-2">
+                <span className="text-muted-foreground ml-2">
                   (关闭则直接播放原始 m3u8 链接)
                 </span>
               </span>
@@ -723,13 +723,13 @@ export function VodSourcesTab({
         <div className="flex gap-3 mt-6">
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-[#E50914] hover:bg-[#B20710] text-white rounded-lg transition font-medium"
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition font-medium"
           >
             保存
           </button>
           <button
             onClick={handleCancel}
-            className="px-6 py-2 bg-[#333] hover:bg-[#444] text-white rounded-lg transition font-medium"
+            className="px-6 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg transition font-medium"
           >
             取消
           </button>
@@ -737,12 +737,12 @@ export function VodSourcesTab({
       </Modal>
 
       {/* Sources List */}
-      <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#333]">
+      <div className="bg-card-bg rounded-xl p-6 border border-border-color">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-white">已配置的视频源</h2>
+            <h2 className="text-xl font-bold text-foreground">已配置的视频源</h2>
             {sources.length > 0 && (
-              <span className="px-2 py-1 bg-[#E50914] text-white text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full">
                 {sources.length} 个
               </span>
             )}
@@ -761,7 +761,7 @@ export function VodSourcesTab({
                 });
                 setIsAddMode(true);
               }}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium text-sm flex items-center gap-2"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-primary-foreground rounded-lg transition font-medium text-sm flex items-center gap-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -781,7 +781,7 @@ export function VodSourcesTab({
             </button>
             <button
               onClick={() => setShowEncryptedImportModal(true)}
-              className="px-4 py-2 bg-[#E50914] hover:bg-[#B20710] text-white rounded-lg transition font-medium text-sm flex items-center gap-2"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition font-medium text-sm flex items-center gap-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -803,7 +803,7 @@ export function VodSourcesTab({
             {sources.length > 0 && (
               <button
                 onClick={handleDeleteAll}
-                className="px-4 py-2 bg-[#333] hover:bg-red-600 text-slate-300 hover:text-white rounded-lg transition font-medium text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-foreground/10 hover:bg-primary text-muted-foreground hover:text-primary-foreground rounded-lg transition font-medium text-sm flex items-center gap-2"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -830,29 +830,29 @@ export function VodSourcesTab({
               key={source.key}
               className={`p-4 rounded-lg border transition ${
                 selectedKey === source.key
-                  ? "bg-[#E50914]/10 border-[#E50914]"
-                  : "bg-[#141414] border-[#333] hover:border-[#555]"
+                  ? "bg-primary/10 border-primary"
+                  : "bg-surface border-border-color hover:border-muted-foreground/30"
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs px-2 py-1 bg-slate-600 text-slate-300 rounded font-mono">
+                    <span className="text-xs px-2 py-1 bg-foreground/10 text-foreground rounded font-mono">
                       #{source.priority ?? 0}
                     </span>
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {source.name}
                     </h3>
-                    <span className="text-xs px-2 py-1 bg-slate-700 text-slate-300 rounded">
+                    <span className="text-xs px-2 py-1 bg-foreground/10 text-foreground rounded">
                       {source.key}
                     </span>
                     {selectedKey === source.key && (
-                      <span className="text-xs px-2 py-1 bg-[#E50914] text-white rounded">
+                      <span className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded">
                         当前使用
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-400 space-y-1">
+                  <div className="text-sm text-muted-foreground space-y-1">
                     <p>API: {source.api}</p>
                     {source.playUrl && (
                       <p>
@@ -863,7 +863,7 @@ export function VodSourcesTab({
                       </p>
                     )}
                     {!source.playUrl && (
-                      <p className="text-slate-500">播放: 直接使用原始链接</p>
+                      <p className="text-muted-foreground">播放: 直接使用原始链接</p>
                     )}
                   </div>
                 </div>
@@ -871,20 +871,20 @@ export function VodSourcesTab({
                   {selectedKey !== source.key && (
                     <button
                       onClick={() => handleSelectSource(source.key)}
-                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition"
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-primary-foreground text-sm rounded transition"
                     >
                       设为当前
                     </button>
                   )}
                   <button
                     onClick={() => handleEdit(source)}
-                    className="px-3 py-1 bg-[#E50914] hover:bg-[#B20710] text-white text-sm rounded transition"
+                    className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm rounded transition"
                   >
                     编辑
                   </button>
                   <button
                     onClick={() => handleDelete(source.key)}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-primary-foreground text-sm rounded transition"
                   >
                     删除
                   </button>
@@ -893,7 +893,7 @@ export function VodSourcesTab({
             </div>
           ))}
           {sources.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-muted-foreground">
               <div className="text-5xl mb-4">📺</div>
               <p className="text-lg mb-2">暂无视频源配置</p>
               <p className="text-sm">点击上方「导入配置」按钮导入配置</p>
@@ -911,36 +911,36 @@ export function VodSourcesTab({
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              解密密码 <span className="text-slate-500 font-normal">(未加密配置无需填写)</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              解密密码 <span className="text-muted-foreground font-normal">(未加密配置无需填写)</span>
             </label>
             <input
               type="password"
               value={importPassword}
               onChange={(e) => setImportPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="如果是加密配置，请输入密码；未加密则留空"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              加密数据 / 订阅URL <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              加密数据 / 订阅URL <span className="text-primary">*</span>
             </label>
             <textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
               placeholder="粘贴加密字符串，或输入订阅 URL (https://...)"
             />
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               支持加密字符串或订阅 URL 两种方式导入
             </p>
           </div>
 
           {decryptError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg text-primary text-sm">
               ❌ {decryptError}
             </div>
           )}
@@ -948,7 +948,7 @@ export function VodSourcesTab({
           <button
             onClick={handleDecryptPreview}
             disabled={isDecrypting || !importData}
-            className="w-full px-4 py-2 bg-[#E50914] hover:bg-[#B20710] disabled:bg-[#333] disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
+            className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-foreground/10 disabled:cursor-not-allowed text-primary-foreground rounded-lg transition font-medium"
           >
             {isDecrypting ? "解析中..." : "🔍 解析/解密预览"}
           </button>
@@ -956,19 +956,19 @@ export function VodSourcesTab({
           {unifiedPreview && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-slate-300">解析成功</h4>
+                <h4 className="text-sm font-medium text-foreground">解析成功</h4>
                 <span className="text-xs text-green-400">✅ 包含以下配置</span>
               </div>
 
               {/* 统一预览列表 */}
-              <div className="max-h-64 overflow-y-auto space-y-3 p-3 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="max-h-64 overflow-y-auto space-y-3 p-3 bg-surface rounded-lg border border-border-color">
                 {/* VOD 源 */}
                 {unifiedPreview.vodSources &&
                   unifiedPreview.vodSources.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#E50914]">📺</span>
-                        <span className="text-white font-medium">
+                        <span className="text-primary">📺</span>
+                        <span className="text-foreground font-medium">
                           视频源 ({unifiedPreview.vodSources.length} 个)
                         </span>
                       </div>
@@ -978,13 +978,13 @@ export function VodSourcesTab({
                           .map((source, idx) => (
                             <div
                               key={source.key || idx}
-                              className="text-sm text-slate-400"
+                              className="text-sm text-muted-foreground"
                             >
                               • {source.name}
                             </div>
                           ))}
                         {unifiedPreview.vodSources.length > 3 && (
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted-foreground">
                             ... 还有 {unifiedPreview.vodSources.length - 3} 个
                           </div>
                         )}
@@ -997,8 +997,8 @@ export function VodSourcesTab({
                   unifiedPreview.shortsSources.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#E50914]">🎬</span>
-                        <span className="text-white font-medium">
+                        <span className="text-primary">🎬</span>
+                        <span className="text-foreground font-medium">
                           短剧源 ({unifiedPreview.shortsSources.length} 个)
                         </span>
                       </div>
@@ -1008,13 +1008,13 @@ export function VodSourcesTab({
                           .map((source, idx) => (
                             <div
                               key={source.key || idx}
-                              className="text-sm text-slate-400"
+                              className="text-sm text-muted-foreground"
                             >
                               • {source.name}
                             </div>
                           ))}
                         {unifiedPreview.shortsSources.length > 3 && (
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted-foreground">
                             ... 还有 {unifiedPreview.shortsSources.length - 3}{" "}
                             个
                           </div>
@@ -1028,8 +1028,8 @@ export function VodSourcesTab({
                   unifiedPreview.dailymotionChannels.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#E50914]">📹</span>
-                        <span className="text-white font-medium">
+                        <span className="text-primary">📹</span>
+                        <span className="text-foreground font-medium">
                           Dailymotion 频道 (
                           {unifiedPreview.dailymotionChannels.length} 个)
                         </span>
@@ -1040,13 +1040,13 @@ export function VodSourcesTab({
                           .map((channel, idx) => (
                             <div
                               key={channel.username || idx}
-                              className="text-sm text-slate-400"
+                              className="text-sm text-muted-foreground"
                             >
                               • {channel.displayName} (@{channel.username})
                             </div>
                           ))}
                         {unifiedPreview.dailymotionChannels.length > 3 && (
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted-foreground">
                             ... 还有{" "}
                             {unifiedPreview.dailymotionChannels.length - 3} 个
                           </div>
@@ -1057,8 +1057,8 @@ export function VodSourcesTab({
               </div>
 
               {/* 导入模式选择 */}
-              <div className="p-3 bg-[#141414] rounded-lg border border-[#333]">
-                <div className="text-sm font-medium text-slate-300 mb-2">
+              <div className="p-3 bg-surface rounded-lg border border-border-color">
+                <div className="text-sm font-medium text-foreground mb-2">
                   导入模式
                 </div>
                 <div className="flex gap-2">
@@ -1066,8 +1066,8 @@ export function VodSourcesTab({
                     onClick={() => setImportMode("merge")}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm transition ${
                       importMode === "merge"
-                        ? "bg-[#E50914] text-white"
-                        : "bg-[#333] text-slate-300 hover:bg-[#444]"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-foreground/10 text-foreground hover:bg-foreground/20"
                     }`}
                   >
                     <div className="font-medium">🔀 合并</div>
@@ -1077,8 +1077,8 @@ export function VodSourcesTab({
                     onClick={() => setImportMode("replace")}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm transition ${
                       importMode === "replace"
-                        ? "bg-orange-600 text-white"
-                        : "bg-[#333] text-slate-300 hover:bg-[#444]"
+                        ? "bg-orange-600 text-primary-foreground"
+                        : "bg-foreground/10 text-foreground hover:bg-foreground/20"
                     }`}
                   >
                     <div className="font-medium">🔄 替换</div>

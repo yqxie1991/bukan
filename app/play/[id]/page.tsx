@@ -361,9 +361,9 @@ export default function PlayPage() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center px-6">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-10 h-10 text-red-400"
+              className="w-10 h-10 text-primary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -379,7 +379,7 @@ export default function PlayPage() {
           <p className="text-white text-xl mb-2">{error}</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-foreground rounded-lg transition-colors"
           >
             返回首页
           </button>
@@ -403,13 +403,13 @@ export default function PlayPage() {
       }}
     >
       {/* 顶部导航栏 - Netflix风格 */}
-      <nav className="sticky top-0 z-450 bg-zinc-900/95 backdrop-blur-md border-b border-white/5">
+      <nav className="sticky top-0 z-450 bg-surface/95 backdrop-blur-md border-b border-border-color">
         <div className="w-full mx-auto px-4 md:px-6 h-[48px] md:h-[64px] flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="text-white text-lg font-bold flex items-center gap-2 hover:text-red-500 transition-all duration-300 group"
+            className="text-foreground text-lg font-bold flex items-center gap-2 hover:text-primary transition-all duration-300 group"
           >
-            <div className="p-2 rounded-lg bg-white/5 group-hover:bg-red-500/10 transition-all duration-300">
+            <div className="p-2 rounded-lg bg-foreground/5 group-hover:bg-primary/10 transition-all duration-300">
               <ArrowLeft className="w-5 h-5" />
             </div>
             <span className="hidden sm:inline">返回</span>
@@ -447,10 +447,10 @@ export default function PlayPage() {
             {!isRightPanelOpen && (
               <button
                 onClick={() => setIsRightPanelOpen(true)}
-                className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 transition-all duration-300 group"
+                className="p-2 rounded-lg bg-foreground/5 hover:bg-primary/10 transition-all duration-300 group"
                 title="打开侧边栏"
               >
-                <ChevronLeft className="w-5 h-5 text-white group-hover:text-red-500 transform rotate-180" />
+                <ChevronLeft className="w-5 h-5 text-foreground group-hover:text-primary transform rotate-180" />
               </button>
             )}
           </div>
@@ -497,25 +497,25 @@ export default function PlayPage() {
           </div>
 
           {/* 视频下方信息 - 仅在移动端显示 */}
-          <div className="lg:hidden p-4 bg-linear-to-b from-gray-900/90 to-gray-950/90 backdrop-blur-sm">
-            <h1 className="text-sm font-bold text-white mb-2 tracking-tight">
+          <div className="lg:hidden p-4 bg-linear-to-b from-background/90 to-background/90 backdrop-blur-sm">
+            <h1 className="text-sm font-bold text-foreground mb-2 tracking-tight">
               {dramaDetail.name}
             </h1>
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {dramaDetail.year && (
-                <span className="px-2 py-1 bg-linear-to-r from-red-600 to-red-500 text-white font-semibold rounded-md shadow-lg shadow-red-500/30">
+                <span className="px-2 py-1 bg-linear-to-r from-red-600 to-red-500 text-primary-foreground font-semibold rounded-md shadow-lg shadow-red-500/30">
                   {dramaDetail.year}
                 </span>
               )}
               {dramaDetail.type && (
-                <span className="text-gray-300 font-medium">
+                <span className="text-muted-foreground font-medium">
                   {dramaDetail.type}
                 </span>
               )}
               {dramaDetail.area && (
                 <>
-                  <span className="text-gray-600">•</span>
-                  <span className="text-gray-300 font-medium">
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground font-medium">
                     {dramaDetail.area}
                   </span>
                 </>
@@ -526,24 +526,24 @@ export default function PlayPage() {
 
         {/* 右侧：剧集信息和选择器 - Netflix风格 */}
         {isRightPanelOpen ? (
-          <div className="w-full lg:w-[380px] xl:w-[420px] bg-zinc-900 overflow-y-auto lg:max-h-[calc(100vh-65px)] relative">
+          <div className="w-full lg:w-[380px] xl:w-[420px] bg-surface overflow-y-auto lg:max-h-[calc(100vh-65px)] relative">
             {/* 关闭按钮 */}
             <button
               onClick={() => setIsRightPanelOpen(false)}
-              className="hidden sm:block absolute top-4 right-4 z-20 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 group"
+              className="hidden sm:block absolute top-4 right-4 z-20 p-2 bg-foreground/10 hover:bg-foreground/20 rounded-full transition-all duration-300 group"
               title="关闭侧边栏"
             >
-              <X className="w-5 h-5 text-gray-300 group-hover:text-white" />
+              <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
             </button>
             <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
               {/* 查看全部集数模式 */}
               {showAllEpisodes ? (
                 <div className="space-y-4 lg:space-y-6">
                   {/* 返回按钮和标题 */}
-                  <div className="flex items-center justify-between sticky top-0 bg-zinc-900 pb-4 border-b border-white/10 z-10">
+                  <div className="flex items-center justify-between sticky top-0 bg-surface pb-4 border-b border-border-color z-10">
                     <button
                       onClick={() => setShowAllEpisodes(false)}
-                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors group"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
                     >
                       <svg
                         className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
@@ -566,10 +566,10 @@ export default function PlayPage() {
 
                   {/* 剧集标题 */}
                   <div>
-                    <h1 className="text-sm lg:text-2xl font-bold text-white mb-2 line-clamp-2 tracking-tight leading-tight">
+                    <h1 className="text-sm lg:text-2xl font-bold text-foreground mb-2 line-clamp-2 tracking-tight leading-tight">
                       {dramaDetail.name}
                     </h1>
-                    <p className="text-xs lg:text-sm text-gray-400">选择集数</p>
+                    <p className="text-xs lg:text-sm text-muted-foreground">选择集数</p>
                   </div>
 
                   {/* 所有集数网格 */}
@@ -583,8 +583,8 @@ export default function PlayPage() {
                         }}
                         className={`aspect-video rounded-lg text-xs lg:text-sm flex flex-col items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${
                           currentEpisode === index
-                            ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
-                            : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
+                            ? "bg-linear-to-br from-red-600 to-red-500 text-primary-foreground shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
+                            : "bg-foreground/10 hover:bg-foreground/20 text-muted-foreground hover:text-foreground hover:scale-105 backdrop-blur-sm"
                         }`}
                       >
                         {episode.name}
@@ -596,26 +596,26 @@ export default function PlayPage() {
                 <>
                   {/* 剧集标题和信息 - 仅在桌面端显示 */}
                   <div className="hidden lg:block animate-fade-in">
-                    <h1 className="text-2xl font-bold text-white mb-4 line-clamp-2 tracking-tight leading-tight">
+                    <h1 className="text-2xl font-bold text-foreground mb-4 line-clamp-2 tracking-tight leading-tight">
                       {dramaDetail.name}
                     </h1>
                     <div className="flex flex-wrap items-center gap-2 text-sm mb-4">
                       {dramaDetail.year && (
-                        <span className="px-3 py-1.5 bg-linear-to-r from-red-600 to-red-500 text-white font-semibold rounded-md shadow-lg shadow-red-500/30">
+                        <span className="px-3 py-1.5 bg-linear-to-r from-red-600 to-red-500 text-primary-foreground font-semibold rounded-md shadow-lg shadow-red-500/30">
                           {dramaDetail.year}
                         </span>
                       )}
                       {dramaDetail.remarks && (
-                        <span className="px-3 py-1.5 border border-white/20 text-gray-200 rounded-md font-medium backdrop-blur-sm bg-white/5">
+                        <span className="px-3 py-1.5 border border-border-color text-foreground rounded-md font-medium backdrop-blur-sm bg-foreground/5">
                           {dramaDetail.remarks}
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300 font-medium">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground font-medium">
                       {dramaDetail.type && <span>{dramaDetail.type}</span>}
                       {dramaDetail.area && (
                         <>
-                          <span className="text-gray-600">•</span>
+                          <span className="text-muted-foreground">•</span>
                           <span>{dramaDetail.area}</span>
                         </>
                       )}
@@ -624,23 +624,23 @@ export default function PlayPage() {
 
                   {/* 演职人员 */}
                   {(dramaDetail.actor || dramaDetail.director) && (
-                    <div className="space-y-3 text-xs lg:text-sm lg:border-t lg:border-white/10 lg:pt-6">
+                    <div className="space-y-3 text-xs lg:text-sm lg:border-t lg:border-border-color lg:pt-6">
                       {dramaDetail.actor && (
                         <div className="group">
-                          <span className="text-gray-400 font-semibold">
+                          <span className="text-muted-foreground font-semibold">
                             主演：
                           </span>
-                          <span className="text-gray-200 group-hover:text-white transition-colors">
+                          <span className="text-foreground group-hover:text-foreground transition-colors">
                             {dramaDetail.actor}
                           </span>
                         </div>
                       )}
                       {dramaDetail.director && (
                         <div className="group">
-                          <span className="text-gray-400 font-semibold">
+                          <span className="text-muted-foreground font-semibold">
                             导演：
                           </span>
-                          <span className="text-gray-200 group-hover:text-white transition-colors">
+                          <span className="text-foreground group-hover:text-foreground transition-colors">
                             {dramaDetail.director}
                           </span>
                         </div>
@@ -650,13 +650,13 @@ export default function PlayPage() {
 
                   {/* 简介 */}
                   {dramaDetail.blurb && (
-                    <div className="border-t border-white/10 pt-4 lg:pt-6">
-                      <h3 className="text-xs lg:text-sm font-semibold text-gray-400 mb-2">
+                    <div className="border-t border-border-color pt-4 lg:pt-6">
+                      <h3 className="text-xs lg:text-sm font-semibold text-muted-foreground mb-2">
                         剧情简介
                       </h3>
                       <div className="relative">
                         <p
-                          className={`text-xs lg:text-sm text-gray-300 leading-relaxed transition-all duration-300 ${
+                          className={`text-xs lg:text-sm text-muted-foreground leading-relaxed transition-all duration-300 ${
                             isDescriptionExpanded ? "" : "line-clamp-4"
                           }`}
                           dangerouslySetInnerHTML={{
@@ -670,7 +670,7 @@ export default function PlayPage() {
                             onClick={() =>
                               setIsDescriptionExpanded(!isDescriptionExpanded)
                             }
-                            className="mt-2 text-xs lg:text-sm text-red-500 hover:text-red-400 font-semibold transition-colors flex items-center gap-1 group"
+                            className="mt-2 text-xs lg:text-sm text-primary hover:text-primary font-semibold transition-colors flex items-center gap-1 group"
                           >
                             {isDescriptionExpanded ? (
                               <>
@@ -714,9 +714,9 @@ export default function PlayPage() {
                   )}
 
                   {/* 选集区域 */}
-                  <div className="border-t border-white/10 pt-6">
+                  <div className="border-t border-border-color pt-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xs lg:text-sm font-bold text-white tracking-tight">
+                      <h2 className="text-xs lg:text-sm font-bold text-foreground tracking-tight">
                         选集
                       </h2>
                     </div>
@@ -726,7 +726,7 @@ export default function PlayPage() {
                       <button
                         onClick={previousEpisode}
                         disabled={currentEpisode === 0}
-                        className="flex-1 px-4 py-2.5 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:text-gray-600 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
+                        className="flex-1 px-4 py-2.5 bg-foreground/10 hover:bg-foreground/20 disabled:bg-foreground/5 disabled:text-muted-foreground text-foreground rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
                       >
                         上一集
                       </button>
@@ -735,7 +735,7 @@ export default function PlayPage() {
                         disabled={
                           currentEpisode === dramaDetail.episodes.length - 1
                         }
-                        className="flex-1 px-4 py-2.5 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:shadow-none"
+                        className="flex-1 px-4 py-2.5 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-surface disabled:to-surface disabled:text-muted-foreground text-primary-foreground rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:shadow-none"
                       >
                         下一集
                       </button>
@@ -751,8 +751,8 @@ export default function PlayPage() {
                             onClick={() => selectEpisode(index)}
                             className={`rounded-lg flex flex-col text-xs lg:text-sm items-center justify-center p-2 transition-all duration-300 group relative overflow-hidden ${
                               currentEpisode === index
-                                ? "bg-linear-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
-                                : "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white hover:scale-105 backdrop-blur-sm"
+                                ? "bg-linear-to-br from-red-600 to-red-500 text-primary-foreground shadow-lg shadow-red-500/40 ring-2 ring-red-400 scale-105"
+                                : "bg-foreground/10 hover:bg-foreground/20 text-muted-foreground hover:text-foreground hover:scale-105 backdrop-blur-sm"
                             }`}
                           >
                             {episode.name}
@@ -764,7 +764,7 @@ export default function PlayPage() {
                     {dramaDetail.episodes.length > 12 && (
                       <button
                         onClick={() => setShowAllEpisodes(true)}
-                        className="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                        className="w-full px-4 py-3 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg transition-all duration-300 text-xs lg:text-sm font-semibold backdrop-blur-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
                       >
                         <span>查看全部</span>
                         <svg

@@ -13,7 +13,6 @@ import { useMovieMatch } from '@/hooks/useMovieMatch';
 
 // Components
 import { Navbar } from '@/components/home/Navbar';
-import { SearchModal } from '@/components/home/SearchModal';
 import { Footer } from '@/components/home/Footer';
 import { LoadingOverlay } from '@/components/home/LoadingOverlay';
 
@@ -266,9 +265,8 @@ function CalendarSkeleton() {
 
 export default function CalendarPage() {
   const router = useRouter();
-  const [showSearch, setShowSearch] = useState(false);
   const scrolled = useScrollState(50);
-  const { matchingMovie, handleMovieClick, toast, setToast } = useMovieMatch();
+  const { matchingMovie, toast, setToast } = useMovieMatch();
 
   const [calendarData, setCalendarData] = useState<CalendarResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -334,10 +332,7 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* 导航栏 */}
-      <Navbar scrolled={scrolled} onSearchOpen={() => setShowSearch(true)} />
-
-      {/* 搜索弹窗 */}
-      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      <Navbar scrolled={scrolled} />
 
       {/* Hero 区域 */}
       <div className="relative w-full pt-16 pb-8 md:pt-20 md:pb-12 bg-gradient-to-b from-background/90 to-background border-b border-gray-200 dark:border-neutral-800/50 transition-colors duration-300">

@@ -397,26 +397,26 @@ export default function MovieDetailPage() {
 
       {/* 加载中骨架屏 */}
       {isLoadingDetail && (
-        <main className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <main className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-20 md:pb-0">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* 海报骨架 */}
             <div className="w-full max-w-[300px] mx-auto lg:w-[360px] shrink-0">
-              <div className="aspect-2/3 rounded-2xl bg-white/10 animate-pulse shadow-2xl shadow-black/50" />
+              <div className="aspect-2/3 rounded-2xl bg-foreground/10 animate-pulse shadow-2xl shadow-black/50" />
             </div>
 
             {/* 信息骨架 */}
             <div className="flex-1 w-full space-y-6">
               {/* 标题 */}
               <div className="space-y-3">
-                <div className="h-10 md:h-14 bg-white/10 rounded-xl w-3/4 animate-pulse" />
+                <div className="h-10 md:h-14 bg-foreground/10 rounded-xl w-3/4 animate-pulse" />
               </div>
 
               {/* 评分和标签行 */}
               <div className="flex flex-wrap gap-3">
                 <div className="h-9 w-20 bg-yellow-500/10 rounded-lg animate-pulse" />
-                <div className="h-9 w-16 bg-white/10 rounded-lg animate-pulse delay-75" />
-                <div className="h-9 w-24 bg-white/10 rounded-lg animate-pulse delay-100" />
-                <div className="h-9 w-20 bg-white/10 rounded-lg animate-pulse delay-150" />
+                <div className="h-9 w-16 bg-foreground/10 rounded-lg animate-pulse delay-75" />
+                <div className="h-9 w-24 bg-foreground/10 rounded-lg animate-pulse delay-100" />
+                <div className="h-9 w-20 bg-foreground/10 rounded-lg animate-pulse delay-150" />
               </div>
 
               {/* 类型标签 */}
@@ -429,34 +429,34 @@ export default function MovieDetailPage() {
               {/* 导演/演员 */}
               <div className="space-y-3">
                 <div className="flex gap-2 items-center">
-                  <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
-                  <div className="h-4 w-40 bg-white/10 rounded animate-pulse delay-75" />
+                  <div className="h-4 w-12 bg-foreground/5 rounded animate-pulse" />
+                  <div className="h-4 w-40 bg-foreground/10 rounded animate-pulse delay-75" />
                 </div>
                 <div className="flex gap-2 items-center">
-                  <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
-                  <div className="h-4 w-64 bg-white/10 rounded animate-pulse delay-100" />
+                  <div className="h-4 w-12 bg-foreground/5 rounded animate-pulse" />
+                  <div className="h-4 w-64 bg-foreground/10 rounded animate-pulse delay-100" />
                 </div>
               </div>
 
               {/* 短评骨架 */}
-              <div className="bg-white/5 rounded-xl p-4 space-y-2 animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-full" />
-                <div className="h-4 bg-white/10 rounded w-5/6" />
-                <div className="h-3 bg-white/5 rounded w-24 mt-3" />
+              <div className="bg-foreground/5 rounded-xl p-4 space-y-2 animate-pulse">
+                <div className="h-4 bg-foreground/10 rounded w-full" />
+                <div className="h-4 bg-foreground/10 rounded w-5/6" />
+                <div className="h-3 bg-foreground/5 rounded w-24 mt-3" />
               </div>
 
               {/* 播放源区域骨架 */}
-              <div className="bg-white/5 rounded-3xl p-6 mt-8 space-y-4">
+              <div className="bg-foreground/5 rounded-3xl p-6 mt-8 space-y-4">
                 <div className="flex justify-between items-center">
-                  <div className="h-6 w-20 bg-white/10 rounded animate-pulse" />
-                  <div className="h-4 w-28 bg-white/5 rounded animate-pulse" />
+                  <div className="h-6 w-20 bg-foreground/10 rounded animate-pulse" />
+                  <div className="h-4 w-28 bg-foreground/5 rounded animate-pulse" />
                 </div>
                 <div className="h-12 w-36 bg-red-500/20 rounded-full mx-auto animate-pulse" />
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
-                      className="h-16 bg-white/5 rounded-xl animate-pulse"
+                      className="h-16 bg-foreground/5 rounded-xl animate-pulse"
                       style={{ animationDelay: `${i * 50}ms` }}
                     />
                   ))}
@@ -469,7 +469,7 @@ export default function MovieDetailPage() {
 
       {/* 主内容 */}
       {!isLoadingDetail && (
-        <main className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <main className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-20 md:pb-0">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* 左侧海报 */}
             <div className="w-full max-w-[300px] mx-auto lg:w-[360px] shrink-0 animate-fade-in">
@@ -517,7 +517,7 @@ export default function MovieDetailPage() {
                     </div>
                   )}
                   {movieDetail?.episodes_count && (
-                    <div className="px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-lg border border-blue-500/20">
+                    <div className="px-3 py-1.5 bg-blue-500/20 text-blue-600 dark:text-blue-300 rounded-lg border border-blue-500/20">
                       {movieDetail.episodes_count}
                     </div>
                   )}
@@ -529,7 +529,7 @@ export default function MovieDetailPage() {
                     {movieDetail.types.map((type, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-sm border border-red-500/20"
+                        className="px-3 py-1 bg-red-500/20 text-red-600 dark:text-red-300 rounded-full text-sm border border-red-500/20"
                       >
                         {type}
                       </span>
@@ -542,22 +542,22 @@ export default function MovieDetailPage() {
                   {movieDetail?.directors &&
                     movieDetail.directors.length > 0 && (
                       <div className="flex items-start gap-2 text-sm">
-                        <span className="text-gray-500 shrink-0 flex items-center gap-1">
+                        <span className="text-muted-foreground shrink-0 flex items-center gap-1">
                           <Clapperboard className="w-4 h-4" />
                           导演:
                         </span>
-                        <span className="text-gray-300">
+                        <span className="text-foreground">
                           {movieDetail.directors.join(" / ")}
                         </span>
                       </div>
                     )}
                   {movieDetail?.actors && movieDetail.actors.length > 0 && (
                     <div className="flex items-start gap-2 text-sm">
-                      <span className="text-gray-500 shrink-0 flex items-center gap-1">
+                      <span className="text-muted-foreground shrink-0 flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         主演:
                       </span>
-                      <span className="text-gray-300 line-clamp-2">
+                      <span className="text-foreground line-clamp-2">
                         {movieDetail.actors.slice(0, 5).join(" / ")}
                       </span>
                     </div>
@@ -566,11 +566,11 @@ export default function MovieDetailPage() {
 
                 {/* 短评 */}
                 {movieDetail?.short_comment && (
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                    <p className="text-gray-300 text-sm italic leading-relaxed">
+                  <div className="bg-foreground/5 rounded-xl p-4 border border-border-color">
+                    <p className="text-foreground text-sm italic leading-relaxed">
                       &ldquo;{movieDetail.short_comment.content}&rdquo;
                     </p>
-                    <p className="text-gray-500 text-xs mt-2">
+                    <p className="text-muted-foreground text-xs mt-2">
                       ——{" "}
                       {typeof movieDetail.short_comment.author === "string"
                         ? movieDetail.short_comment.author
@@ -622,7 +622,7 @@ export default function MovieDetailPage() {
                           <p className="text-foreground/80 text-sm leading-relaxed line-clamp-3">
                             {comment.content}
                           </p>
-                          <p className="text-gray-500 text-xs mt-2">
+                          <p className="text-muted-foreground text-xs mt-2">
                             —— {comment.author.name}
                           </p>
                         </div>
@@ -700,8 +700,8 @@ export default function MovieDetailPage() {
                               <span
                                 className={`text-xs font-medium px-2 py-0.5 rounded-md ${
                                   index === 0
-                                    ? "bg-red-500/20 text-red-300"
-                                    : "bg-foreground/10 text-gray-500 dark:text-gray-400 group-hover:text-foreground"
+                                    ? "bg-red-500/20 text-red-600 dark:text-red-300"
+                                    : "bg-foreground/10 text-muted-foreground group-hover:text-foreground"
                                 }`}
                               >
                                 {source.source_name}
@@ -726,13 +726,13 @@ export default function MovieDetailPage() {
                 {searchStatus === "not_found" && (
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
                     <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center">
-                      <AlertCircle className="w-8 h-8 text-gray-500" />
+                      <AlertCircle className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <div className="text-center">
                       <p className="text-foreground font-medium mb-1">
                         未找到匹配资源
                       </p>
-                      <p className="text-sm text-gray-500">{errorMessage}</p>
+                      <p className="text-sm text-muted-foreground">{errorMessage}</p>
                     </div>
                     <button
                       onClick={() => searchPlaySources(true)}

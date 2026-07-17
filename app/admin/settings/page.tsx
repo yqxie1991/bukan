@@ -142,23 +142,22 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="dark">
-      <div className="min-h-screen bg-[#141414] text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
         {/* Header - Netflix Style */}
-        <div className="bg-[#141414] border-b border-[#333] transition-colors duration-300">
+        <div className="bg-background border-b border-border-color transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div className="flex items-center gap-6">
-              <h1 
-                className="text-2xl font-bold text-[#E50914]"
+              <h1
+                className="text-2xl font-bold text-primary"
                 style={{ fontFamily: '"Smiley Sans", sans-serif' }}
               >
                 不看
               </h1>
-              <span className="text-white text-lg font-medium">系统设置</span>
+              <span className="text-foreground text-lg font-medium">系统设置</span>
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-[#333] hover:bg-[#444] text-white border border-transparent rounded transition-colors"
+              className="px-4 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground border border-transparent rounded transition-colors"
             >
               退出登录
             </button>
@@ -166,7 +165,7 @@ function SettingsContent() {
         </div>
 
         {/* Tabs Navigation - Netflix Style */}
-        <div className="bg-[#181818] border-b border-[#333] transition-colors duration-300">
+        <div className="bg-card-bg border-b border-border-color transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex space-x-1">
               {tabs.map((tab) => {
@@ -177,8 +176,8 @@ function SettingsContent() {
                     onClick={() => handleTabChange(tab.id)}
                     className={`px-6 py-4 text-sm font-medium transition-all relative ${
                       activeTab === tab.id
-                        ? "text-white font-semibold"
-                        : "text-[#808080] hover:text-white"
+                        ? "text-foreground font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -186,7 +185,7 @@ function SettingsContent() {
                       <span>{tab.name}</span>
                     </span>
                     {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#E50914]" />
+                      <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary" />
                     )}
                   </button>
                 );
@@ -270,7 +269,6 @@ function SettingsContent() {
           danger={confirm.danger}
         />
       )}
-      </div>
     </div>
   );
 }
@@ -278,10 +276,10 @@ function SettingsContent() {
 // 加载占位符
 function SettingsLoading() {
   return (
-    <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-600 border-t-red-600 mx-auto mb-4" />
-        <p className="text-gray-400">加载中...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-foreground/10 border-t-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">加载中...</p>
       </div>
     </div>
   );

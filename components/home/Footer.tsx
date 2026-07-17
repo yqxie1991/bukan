@@ -1,7 +1,7 @@
 export function Footer() {
   return (
     <footer 
-      className="mt-20 border-t border-gray-200 dark:border-gray-800 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black dark:to-gray-950 transition-all duration-300"
+      className="mt-20 border-t border-border-color bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black dark:to-gray-950 transition-all duration-300"
       style={{ fontFamily: '"LXGW WenKai GB Screen", sans-serif' }}
     >
       <div className="mx-auto px-4 md:px-12 py-12">
@@ -44,7 +44,7 @@ export function Footer() {
         </div>
 
         {/* 分隔线 */}
-        <div className="border-t border-gray-200 dark:border-gray-800 my-8"></div>
+        <div className="border-t border-border-color my-8"></div>
 
         {/* 底部信息 */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">

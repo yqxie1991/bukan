@@ -43,25 +43,25 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#141414]">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md px-6">
-        <div className="bg-[#1a1a1a] rounded-lg shadow-2xl p-10 border border-[#333]">
+        <div className="bg-card-bg rounded-lg shadow-[var(--card-shadow-hover)] p-10 border border-border-color">
           {/* Netflix Logo Style */}
           <div className="text-center mb-8">
-            <h1 
-              className="text-4xl font-bold text-[#E50914] mb-2"
+            <h1
+              className="text-4xl font-bold text-primary mb-2"
               style={{ fontFamily: '"Smiley Sans", sans-serif' }}
             >
               不看
             </h1>
-            <p className="text-[#808080] text-lg">后台管理系统</p>
+            <p className="text-muted-foreground text-lg">后台管理系统</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-[#b3b3b3] mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 密码
               </label>
@@ -70,7 +70,7 @@ function LoginForm() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-[#333] border border-[#454545] rounded text-white placeholder-[#8c8c8c] focus:outline-none focus:ring-2 focus:ring-[#E50914] focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-surface border border-border-color rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition"
                 placeholder="请输入管理员密码"
                 required
                 autoFocus
@@ -78,7 +78,7 @@ function LoginForm() {
             </div>
 
             {error && (
-              <div className="bg-[#E50914]/10 border border-[#E50914]/50 rounded p-3 text-[#E50914] text-sm">
+              <div className="bg-primary/10 border border-primary/50 rounded p-3 text-primary text-sm">
                 {error}
               </div>
             )}
@@ -86,13 +86,13 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#E50914] hover:bg-[#B20710] disabled:bg-[#831010] disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded transition duration-200"
+              className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold py-3 px-4 rounded transition duration-200"
             >
               {loading ? "登录中..." : "登录"}
             </button>
           </form>
 
-          <div className="mt-8 text-center text-sm text-[#8c8c8c]">
+          <div className="mt-8 text-center text-sm text-muted-foreground">
             <p>默认密码：bukan</p>
             <p className="mt-1">可通过环境变量 ADMIN_PASSWORD 修改</p>
           </div>
@@ -104,16 +104,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="dark">
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center bg-[#141414]">
-            <div className="text-white">加载中...</div>
-          </div>
-        }
-      >
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-foreground">加载中...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -28,13 +28,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg' }: ModalPr
       aria-labelledby="modal-title"
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
-      <div className={`bg-slate-800 rounded-xl shadow-2xl border border-slate-700 ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto animate-scale-in overscroll-contain`}>
-        <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between z-10">
-          <h3 id="modal-title" className="text-xl font-bold text-white">{title}</h3>
+      <div className={`bg-card-bg rounded-xl shadow-[var(--card-shadow-hover)] border border-border-color ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto animate-scale-in overscroll-contain`}>
+        <div className="sticky top-0 bg-card-bg border-b border-border-color px-6 py-4 flex items-center justify-between z-10">
+          <h3 id="modal-title" className="text-xl font-bold text-foreground">{title}</h3>
           <button
             onClick={onClose}
             aria-label="关闭弹窗"
-            className="text-slate-400 hover:text-white transition text-2xl leading-none"
+            className="text-muted-foreground hover:text-foreground transition text-2xl leading-none"
           >
             ×
           </button>

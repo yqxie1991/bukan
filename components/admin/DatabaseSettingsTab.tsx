@@ -210,9 +210,9 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
   return (
     <div className="space-y-6">
       {/* 数据库连接状态卡片 */}
-      <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#333]">
+      <div className="bg-card-bg rounded-xl p-6 border border-border-color">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Database size={24} />
             数据库状态
           </h2>
@@ -220,7 +220,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
             <button
               onClick={fetchStatus}
               disabled={loading}
-              className="px-4 py-2 bg-[#333] hover:bg-[#444] text-white text-sm rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground text-sm rounded-lg transition flex items-center gap-2 disabled:opacity-50"
             >
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               刷新
@@ -228,7 +228,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
             <button
               onClick={handleTestConnection}
               disabled={testing}
-              className="px-4 py-2 bg-[#E50914] hover:bg-[#B20710] text-white text-sm rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm rounded-lg transition flex items-center gap-2 disabled:opacity-50"
             >
               {testing ? (
                 <>
@@ -247,7 +247,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
 
         {loading && !status ? (
           <div className="flex items-center justify-center py-12">
-            <RefreshCw size={32} className="animate-spin text-[#E50914]" />
+            <RefreshCw size={32} className="animate-spin text-primary" />
           </div>
         ) : status ? (
           <div className="space-y-4">
@@ -264,11 +264,11 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
                   <XCircle size={24} className="text-red-500" />
                 )}
                 <div className="flex-1">
-                  <div className={`font-medium ${status.connected ? "text-green-400" : "text-red-400"}`}>
+                  <div className={`font-medium ${status.connected ? "text-green-400" : "text-primary"}`}>
                     {status.connected ? "连接正常" : "连接失败"}
                   </div>
                   {status.error && (
-                    <div className="text-sm text-red-400 mt-1 font-mono break-all">{status.error}</div>
+                    <div className="text-sm text-primary mt-1 font-mono break-all">{status.error}</div>
                   )}
                 </div>
               </div>
@@ -285,7 +285,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
                     </h4>
                     <ul className="space-y-1.5">
                       {errorSuggestion.suggestions.map((suggestion, index) => (
-                        <li key={index} className="text-sm text-slate-300 flex items-start gap-2">
+                        <li key={index} className="text-sm text-foreground flex items-start gap-2">
                           <span className="text-orange-400 font-bold">{index + 1}.</span>
                           <span>{suggestion}</span>
                         </li>
@@ -299,54 +299,54 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
             {/* 详细信息网格 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* 延迟 */}
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                   <Clock size={16} />
                   响应延迟
                 </div>
-                <div className="text-2xl font-bold text-white">
-                  {status.latency}<span className="text-sm text-slate-400 ml-1">ms</span>
+                <div className="text-2xl font-bold text-foreground">
+                  {status.latency}<span className="text-sm text-muted-foreground ml-1">ms</span>
                 </div>
               </div>
 
               {/* 数据库名称 */}
               {status.database && (
-                <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                  <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                <div className="p-4 bg-surface rounded-lg border border-border-color">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                     <Database size={16} />
                     数据库名称
                   </div>
-                  <div className="text-lg font-medium text-white">{status.database}</div>
+                  <div className="text-lg font-medium text-foreground">{status.database}</div>
                 </div>
               )}
 
               {/* 集合数量 */}
               {status.collectionCount !== undefined && (
-                <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                  <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                <div className="p-4 bg-surface rounded-lg border border-border-color">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                     <Layers size={16} />
                     集合数量
                   </div>
-                  <div className="text-2xl font-bold text-white">{status.collectionCount}</div>
+                  <div className="text-2xl font-bold text-foreground">{status.collectionCount}</div>
                 </div>
               )}
 
               {/* 服务器版本 */}
               {status.serverInfo?.version && (
-                <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                  <div className="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                <div className="p-4 bg-surface rounded-lg border border-border-color">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                     <Server size={16} />
                     MongoDB 版本
                   </div>
-                  <div className="text-lg font-medium text-white">{status.serverInfo.version}</div>
+                  <div className="text-lg font-medium text-foreground">{status.serverInfo.version}</div>
                 </div>
               )}
             </div>
 
             {/* 集合列表 */}
             {status.collections && status.collections.length > 0 && (
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
+                <h3 className="text-foreground font-medium mb-3 flex items-center gap-2">
                   <Layers size={18} />
                   集合列表
                 </h3>
@@ -354,7 +354,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
                   {status.collections.map((collection) => (
                     <span
                       key={collection}
-                      className="px-3 py-1 bg-[#333] text-slate-300 text-sm rounded-lg"
+                      className="px-3 py-1 bg-foreground/10 text-foreground text-sm rounded-lg"
                     >
                       {collection}
                     </span>
@@ -365,20 +365,20 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
 
             {/* 连接 URI（已脱敏） */}
             {status.uri && (
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
-                <h3 className="text-white font-medium mb-2">连接 URI</h3>
-                <code className="text-sm text-slate-400 break-all">{status.uri}</code>
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
+                <h3 className="text-foreground font-medium mb-2">连接 URI</h3>
+                <code className="text-sm text-muted-foreground break-all">{status.uri}</code>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-400">无法获取数据库状态</div>
+          <div className="text-center py-8 text-muted-foreground">无法获取数据库状态</div>
         )}
       </div>
 
       {/* MongoDB 配置指南 */}
-      <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#333]">
-        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+      <div className="bg-card-bg rounded-xl p-6 border border-border-color">
+        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
           <Database size={20} />
           MongoDB 配置指南
         </h3>
@@ -389,7 +389,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
             <p className="text-blue-300">
               本项目使用 <strong>MongoDB</strong> 作为数据库，支持以下部署方式：
             </p>
-            <ul className="mt-2 space-y-1 text-slate-300">
+            <ul className="mt-2 space-y-1 text-foreground">
               <li>• 本地 MongoDB 实例</li>
               <li>• Docker 容器化部署</li>
               <li>• MongoDB Atlas 云服务（推荐生产环境）</li>
@@ -398,20 +398,20 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
 
           {/* 环境变量说明 */}
           <div>
-            <h4 className="text-white font-medium mb-3">环境变量配置</h4>
-            <p className="text-slate-400 mb-3">
-              数据库连接通过环境变量配置，修改后需要重启服务生效。在 <code className="text-slate-300 bg-[#333] px-1 rounded">.env</code> 文件或部署平台设置：
+            <h4 className="text-foreground font-medium mb-3">环境变量配置</h4>
+            <p className="text-muted-foreground mb-3">
+              数据库连接通过环境变量配置，修改后需要重启服务生效。在 <code className="text-foreground bg-foreground/10 px-1 rounded">.env</code> 文件或部署平台设置：
             </p>
             <div className="space-y-3">
-              <div className="p-3 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="p-3 bg-surface rounded-lg border border-border-color">
                 <div className="font-mono text-green-400 text-xs mb-1"># 必需</div>
-                <div className="font-mono text-slate-300">
+                <div className="font-mono text-foreground">
                   MONGODB_URI=&lt;连接字符串&gt;
                 </div>
               </div>
-              <div className="p-3 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="p-3 bg-surface rounded-lg border border-border-color">
                 <div className="font-mono text-green-400 text-xs mb-1"># 可选（默认: kerkerker）</div>
-                <div className="font-mono text-slate-300">
+                <div className="font-mono text-foreground">
                   MONGODB_DB_NAME=kerkerker
                 </div>
               </div>
@@ -420,46 +420,46 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
 
           {/* 部署方式 */}
           <div>
-            <h4 className="text-white font-medium mb-3">连接字符串示例</h4>
+            <h4 className="text-foreground font-medium mb-3">连接字符串示例</h4>
             <div className="space-y-4">
               {/* Docker 部署 */}
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded">Docker</span>
-                  <span className="text-white font-medium">Docker Compose 部署</span>
+                  <span className="px-2 py-0.5 bg-blue-600 text-primary-foreground text-xs rounded">Docker</span>
+                  <span className="text-foreground font-medium">Docker Compose 部署</span>
                 </div>
-                <code className="block text-xs text-slate-400 break-all">
+                <code className="block text-xs text-muted-foreground break-all">
                   MONGODB_URI=mongodb://mongodb:27017/kerkerker
                 </code>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   使用 docker-compose 时，MongoDB 容器名为 mongodb
                 </p>
               </div>
 
               {/* 本地开发 */}
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded">本地</span>
-                  <span className="text-white font-medium">本地 MongoDB</span>
+                  <span className="px-2 py-0.5 bg-green-600 text-primary-foreground text-xs rounded">本地</span>
+                  <span className="text-foreground font-medium">本地 MongoDB</span>
                 </div>
-                <code className="block text-xs text-slate-400 break-all">
+                <code className="block text-xs text-muted-foreground break-all">
                   MONGODB_URI=mongodb://localhost:27017/kerkerker
                 </code>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   需要先安装并启动本地 MongoDB 服务
                 </p>
               </div>
 
               {/* MongoDB Atlas */}
-              <div className="p-4 bg-[#141414] rounded-lg border border-[#333]">
+              <div className="p-4 bg-surface rounded-lg border border-border-color">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded">推荐</span>
-                  <span className="text-white font-medium">MongoDB Atlas 云服务</span>
+                  <span className="px-2 py-0.5 bg-purple-600 text-primary-foreground text-xs rounded">推荐</span>
+                  <span className="text-foreground font-medium">MongoDB Atlas 云服务</span>
                 </div>
-                <code className="block text-xs text-slate-400 break-all">
+                <code className="block text-xs text-muted-foreground break-all">
                   MONGODB_URI=mongodb+srv://&lt;用户名&gt;:&lt;密码&gt;@&lt;集群&gt;.mongodb.net/kerkerker
                 </code>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   从 Atlas 控制台获取连接字符串，支持免费 M0 套餐
                 </p>
               </div>
@@ -468,30 +468,30 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
 
           {/* Atlas 配置步骤 */}
           <div>
-            <h4 className="text-white font-medium mb-3">MongoDB Atlas 快速配置</h4>
-            <ol className="space-y-2 text-slate-400">
+            <h4 className="text-foreground font-medium mb-3">MongoDB Atlas 快速配置</h4>
+            <ol className="space-y-2 text-muted-foreground">
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">1.</span>
+                <span className="text-primary font-bold">1.</span>
                 <span>访问 <a href="https://www.mongodb.com/atlas" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">mongodb.com/atlas</a> 注册账号</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">2.</span>
+                <span className="text-primary font-bold">2.</span>
                 <span>创建免费 M0 集群（选择离用户最近的区域）</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">3.</span>
+                <span className="text-primary font-bold">3.</span>
                 <span>在 Database Access 创建数据库用户</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">4.</span>
+                <span className="text-primary font-bold">4.</span>
                 <span>在 Network Access 添加 IP 白名单（或设置 0.0.0.0/0 允许所有）</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">5.</span>
+                <span className="text-primary font-bold">5.</span>
                 <span>点击 Connect → Drivers → 复制连接字符串</span>
               </li>
               <li className="flex gap-2">
-                <span className="text-[#E50914] font-bold">6.</span>
+                <span className="text-primary font-bold">6.</span>
                 <span>替换 &lt;password&gt; 为你的密码，设置到 MONGODB_URI</span>
               </li>
             </ol>
@@ -500,7 +500,7 @@ export function DatabaseSettingsTab({ onShowToast }: DatabaseSettingsTabProps) {
           {/* 注意事项 */}
           <div className="p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
             <p className="text-yellow-300 font-medium mb-2">⚠️ 注意事项</p>
-            <ul className="space-y-1 text-slate-300 text-xs">
+            <ul className="space-y-1 text-foreground text-xs">
               <li>• 生产环境建议使用 MongoDB Atlas 或独立部署的 MongoDB</li>
               <li>• 请确保连接字符串中的密码不包含特殊字符，或进行 URL 编码</li>
               <li>• Vercel 等无服务器平台必须使用云端 MongoDB（如 Atlas）</li>

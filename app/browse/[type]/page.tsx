@@ -219,8 +219,8 @@ function FilterRow({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2 border-b border-gray-200 dark:border-gray-800/50 last:border-b-0">
-      <span className="text-gray-400 text-sm whitespace-nowrap min-w-12 pt-1">
+    <div className="flex items-start gap-3 py-2 border-b border-border-color last:border-b-0">
+      <span className="text-muted-foreground text-sm whitespace-nowrap min-w-12 pt-1">
         {label}：
       </span>
       <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -287,7 +287,7 @@ export default function BrowsePage() {
 
   // 获取分类图标
   const getCategoryIcon = (name: string): React.JSX.Element => {
-    return CATEGORY_ICONS[name] || <Flame className="w-5 h-5 text-gray-400" />;
+    return CATEGORY_ICONS[name] || <Flame className="w-5 h-5 text-muted-foreground" />;
   };
 
   // 转换数据格式
@@ -507,7 +507,7 @@ export default function BrowsePage() {
               <h1 className="text-2xl lg:text-4xl font-bold text-foreground mb-1 tracking-tight">
                 {config.title}
               </h1>
-              <p className="text-sm md:text-base text-gray-400">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {getStatsText()}
               </p>
             </div>
@@ -517,7 +517,7 @@ export default function BrowsePage() {
 
       {/* 筛选器（仅 latest） */}
       {config.hasFilters && (
-        <div className="px-4 md:px-12 py-4 bg-foreground/5 border-y border-gray-200 dark:bg-gray-900/50 dark:border-gray-800/50 transition-colors duration-300">
+        <div className="px-4 md:px-12 py-4 bg-foreground/5 border-y border-border-color transition-colors duration-300">
           <FilterRow
             label="类型"
             options={GENRE_OPTIONS}
@@ -546,12 +546,12 @@ export default function BrowsePage() {
       )}
 
       {/* 内容区域 */}
-      <div className="px-4 md:px-12 pb-16 pt-6">
+      <div className="px-4 md:px-12 pb-24 md:pb-16 pt-6">
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-red-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">正在加载精彩内容...</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-foreground/10 border-t-red-600 mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">正在加载精彩内容...</p>
             </div>
           </div>
         ) : error ? (
@@ -580,7 +580,7 @@ export default function BrowsePage() {
                       <span>{getCategoryIcon(category.name)}</span>
                       <span>{category.name}</span>
                     </h2>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       {categoryMovies.length} 部
                     </div>
                   </div>
@@ -606,11 +606,11 @@ export default function BrowsePage() {
           // 空状态 (latest)
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Film className="w-10 h-10 text-gray-600" />
+              <div className="w-20 h-20 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Film className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">暂无内容</h3>
-              <p className="text-gray-400 mb-6">
+              <h3 className="text-xl font-bold text-foreground mb-2">暂无内容</h3>
+              <p className="text-muted-foreground mb-6">
                 没有找到符合筛选条件的影视作品
               </p>
               <button
@@ -648,19 +648,19 @@ export default function BrowsePage() {
             {config.hasFilters && (
               <div className="flex justify-center mt-8">
                 {loadingMore ? (
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-600 border-t-red-500" />
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-foreground/10 border-t-red-500" />
                     <span>加载中...</span>
                   </div>
                 ) : hasMore ? (
                   <button
                     onClick={loadMore}
-                    className="px-8 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-lg font-medium transition-colors border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20"
+                    className="px-8 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-lg font-medium transition-colors border border-border-color hover:border-primary/50"
                   >
                     加载更多
                   </button>
                 ) : movies.length > 0 ? (
-                  <p className="text-gray-500 text-sm">已加载全部内容</p>
+                  <p className="text-muted-foreground text-sm">已加载全部内容</p>
                 ) : null}
               </div>
             )}

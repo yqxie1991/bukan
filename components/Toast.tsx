@@ -38,12 +38,12 @@ export function Toast({ message, type = 'info', onClose, duration = 3000 }: Toas
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-slide-in">
-      <div className={`${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]`}>
+      <div className={`${bgColor} text-primary-foreground px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]`}>
         <span className="text-xl">{icon}</span>
         <span className="flex-1">{message}</span>
         <button
           onClick={onClose}
-          className="text-white/80 hover:text-white transition"
+          className="text-primary-foreground/80 hover:text-primary-foreground transition"
         >
           ✕
         </button>
@@ -87,23 +87,23 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 max-w-md w-full mx-4 animate-scale-in">
+      <div className="bg-card-bg rounded-xl shadow-2xl border border-border-color max-w-md w-full mx-4 animate-scale-in">
         <div className="p-6">
-          <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-          <p className="text-slate-300">{message}</p>
+          <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
+          <p className="text-muted-foreground">{message}</p>
         </div>
         <div className="flex gap-3 px-6 pb-6">
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
             disabled={isLoading}
-            className={`flex-1 px-4 py-2 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex-1 px-4 py-2 text-primary-foreground rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
               danger
                 ? 'bg-red-600 hover:bg-red-700'
                 : 'bg-blue-600 hover:bg-blue-700'

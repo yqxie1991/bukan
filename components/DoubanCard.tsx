@@ -22,10 +22,10 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   return (
     <div
       onClick={() => onSelect(movie)}
-      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08),0_0_15px_rgba(0,0,0,0.02)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(229,9,20,0.15)] rounded-lg"
+      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[var(--card-shadow-hover)] rounded-lg"
     >
       {/* 海报图片 */}
-      <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-foreground/5 dark:bg-gray-800 border border-black/5 dark:border-white/5 transition-colors duration-300">
+      <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-foreground/5 dark:bg-surface border border-black/5 dark:border-white/5 transition-colors duration-300">
         {!imageError ? (
           <img
             src={imageUrl}
@@ -70,8 +70,16 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
  
       </div>
 
-      {/* 悬浮信息层 */}
-      <div className="absolute inset-0 bg-linear-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex flex-col justify-end p-4">
+      {/* 移动端常驻标题 */}
+      <div className="mt-2 md:hidden">
+        <h3 className="text-foreground text-sm font-medium line-clamp-1">{movie.title}</h3>
+        {movie.episode_info && movie.episode_info.length > 0 && (
+          <p className="text-muted-foreground text-xs mt-0.5 line-clamp-1">{movie.episode_info}</p>
+        )}
+      </div>
+
+      {/* 悬浮信息层 - 仅桌面端 */}
+      <div className="hidden md:flex absolute inset-0 bg-linear-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex-col justify-end p-4">
         <h3 className="text-white font-bold text-base mb-2 line-clamp-2">
           {movie.title}
         </h3>
@@ -84,7 +92,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
 
         {/* 播放按钮 */}
         <div className="mt-3 flex items-center space-x-2">
-          <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 hover:scale-105 transition-all duration-200 shadow-lg">
+          <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 hover:scale-105 transition-all duration-200 shadow-lg">
             <Play className="w-4 h-4 fill-current" />
             <span>立即播放</span>
           </button>

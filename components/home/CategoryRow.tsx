@@ -55,14 +55,14 @@ export function CategoryRow({
           isIntersecting ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
         }`}
       >
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
           {icon}
           <span>{title}</span>
         </h2>
         {hasMore && (
           <button
             onClick={onViewMore}
-            className="text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center space-x-1 group"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1 group px-3 py-2 -mr-3"
           >
             <span>查看全部</span>
             <svg
@@ -84,11 +84,11 @@ export function CategoryRow({
 
       {/* 横向滚动列表 */}
       <div className="relative">
-        <div className="flex overflow-x-auto space-x-3 md:space-x-4 py-4 -my-4 scrollbar-hide scroll-smooth">
+        <div className="flex overflow-x-auto space-x-3 md:space-x-4 py-4 -my-4 scrollbar-hide scroll-smooth snap-x snap-mandatory">
           {displayMovies.map((movie, index) => (
             <div 
               key={movie.id} 
-              className={`shrink-0 w-40 sm:w-48 md:w-56 transition-all duration-700 ease-out transform ${
+              className={`shrink-0 w-40 sm:w-48 md:w-56 snap-start transition-all duration-700 ease-out transform ${
                 isIntersecting 
                   ? "opacity-100 translate-y-0 scale-100" 
                   : "opacity-0 translate-y-4 scale-95"

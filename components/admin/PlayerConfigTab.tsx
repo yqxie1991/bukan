@@ -178,23 +178,23 @@ export function PlayerConfigTab({
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#333]">
-        <h2 className="text-xl font-bold text-white mb-6">播放器配置</h2>
+      <div className="bg-card-bg rounded-xl p-6 border border-border-color">
+        <h2 className="text-xl font-bold text-foreground mb-6">播放器配置</h2>
 
         {/* 播放器模式选择 */}
         <div className="mb-6">
-          <h3 className="text-white font-medium mb-3">播放器模式</h3>
+          <h3 className="text-foreground font-medium mb-3">播放器模式</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => handlePlayerModeChange("iframe")}
               className={`p-4 rounded-lg border-2 transition ${
                 playerConfig.mode === "iframe"
-                  ? "border-[#E50914] bg-[#E50914]/10"
-                  : "border-[#333] bg-[#141414] hover:border-[#555]"
+                  ? "border-primary bg-primary/10"
+                  : "border-border-color bg-surface hover:border-muted-foreground/30"
               }`}
             >
-              <div className="text-white font-medium mb-1">iframe模式</div>
-              <div className="text-xs text-slate-400">
+              <div className="text-foreground font-medium mb-1">iframe模式</div>
+              <div className="text-xs text-muted-foreground">
                 兼容性好，多播放器切换
               </div>
             </button>
@@ -202,39 +202,39 @@ export function PlayerConfigTab({
               onClick={() => handlePlayerModeChange("local")}
               className={`p-4 rounded-lg border-2 transition ${
                 playerConfig.mode === "local"
-                  ? "border-[#E50914] bg-[#E50914]/10"
-                  : "border-[#333] bg-[#141414] hover:border-[#555]"
+                  ? "border-primary bg-primary/10"
+                  : "border-border-color bg-surface hover:border-muted-foreground/30"
               }`}
             >
-              <div className="text-white font-medium mb-1">本地HLS播放器</div>
-              <div className="text-xs text-slate-400">完全控制，进度记忆</div>
+              <div className="text-foreground font-medium mb-1">本地HLS播放器</div>
+              <div className="text-xs text-muted-foreground">完全控制，进度记忆</div>
             </button>
             <button
               onClick={() => handlePlayerModeChange("auto")}
               className={`p-4 rounded-lg border-2 transition ${
                 playerConfig.mode === "auto"
-                  ? "border-[#E50914] bg-[#E50914]/10"
-                  : "border-[#333] bg-[#141414] hover:border-[#555]"
+                  ? "border-primary bg-primary/10"
+                  : "border-border-color bg-surface hover:border-muted-foreground/30"
               }`}
             >
-              <div className="text-white font-medium mb-1">自动模式</div>
-              <div className="text-xs text-slate-400">智能选择最佳播放器</div>
+              <div className="text-foreground font-medium mb-1">自动模式</div>
+              <div className="text-xs text-muted-foreground">智能选择最佳播放器</div>
             </button>
           </div>
         </div>
 
         {/* 代理设置 */}
-        <div className="mb-6 flex items-center justify-between p-4 bg-[#141414] rounded-lg border border-[#333]">
+        <div className="mb-6 flex items-center justify-between p-4 bg-surface rounded-lg border border-border-color">
           <div>
-            <h3 className="text-white font-medium mb-1">启用视频代理</h3>
-            <p className="text-xs text-slate-400">
+            <h3 className="text-foreground font-medium mb-1">启用视频代理</h3>
+            <p className="text-xs text-muted-foreground">
               本地播放器需要启用代理（推荐）
             </p>
           </div>
           <button
             onClick={() => handleToggleProxy(!playerConfig.enableProxy)}
             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-              playerConfig.enableProxy ? "bg-[#E50914]" : "bg-[#333]"
+              playerConfig.enableProxy ? "bg-primary" : "bg-foreground/10"
             }`}
           >
             <span
@@ -248,17 +248,17 @@ export function PlayerConfigTab({
         {/* iframe播放器列表 */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-medium">iframe播放器列表</h3>
+            <h3 className="text-foreground font-medium">iframe播放器列表</h3>
             <div className="flex gap-2">
               <button
                 onClick={handleResetPlayers}
-                className="px-4 py-2 bg-[#333] hover:bg-orange-600 text-slate-300 hover:text-white text-sm rounded-lg transition"
+                className="px-4 py-2 bg-foreground/10 hover:bg-orange-600 text-foreground hover:text-primary-foreground text-sm rounded-lg transition"
               >
                 🔄 重置为默认
               </button>
               <button
                 onClick={handleAddPlayer}
-                className="px-4 py-2 bg-[#E50914] hover:bg-[#B20710] text-white text-sm rounded-lg transition"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm rounded-lg transition"
               >
                 + 添加播放器
               </button>
@@ -269,22 +269,22 @@ export function PlayerConfigTab({
             {playerConfig.iframePlayers.map((player) => (
               <div
                 key={player.id}
-                className="p-4 bg-[#141414] rounded-lg border border-[#333] hover:border-[#555] transition"
+                className="p-4 bg-surface rounded-lg border border-border-color hover:border-muted-foreground/30 transition"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-white font-medium">
+                      <span className="text-foreground font-medium">
                         {player.name}
                       </span>
-                      <span className="text-xs px-2 py-1 bg-slate-700 rounded text-slate-300">
+                      <span className="text-xs px-2 py-1 bg-foreground/10 rounded text-foreground">
                         优先级: {player.priority}
                       </span>
-                      <span className="text-xs px-2 py-1 bg-slate-700 rounded text-slate-300">
+                      <span className="text-xs px-2 py-1 bg-foreground/10 rounded text-foreground">
                         超时: {player.timeout}ms
                       </span>
                     </div>
-                    <div className="text-xs text-slate-400 break-all">
+                    <div className="text-xs text-muted-foreground break-all">
                       {player.url}
                     </div>
                   </div>
@@ -295,21 +295,21 @@ export function PlayerConfigTab({
                       }
                       className={`px-3 py-1 text-xs rounded transition ${
                         player.enabled
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-[#333] hover:bg-[#444] text-slate-300"
+                          ? "bg-green-600 hover:bg-green-700 text-primary-foreground"
+                          : "bg-foreground/10 hover:bg-foreground/20 text-foreground"
                       }`}
                     >
                       {player.enabled ? "已启用" : "已禁用"}
                     </button>
                     <button
                       onClick={() => handleEditPlayer(player)}
-                      className="px-3 py-1 bg-[#E50914] hover:bg-[#B20710] text-white text-xs rounded transition"
+                      className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-xs rounded transition"
                     >
                       编辑
                     </button>
                     <button
                       onClick={() => handleDeletePlayer(player.id)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition"
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-primary-foreground text-xs rounded transition"
                     >
                       删除
                     </button>
@@ -322,12 +322,12 @@ export function PlayerConfigTab({
 
         {/* 本地播放器设置 */}
         <div>
-          <h3 className="text-white font-medium mb-4">本地播放器设置</h3>
+          <h3 className="text-foreground font-medium mb-4">本地播放器设置</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-[#141414] rounded-lg border border-[#333]">
+            <div className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border-color">
               <div>
-                <span className="text-white text-sm">自动保存进度</span>
-                <p className="text-xs text-slate-400 mt-1">记住上次播放位置</p>
+                <span className="text-foreground text-sm">自动保存进度</span>
+                <p className="text-xs text-muted-foreground mt-1">记住上次播放位置</p>
               </div>
               <button
                 onClick={() =>
@@ -338,8 +338,8 @@ export function PlayerConfigTab({
                 }
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   playerConfig.localPlayerSettings.autoSaveProgress
-                    ? "bg-[#E50914]"
-                    : "bg-[#333]"
+                    ? "bg-primary"
+                    : "bg-foreground/10"
                 }`}
               >
                 <span
@@ -352,8 +352,8 @@ export function PlayerConfigTab({
               </button>
             </div>
 
-            <div className="p-3 bg-[#141414] rounded-lg border border-[#333]">
-              <label className="text-white text-sm block mb-2">
+            <div className="p-3 bg-surface rounded-lg border border-border-color">
+              <label className="text-foreground text-sm block mb-2">
                 进度保存间隔（秒）
               </label>
               <input
@@ -365,14 +365,14 @@ export function PlayerConfigTab({
                     parseInt(e.target.value) || 5
                   )
                 }
-                className="w-full px-3 py-2 bg-slate-900/50 border border-[#333] rounded text-white focus:outline-none focus:ring-2 focus:ring-[#E50914]"
+                className="w-full px-3 py-2 bg-surface border border-border-color rounded text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 min="1"
                 max="60"
               />
             </div>
 
-            <div className="p-3 bg-[#141414] rounded-lg border border-[#333]">
-              <label className="text-white text-sm block mb-2">主题颜色</label>
+            <div className="p-3 bg-surface rounded-lg border border-border-color">
+              <label className="text-foreground text-sm block mb-2">主题颜色</label>
               <input
                 type="color"
                 value={playerConfig.localPlayerSettings.theme}
@@ -395,7 +395,7 @@ export function PlayerConfigTab({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               播放器名称
             </label>
             <input
@@ -404,12 +404,12 @@ export function PlayerConfigTab({
               onChange={(e) =>
                 setPlayerFormData({ ...playerFormData, name: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="例如: 备用播放器1"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               播放器URL
             </label>
             <input
@@ -418,12 +418,12 @@ export function PlayerConfigTab({
               onChange={(e) =>
                 setPlayerFormData({ ...playerFormData, url: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="https://jx.example.com/?url="
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               优先级（数字越小越优先）
             </label>
             <input
@@ -435,12 +435,12 @@ export function PlayerConfigTab({
                   priority: parseInt(e.target.value) || 1,
                 })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               min="1"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               超时时间（毫秒）
             </label>
             <input
@@ -452,7 +452,7 @@ export function PlayerConfigTab({
                   timeout: parseInt(e.target.value) || 10000,
                 })
               }
-              className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-surface border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               min="1000"
               step="1000"
             />
@@ -461,13 +461,13 @@ export function PlayerConfigTab({
         <div className="flex gap-3">
           <button
             onClick={handleSavePlayer}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-primary-foreground rounded-lg transition font-medium"
           >
             保存
           </button>
           <button
             onClick={handleCancelPlayerEdit}
-            className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition font-medium"
+            className="px-6 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg transition font-medium"
           >
             取消
           </button>
