@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SourceInfo {
   source_key: string;
@@ -19,12 +20,29 @@ interface SourceSelectorProps {
 
 export function SourceSelector({ sources, currentSourceKey, onSourceChange }: SourceSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  // 是否移动端视口（<768px）。SSR 安全：初始 false，hydration 后按 matchMedia 更新
+  const [isMobile, setIsMobile] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  // 菜单 ref：移动端 Portal 到 body 后，需单独 ref 用于点击外部关闭判断
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 响应式视口判断
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        menuRef.current && !menuRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -71,10 +89,97 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
     );
   };
 
+  // 菜单内容：移动端 fixed 贴底弹层（Portal 到 body，绕开 nav 的 backdrop-filter 包含块），
+  // 桌面端 absolute 右对齐下拉（相对按钮，视口足够宽不溢出）
+  const menuClassName = isMobile
+    ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
+    : 'absolute right-0 mt-3 w-80 z-50 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in';
+
+  const menu = isOpen ? (
+    <div ref={menuRef} className={menuClassName}>
+      {/* 头部 */}
+      <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-white flex items-center space-x-2">
+            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>选择播放源</span>
+          </h3>
+          <span className="text-xs text-gray-500">
+            {sources.filter(s => s.match_confidence === 'high').length} 个精准匹配
+          </span>
+        </div>
+      </div>
+
+      {/* 源列表 */}
+      <div className="overflow-y-auto" style={{ maxHeight: isMobile ? 'calc(80vh - 120px)' : '60vh' }}>
+        {sortedSources.map((source, index) => {
+          const isCurrent = source.source_key === currentSourceKey;
+          return (
+            <button
+              key={source.source_key}
+              onClick={() => {
+                if (!isCurrent) {
+                  onSourceChange(source.source_key, source.vod_id);
+                }
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 transition-all ${isCurrent
+                ? 'bg-red-600/20 border-l-4 border-red-600'
+                : 'hover:bg-white/5 border-l-4 border-transparent'
+                } ${index !== sortedSources.length - 1 ? 'border-b border-gray-800/50' : ''}`}
+              disabled={isCurrent}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  {/* 源名称 */}
+                  <div className="flex items-center space-x-2 mb-1">
+                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-red-400' : 'text-white'
+                      }`}>
+                      {source.source_name}
+                    </p>
+                    {isCurrent && (
+                      <span className="flex-shrink-0 text-red-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                  {/* 视频名称 */}
+                  <p className="text-xs text-gray-400 truncate" title={source.vod_name}>
+                    {source.vod_name}
+                  </p>
+                </div>
+
+                {/* 匹配度标签 */}
+                <div className="flex-shrink-0">
+                  {getConfidenceBadge(source.match_confidence)}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 底部提示 */}
+      <div className="p-3 border-t border-gray-800 bg-gray-900/50">
+        <p className="text-xs text-gray-500 flex items-start space-x-2">
+          <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <span>不同播放源的清晰度和加载速度可能不同</span>
+        </p>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       {/* 触发按钮 */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all hover:scale-105 text-white text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
         aria-label="切换视频源"
@@ -102,86 +207,10 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
         )}
       </button>
 
-      {/* 下拉菜单 */}
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-72 md:w-80 bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50">
-          {/* 头部 */}
-          <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-gray-800/50 to-transparent">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white flex items-center space-x-2">
-                <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-                <span>选择播放源</span>
-              </h3>
-              <span className="text-xs text-gray-500">
-                {sources.filter(s => s.match_confidence === 'high').length} 个精准匹配
-              </span>
-            </div>
-          </div>
-
-          {/* 源列表 */}
-          <div className="max-h-[60vh] overflow-y-auto">
-            {sortedSources.map((source, index) => {
-              const isCurrent = source.source_key === currentSourceKey;
-              return (
-                <button
-                  key={source.source_key}
-                  onClick={() => {
-                    if (!isCurrent) {
-                      onSourceChange(source.source_key, source.vod_id);
-                    }
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-3 transition-all ${isCurrent
-                    ? 'bg-red-600/20 border-l-4 border-red-600'
-                    : 'hover:bg-white/5 border-l-4 border-transparent'
-                    } ${index !== sortedSources.length - 1 ? 'border-b border-gray-800/50' : ''}`}
-                  disabled={isCurrent}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      {/* 源名称 */}
-                      <div className="flex items-center space-x-2 mb-1">
-                        <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-red-400' : 'text-white'
-                          }`}>
-                          {source.source_name}
-                        </p>
-                        {isCurrent && (
-                          <span className="flex-shrink-0 text-red-400">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </span>
-                        )}
-                      </div>
-                      {/* 视频名称 */}
-                      <p className="text-xs text-gray-400 truncate" title={source.vod_name}>
-                        {source.vod_name}
-                      </p>
-                    </div>
-
-                    {/* 匹配度标签 */}
-                    <div className="flex-shrink-0">
-                      {getConfidenceBadge(source.match_confidence)}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* 底部提示 */}
-          <div className="p-3 border-t border-gray-800 bg-gray-900/50">
-            <p className="text-xs text-gray-500 flex items-start space-x-2">
-              <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <span>不同播放源的清晰度和加载速度可能不同</span>
-            </p>
-          </div>
-        </div>
-      )}
+      {/* 下拉菜单：移动端 Portal 到 body 以绕开 nav 的 backdrop-filter 包含块 */}
+      {menu && (isMobile
+        ? createPortal(menu, document.body)
+        : menu)}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
@@ -39,12 +41,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm transition-opacity duration-200">
-      <div className="flex items-start justify-center pt-32 px-4">
+      <div className="flex items-start justify-center pt-20 sm:pt-28 px-4">
         <div className="w-full max-w-3xl">
           {/* 搜索框 */}
           <div className="relative">
-            <div className="flex items-center bg-white rounded-lg shadow-2xl overflow-hidden">
-              <div className="pl-6 pr-4 text-gray-400">
+            <div className="flex items-center bg-card-bg rounded-lg shadow-2xl overflow-hidden">
+              <div className="pl-6 pr-4 text-muted-foreground">
                 <svg
                   className="w-6 h-6"
                   fill="none"
@@ -68,12 +70,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   if (e.key === "Escape") onClose();
                 }}
                 placeholder="搜索你想看的内容…"
-                className="flex-1 px-2 py-5 text-lg text-black outline-none placeholder:text-gray-400"
+                className="flex-1 px-2 py-4 sm:py-5 text-lg text-foreground outline-none placeholder:text-muted-foreground"
                 autoFocus
               />
               <button
                 onClick={onClose}
-                className="px-6 py-5 text-gray-400 hover:text-gray-600 transition-colors"
+                className="px-6 py-4 sm:py-5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <svg
                   className="w-6 h-6"
@@ -93,27 +95,27 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {/* 提示文字 */}
             <div className="mt-4 text-center">
-              <p className="text-sm text-gray-400">
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">
+              <p className="text-sm text-muted-foreground">
+                <kbd className="px-2 py-1 bg-foreground/10 rounded text-xs">
                   Enter
                 </kbd>{" "}
                 开始搜索 •{" "}
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">Esc</kbd>{" "}
+                <kbd className="px-2 py-1 bg-foreground/10 rounded text-xs">Esc</kbd>{" "}
                 关闭
               </p>
             </div>
 
             {/* 搜索历史 */}
             {history.length > 0 && (
-              <div className="mt-6 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+              <div className="mt-6 bg-card-bg/90 backdrop-blur-sm rounded-xl p-4 border border-border-color">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 text-gray-300">
+                  <div className="flex items-center gap-2 text-foreground">
                     <Clock className="w-4 h-4" />
                     <span className="text-sm font-medium">搜索历史</span>
                   </div>
                   <button
                     onClick={clearHistory}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>清除全部</span>
@@ -124,9 +126,9 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     <div
                       key={index}
                       onClick={() => handleHistoryClick(keyword)}
-                      className="group flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-full cursor-pointer transition-all duration-200"
+                      className="group flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 rounded-full cursor-pointer transition-all duration-200"
                     >
-                      <span className="text-sm text-gray-200 group-hover:text-white">
+                      <span className="text-sm text-foreground group-hover:text-primary">
                         {keyword}
                       </span>
                       <button

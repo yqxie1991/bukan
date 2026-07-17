@@ -72,7 +72,7 @@ export function HeroBanner({
   return (
     <div className="relative w-full group">
       {/* 海报容器 - 使用固定宽高比 */}
-      <div className="relative w-full aspect-3/4 md:aspect-12/5 overflow-hidden">
+      <div className="relative w-full aspect-1/1 md:aspect-12/5 overflow-hidden">
         {/* 轮播图片 */}
         {heroMovies.map((movie, index) => {
           const heroData = heroDataList[index];
@@ -187,9 +187,9 @@ export function HeroBanner({
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => onMovieClick(movie)}
-                        className="group flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-xl font-bold hover:bg-primary hover:scale-105 transition-all duration-300 shadow-lg shadow-white/5"
+                        className="group flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-xl font-bold hover:bg-primary hover:text-primary-foreground hover:scale-105 transition-all duration-300 shadow-lg shadow-white/5"
                       >
-                        <Play className="w-6 h-6 fill-black group-hover:fill-black transition-colors" />
+                        <Play className="w-6 h-6 fill-black group-hover:fill-primary-foreground transition-colors" />
                         <span className="text-lg">立即播放</span>
                       </button>
                     </div>
@@ -239,7 +239,7 @@ export function HeroBanner({
 // Hero Banner 骨架屏组件 - 使用与实际组件相同的宽高比
 function HeroBannerSkeleton() {
   return (
-    <div className="relative w-full aspect-3/4 md:aspect-12/5 overflow-hidden bg-black">
+    <div className="relative w-full aspect-1/1 md:aspect-12/5 overflow-hidden bg-black">
       {/* 动态渐变背景 */}
       <div className="absolute inset-0 bg-linear-to-br from-gray-900 via-gray-800 to-black">
         {/* 微光扫描效果 */}

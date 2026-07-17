@@ -22,10 +22,10 @@ function SearchSkeleton() {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-8 gap-x-4 animate-pulse">
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="space-y-3">
-          <div className="aspect-2/3 bg-gray-800/50 rounded-lg w-full" />
+          <div className="aspect-2/3 bg-foreground/5 rounded-lg w-full" />
           <div className="space-y-2">
-            <div className="h-4 bg-gray-800/50 rounded w-3/4" />
-            <div className="h-3 bg-gray-800/50 rounded w-1/2" />
+            <div className="h-4 bg-foreground/5 rounded w-3/4" />
+            <div className="h-3 bg-foreground/5 rounded w-1/2" />
           </div>
         </div>
       ))}
@@ -216,7 +216,7 @@ function SearchContent() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-red-500/30 transition-colors duration-300">
       {/* 顶部导航栏 */}
-      <div className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-xl border-b border-gray-200 dark:border-neutral-800/50 shadow-lg transition-colors duration-300">
+      <div className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-black/95 backdrop-blur-xl border-b border-border-color shadow-lg transition-colors duration-300">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             {/* 返回按钮和Logo */}
@@ -226,7 +226,7 @@ function SearchContent() {
                 className="p-2 -ml-2 rounded-full hover:bg-foreground/10 transition-colors group"
               >
                 <svg
-                  className="w-5 h-5 text-gray-400 group-hover:text-foreground transition-colors"
+                  className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -244,7 +244,7 @@ function SearchContent() {
                 onClick={goBack}
                 style={{ fontFamily: '"Smiley Sans", sans-serif' }}
               >
-                <span className="text-red-600">不看</span>
+                <span className="text-primary">不看</span>
                 <span className="text-foreground ml-1">搜索</span>
               </h1>
             </div>
@@ -253,7 +253,7 @@ function SearchContent() {
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg
-                    className="w-5 h-5 text-gray-500 group-focus-within:text-red-500 transition-colors"
+                    className="w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -272,7 +272,7 @@ function SearchContent() {
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="搜索电影、电视剧、动漫..."
-                  className="w-full bg-foreground/5 border border-gray-200 dark:border-white/10 rounded-full py-2.5 pl-12 pr-12 text-sm md:text-base text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 focus:bg-foreground/10 dark:focus:bg-white/10 transition-all duration-300"
+                  className="w-full bg-foreground/5 border border-border-color rounded-full py-2.5 pl-12 pr-12 text-sm md:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-foreground/10 transition-all duration-300"
                   autoFocus
                 />
                 {searchKeyword && (
@@ -281,7 +281,7 @@ function SearchContent() {
                     className="absolute inset-y-0 right-14 pr-2 flex items-center"
                   >
                     <svg
-                      className="w-4 h-4 text-gray-500 hover:text-white transition-colors"
+                      className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -315,8 +315,8 @@ function SearchContent() {
                   onClick={() => setCurrentSource(null)}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
                     currentSource === null
-                      ? "bg-foreground text-background dark:bg-white dark:text-black shadow-md"
-                      : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-gray-200 dark:hover:border-white/10"
+                      ? "bg-foreground text-background shadow-md"
+                      : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-border-color"
                   }`}
                 >
                   全部
@@ -335,7 +335,7 @@ function SearchContent() {
                       className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                         currentSource?.key === source.key
                           ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
-                          : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-gray-200 dark:hover:border-white/10"
+                          : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground border border-transparent hover:border-border-color"
                       }`}
                     >
                       {source.name}
@@ -364,12 +364,12 @@ function SearchContent() {
         {/* 状态反馈条 */}
         {(loading || searched) && (
           <div className="mb-8 flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               {loading ? (
                 <>
                   <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   正在从 {searchProgress.total} 个源中搜索...
-                  <span className="ml-2 px-2 py-0.5 bg-foreground/5 rounded-md text-xs border border-gray-200 dark:border-white/5 transition-colors duration-300">
+                  <span className="ml-2 px-2 py-0.5 bg-foreground/5 rounded-md text-xs border border-border-color transition-colors duration-300">
                     已完成 {searchProgress.completed}/{searchProgress.total}
                   </span>
                 </>
@@ -413,12 +413,12 @@ function SearchContent() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">未配置视频源</h3>
-            <p className="text-gray-400 mb-8 max-w-sm text-center">
+            <p className="text-muted-foreground mb-8 max-w-sm text-center">
               请先在后台管理中配置视频源后再使用搜索功能
             </p>
             <a
               href="/admin/settings"
-              className="px-8 py-3 bg-foreground text-background hover:bg-foreground/90 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-medium rounded-full transition-colors duration-300"
+              className="px-8 py-3 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-full transition-colors duration-300"
             >
               前往配置
             </a>
@@ -472,9 +472,9 @@ function SearchContent() {
           ) : (
             /* 无结果 */
             <div className="flex flex-col items-center justify-center py-32">
-              <div className="w-24 h-24 bg-gray-900 rounded-full flex items-center justify-center mb-6">
+              <div className="w-24 h-24 bg-foreground/5 rounded-full flex items-center justify-center mb-6">
                 <svg
-                  className="w-12 h-12 text-gray-600"
+                  className="w-12 h-12 text-muted-foreground"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -490,17 +490,17 @@ function SearchContent() {
               <h3 className="text-xl font-bold text-foreground mb-2">
                 未找到相关内容
               </h3>
-              <p className="text-gray-400 mb-2">
+              <p className="text-muted-foreground mb-2">
                 在所有 {allSources.length} 个视频源中搜索 &ldquo;{queryKeyword}
                 &rdquo; 没有结果
               </p>
-              <p className="text-gray-500 text-sm mb-6">
+              <p className="text-muted-foreground text-sm mb-6">
                 已搜索: {allSources.map((s) => s.name).join("、")}
               </p>
               <div className="flex items-center space-x-4">
                 <button
                   onClick={goBack}
-                  className="px-6 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground border border-gray-200 dark:border-white/10 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors duration-300"
+                  className="px-6 py-3 bg-foreground/5 hover:bg-foreground/10 text-foreground border border-border-color rounded-lg transition-colors duration-300"
                 >
                   返回首页
                 </button>
@@ -518,7 +518,7 @@ function SearchContent() {
           <div className="flex flex-col items-center justify-center py-32">
             <div className="w-24 h-24 bg-foreground/5 rounded-full flex items-center justify-center mb-6">
               <svg
-                className="w-12 h-12 text-gray-500"
+                className="w-12 h-12 text-muted-foreground"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -532,10 +532,10 @@ function SearchContent() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">搜索影视资源</h3>
-            <p className="text-gray-400 mb-2">
+            <p className="text-muted-foreground mb-2">
               输入关键词，将在 {allSources.length} 个视频源中搜索
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               {allSources.map((s) => s.name).join("、")}
             </p>
           </div>
@@ -551,8 +551,8 @@ export default function SearchPage() {
       fallback={
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center transition-colors duration-300">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-red-600 mx-auto mb-4" />
-            <p className="text-gray-300 text-lg font-medium">加载中...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-foreground/10 border-t-primary mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg font-medium">加载中...</p>
           </div>
         </div>
       }

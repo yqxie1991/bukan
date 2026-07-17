@@ -17,25 +17,25 @@ export function LoadingSkeleton() {
           <div className="w-full px-4 md:px-12 pb-8 md:pb-12 lg:pb-16">
             <div className="max-w-3xl space-y-3 md:space-y-4">
               {/* 标题骨架 */}
-              <div className="h-12 md:h-16 bg-zinc-900/50 rounded-lg w-3/4 animate-pulse" />
+              <div className="h-12 md:h-16 bg-foreground/10 rounded-lg w-3/4 animate-pulse" />
               
               {/* 评分和标签骨架 */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="h-7 w-16 bg-zinc-900/50 rounded-full animate-pulse" />
-                <div className="h-7 w-20 bg-zinc-900/50 rounded-full animate-pulse" />
-                <div className="h-7 w-24 bg-zinc-900/50 rounded-full animate-pulse" />
-                <div className="h-7 w-20 bg-zinc-900/50 rounded-full animate-pulse" />
+                <div className="h-7 w-16 bg-foreground/10 rounded-full animate-pulse" />
+                <div className="h-7 w-20 bg-foreground/10 rounded-full animate-pulse" />
+                <div className="h-7 w-24 bg-foreground/10 rounded-full animate-pulse" />
+                <div className="h-7 w-20 bg-foreground/10 rounded-full animate-pulse" />
               </div>
               
               {/* 描述骨架 - 仅PC端显示 */}
               <div className="hidden md:block space-y-2">
-                <div className="h-5 bg-zinc-900/50 rounded w-full animate-pulse" />
-                <div className="h-5 bg-zinc-900/50 rounded w-5/6 animate-pulse" />
+                <div className="h-5 bg-foreground/10 rounded w-full animate-pulse" />
+                <div className="h-5 bg-foreground/10 rounded w-5/6 animate-pulse" />
               </div>
               
               {/* 按钮骨架 */}
               <div className="flex items-center gap-3 pt-1">
-                <div className="h-12 md:h-14 w-36 md:w-40 bg-zinc-800/50 rounded-lg animate-pulse" />
+                <div className="h-12 md:h-14 w-36 md:w-40 bg-foreground/10 rounded-lg animate-pulse" />
               </div>
             </div>
           </div>
@@ -59,11 +59,11 @@ export function LoadingSkeleton() {
             {/* 分类标题骨架 */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 md:w-6 md:h-6 bg-zinc-900/50 rounded animate-pulse" />
-                <div className="h-7 md:h-8 bg-zinc-900/50 rounded-lg w-32 md:w-40 animate-pulse" />
+                <div className="w-5 h-5 md:w-6 md:h-6 bg-foreground/10 rounded animate-pulse" />
+                <div className="h-7 md:h-8 bg-foreground/10 rounded-lg w-32 md:w-40 animate-pulse" />
               </div>
               {/* 查看全部按钮骨架 */}
-              <div className="h-5 w-20 bg-zinc-900/30 rounded animate-pulse" />
+              <div className="h-5 w-20 bg-foreground/5 rounded animate-pulse" />
             </div>
             
             {/* 影片卡片骨架 - 15个卡片 */}
@@ -75,9 +75,9 @@ export function LoadingSkeleton() {
                     <div className="absolute inset-0 animate-pulse bg-gradient-to-tr from-transparent via-white/10 to-transparent" />
                   </div>
                   {/* 标题骨架 */}
-                  <div className="h-5 md:h-6 bg-zinc-900/50 rounded w-3/4 mt-2 animate-pulse" />
+                  <div className="h-5 md:h-6 bg-foreground/10 rounded w-3/4 mt-2 animate-pulse" />
                   {/* 评分骨架 */}
-                  <div className="h-4 bg-zinc-900/30 rounded w-1/2 mt-1.5 animate-pulse" />
+                  <div className="h-4 bg-foreground/5 rounded w-1/2 mt-1.5 animate-pulse" />
                 </div>
               ))}
             </div>
