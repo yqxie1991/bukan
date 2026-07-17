@@ -122,22 +122,33 @@ export default function PlayPage() {
     fetchPlayerConfig();
   }, []);
 
-  // 加载多源数据
+  // 加载多源数据 - 校验缓存归属当前视频，避免显示上一个视频的源列表
   useEffect(() => {
     try {
       const stored = localStorage.getItem("multi_source_matches");
       if (stored) {
         const data = JSON.parse(stored);
-        if (Date.now() - data.timestamp < 30 * 60 * 1000) {
-          setAvailableSources(data.matches || []);
+        // 缓存有效期 30 分钟，且必须属于当前视频（dramaId 即 vod_id）
+        if (
+          Date.now() - data.timestamp < 30 * 60 * 1000 &&
+          Array.isArray(data.matches) &&
+          data.matches.some(
+            (m: AvailableSource) => String(m.vod_id) === String(dramaId)
+          )
+        ) {
+          setAvailableSources(data.matches);
+        } else {
+          // 缓存不属于当前视频或已过期，清空源列表
+          setAvailableSources([]);
         }
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.error("[Multi-source Data Load Failed]", err);
       }
+      setAvailableSources([]);
     }
-  }, []);
+  }, [dramaId]);
 
   // 获取影视详情
   useEffect(() => {
