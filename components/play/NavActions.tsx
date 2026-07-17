@@ -27,9 +27,10 @@ export function NavActions() {
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
   // 统一基准样式：pill 形态 + chrome 红色 hover（与顶栏所有按钮一致）
+  // 移动端断点收敛：<640px 缩小 padding/图标/间距/阴影，避免 7-8 个按钮溢出窄屏
   const btnClass =
-    "group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm";
-  const iconClass = "w-5 h-5 text-foreground group-hover:text-primary";
+    "group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm";
+  const iconClass = "w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary";
 
   return (
     <Fragment>
