@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { DramaDetail, VodSource } from "@/types/drama";
 import { UnifiedPlayer } from "@/components/player/UnifiedPlayer";
@@ -19,7 +19,7 @@ interface AvailableSource {
   match_confidence: "high" | "medium" | "low";
 }
 
-export default function PlayPage() {
+function PlayPageContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -400,7 +400,14 @@ export default function PlayPage() {
   }
 
   if (!dramaDetail) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-2 border-foreground/20 border-t-primary mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg">加载中...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -801,5 +808,22 @@ export default function PlayPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-2 border-foreground/20 border-t-primary mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg">加载中...</p>
+          </div>
+        </div>
+      }
+    >
+      <PlayPageContent />
+    </Suspense>
   );
 }
