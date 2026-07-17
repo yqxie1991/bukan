@@ -6,9 +6,9 @@ export function EmptyState({ onRetry }: EmptyStateProps) {
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="text-center px-4 max-w-md">
-        <div className="w-24 h-24 mx-auto mb-6 bg-gray-800 rounded-full flex items-center justify-center">
+        <div className="w-24 h-24 mx-auto mb-6 bg-foreground/10 rounded-full flex items-center justify-center">
           <svg
-            className="w-12 h-12 text-gray-500"
+            className="w-12 h-12 text-muted-foreground"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -21,11 +21,11 @@ export function EmptyState({ onRetry }: EmptyStateProps) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">暂无内容</h2>
-        <p className="text-gray-400 mb-6 text-sm">当前没有可显示的内容</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">暂无内容</h2>
+        <p className="text-muted-foreground mb-6 text-sm">当前没有可显示的内容</p>
         <button
           onClick={onRetry}
-          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+          className="px-6 py-3 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg font-medium transition-colors"
         >
           刷新
         </button>

@@ -139,7 +139,7 @@ function CalendarCard({
           {displayName}
         </h3>
         {entry.episode_name && entry.episode_name !== displayName && (
-          <p className="text-gray-400 text-xs mt-1 line-clamp-1">
+          <p className="text-muted-foreground text-xs mt-1 line-clamp-1">
             {entry.episode_name}
           </p>
         )}
@@ -193,14 +193,14 @@ function CalendarDaySection({
           isIntersecting ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
         }`}
       >
-        <div className={`w-2 h-2 rounded-full ${dateInfo.isToday ? 'bg-red-500' : dateInfo.isTomorrow ? 'bg-yellow-500' : 'bg-gray-500'}`} />
+        <div className={`w-2 h-2 rounded-full ${dateInfo.isToday ? 'bg-red-500' : dateInfo.isTomorrow ? 'bg-yellow-500' : 'bg-muted-foreground/50'}`} />
         <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
           {dateInfo.isToday && <span className="text-red-500">今天</span>}
           {dateInfo.isTomorrow && <span className="text-yellow-500">明天</span>}
           <span>{dateInfo.main}</span>
-          <span className="text-gray-400 text-base font-normal">{dateInfo.sub}</span>
+          <span className="text-muted-foreground text-base font-normal">{dateInfo.sub}</span>
         </h2>
-        <span className="text-gray-500 text-sm">
+        <span className="text-muted-foreground text-sm">
           {day.entries.length} 部剧集
         </span>
       </div>
@@ -239,21 +239,21 @@ function CalendarSkeleton() {
         <div key={dayIndex} className="px-4 md:px-12">
           {/* 日期标题骨架 */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-2 h-2 rounded-full bg-gray-700" />
-            <div className="h-7 w-32 bg-gray-800 rounded relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+            <div className="w-2 h-2 rounded-full bg-foreground/20" />
+            <div className="h-7 w-32 bg-foreground/5 rounded relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
             </div>
-            <div className="h-5 w-16 bg-gray-800 rounded" />
+            <div className="h-5 w-16 bg-foreground/5 rounded" />
           </div>
           
           {/* 卡片骨架 */}
           <div className="flex space-x-3 md:space-x-4 overflow-hidden">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="shrink-0 w-36 sm:w-44 md:w-52">
-                <div className="aspect-2/3 bg-gray-800 rounded-lg relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+                <div className="aspect-2/3 bg-foreground/5 rounded-lg relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
                 </div>
-                <div className="mt-2 h-4 bg-gray-800 rounded w-3/4" />
+                <div className="mt-2 h-4 bg-foreground/5 rounded w-3/4" />
               </div>
             ))}
           </div>
@@ -344,7 +344,7 @@ export default function CalendarPage() {
                 <Calendar className="w-8 h-8 md:w-10 md:h-10 text-red-500" />
                 追剧日历
               </h1>
-              <p className="text-gray-400 mt-2 text-sm md:text-base">
+              <p className="text-muted-foreground mt-2 text-sm md:text-base">
                 {dateRange.start.replace(/-/g, '/')} - {dateRange.end.replace(/-/g, '/')}
               </p>
             </div>
@@ -364,7 +364,7 @@ export default function CalendarPage() {
                     </option>
                   ))}
                 </select>
-                <Globe className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Globe className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
 
               {/* 周切换 */}
@@ -414,9 +414,9 @@ export default function CalendarPage() {
         </div>
       ) : daysWithContent.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32">
-          <Calendar className="w-20 h-20 text-gray-700 mb-4" />
-          <p className="text-gray-400 text-xl font-medium">本周暂无剧集播出</p>
-          <p className="text-gray-500 text-sm mt-2">试试切换其他地区或时间范围</p>
+          <Calendar className="w-20 h-20 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground text-xl font-medium">本周暂无剧集播出</p>
+          <p className="text-muted-foreground text-sm mt-2">试试切换其他地区或时间范围</p>
         </div>
       ) : (
         <div className="relative z-20 space-y-10 md:space-y-12 lg:space-y-16 pb-16 pt-8">

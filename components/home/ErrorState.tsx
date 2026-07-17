@@ -22,10 +22,10 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           糟糕，出了点问题
         </h2>
-        <p className="text-gray-400 mb-6 text-sm">{error}</p>
+        <p className="text-muted-foreground mb-6 text-sm">{error}</p>
         <button
           onClick={onRetry}
           className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-lg"

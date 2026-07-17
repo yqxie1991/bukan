@@ -348,10 +348,10 @@ export default function PlayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-2 border-stone-300 border-t-amber-500 mx-auto mb-4" />
-          <p className="text-stone-300 text-lg">加载中...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-2 border-foreground/20 border-t-primary mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg">加载中...</p>
         </div>
       </div>
     );
@@ -359,7 +359,7 @@ export default function PlayPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center px-6">
           <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -376,10 +376,10 @@ export default function PlayPage() {
               />
             </svg>
           </div>
-          <p className="text-white text-xl mb-2">{error}</p>
+          <p className="text-foreground text-xl mb-2">{error}</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-foreground rounded-lg transition-colors"
+            className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-primary-foreground rounded-lg transition-colors"
           >
             返回首页
           </button>

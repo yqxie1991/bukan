@@ -220,8 +220,8 @@ export default function CategoryPage() {
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-red-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">正在加载精彩内容...</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-foreground/20 border-t-primary mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">正在加载精彩内容...</p>
             </div>
           </div>
         ) : error ? (
@@ -239,11 +239,11 @@ export default function CategoryPage() {
         ) : movies.length === 0 ? (
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Film className="w-10 h-10 text-gray-600" />
+              <div className="w-20 h-20 bg-foreground/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Film className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">暂无内容</h3>
-              <p className="text-gray-400 mb-6">该分类暂无影片数据</p>
+              <h3 className="text-xl font-bold text-foreground mb-2">暂无内容</h3>
+              <p className="text-muted-foreground mb-6">该分类暂无影片数据</p>
               <button
                 onClick={goBack}
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
@@ -306,8 +306,8 @@ export default function CategoryPage() {
 
             {/* 没有更多了 */}
             {!hasMore && movies.length > 0 && (
-              <div className="text-center mt-12 text-gray-500">
-                <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 rounded-xl">
+              <div className="text-center mt-12 text-muted-foreground">
+                <div className="inline-flex items-center gap-2 px-6 py-3 bg-foreground/5 rounded-xl">
                   <svg
                     className="w-5 h-5"
                     fill="none"
