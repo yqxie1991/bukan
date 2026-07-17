@@ -7,6 +7,7 @@ import { UnifiedPlayer } from "@/components/player/UnifiedPlayer";
 import { SourceSelector } from "@/components/player/SourceSelector";
 import { PlayerSettingsPanel } from "@/components/player/PlayerSettingsPanel";
 import { DanmakuSelector } from "@/components/player/DanmakuSelector";
+import { NavActions } from "@/components/play/NavActions";
 import type { DanmakuItem } from "@/lib/player/danmaku-service";
 import type { PlayerConfig } from "@/app/api/player-config/route";
 import { ArrowLeft, X, ChevronLeft } from "lucide-react";
@@ -425,11 +426,10 @@ function PlayPageContent() {
         <div className="w-full mx-auto px-4 md:px-6 h-[48px] md:h-[64px] flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="text-foreground text-lg font-bold flex items-center gap-2 hover:text-primary transition-all duration-300 group"
+            className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+            title="返回"
           >
-            <div className="p-2 rounded-lg bg-foreground/5 group-hover:bg-primary/10 transition-all duration-300">
-              <ArrowLeft className="w-5 h-5" />
-            </div>
+            <ArrowLeft className="w-5 h-5 text-foreground group-hover:text-primary" />
             <span className="hidden sm:inline">返回</span>
           </button>
           <div className="flex items-center gap-3 md:gap-4">
@@ -465,12 +465,14 @@ function PlayPageContent() {
             {!isRightPanelOpen && (
               <button
                 onClick={() => setIsRightPanelOpen(true)}
-                className="p-2 rounded-lg bg-foreground/5 hover:bg-primary/10 transition-all duration-300 group"
+                className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
                 title="打开侧边栏"
               >
                 <ChevronLeft className="w-5 h-5 text-foreground group-hover:text-primary transform rotate-180" />
               </button>
             )}
+            {/* 首页 / 搜索 / 主题切换 */}
+            <NavActions />
           </div>
         </div>
       </nav>
