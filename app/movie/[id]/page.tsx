@@ -347,6 +347,24 @@ export default function MovieDetailPage() {
 
   // 播放
   const handlePlay = (source: AvailableSource) => {
+    // 跳转前立即把当前已收集的多源匹配结果写入缓存。
+    // 流式搜索可能尚未完成（用户一看到源就会点播放），若不在此写入，
+    // 播放页读不到 multi_source_matches，SourceSelector 会因 sources 为空而隐藏。
+    try {
+      if (availableSources.length > 0) {
+        localStorage.setItem(
+          "multi_source_matches",
+          JSON.stringify({
+            douban_id: doubanId,
+            title: searchTitle,
+            matches: availableSources,
+            timestamp: Date.now(),
+          })
+        );
+      }
+    } catch {
+      // 静默失败，不影响跳转
+    }
     router.push(
       `/play/${source.vod_id}?source=${source.source_key}&multi=true`
     );
