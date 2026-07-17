@@ -426,13 +426,13 @@ function PlayPageContent() {
         <div className="w-full mx-auto px-4 md:px-6 h-[48px] md:h-[64px] flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+            className="group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm"
             title="返回"
           >
-            <ArrowLeft className="w-5 h-5 text-foreground group-hover:text-primary" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary" />
             <span className="hidden sm:inline">返回</span>
           </button>
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4">
             {/* 多源选择器 */}
             <SourceSelector
               sources={availableSources}
@@ -465,10 +465,10 @@ function PlayPageContent() {
             {!isRightPanelOpen && (
               <button
                 onClick={() => setIsRightPanelOpen(true)}
-                className="group flex items-center space-x-2 px-3 md:px-4 py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow-lg backdrop-blur-sm"
+                className="group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm"
                 title="打开侧边栏"
               >
-                <ChevronLeft className="w-5 h-5 text-foreground group-hover:text-primary transform rotate-180" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transform rotate-180" />
               </button>
             )}
             {/* 首页 / 搜索 / 主题切换 */}
