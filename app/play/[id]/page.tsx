@@ -461,11 +461,11 @@ function PlayPageContent() {
                 }}
               />
             )}
-            {/* 展开侧边栏按钮 */}
+            {/* 展开侧边栏按钮 - 仅桌面端，移动端无侧边栏开关功能 */}
             {!isRightPanelOpen && (
               <button
                 onClick={() => setIsRightPanelOpen(true)}
-                className="group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm"
+                className="group hidden sm:flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm"
                 title="打开侧边栏"
               >
                 <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transform rotate-180" />
