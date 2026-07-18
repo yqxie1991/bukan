@@ -57,20 +57,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!videoResponse.ok && videoResponse.status !== 206) {
+      // 仅记录状态码，避免高频切片请求刷盘（一部电影几千个 .ts）
       console.error(`❌ 视频请求失败: ${videoResponse.status} ${videoResponse.statusText}`);
-      console.error('❌ 目标URL:', videoUrl);
-      console.error('❌ 响应headers:', JSON.stringify(Object.fromEntries(videoResponse.headers.entries()), null, 2));
-      
-      // 尝试读取错误响应体
-      try {
-        const errorText = await videoResponse.text();
-        console.error('❌ 错误响应内容:', errorText.substring(0, 500));
-      } catch (e) {
-        console.error('❌ 无法读取错误响应:', e);
-      }
-      
+
       return NextResponse.json(
-        { 
+        {
           code: videoResponse.status,
           message: `视频请求失败: ${videoResponse.status} ${videoResponse.statusText}`,
           suggestion: videoResponse.status === 403 ? '目标站点拒绝访问，可能需要特定的cookies或认证' : undefined
@@ -82,12 +73,10 @@ export async function GET(request: NextRequest) {
     const contentType = videoResponse.headers.get('content-type') || '';
 
     // 检查是否是 m3u8 播放列表
-    if (contentType.includes('application/vnd.apple.mpegurl') || 
+    if (contentType.includes('application/vnd.apple.mpegurl') ||
         contentType.includes('application/x-mpegURL') ||
         videoUrl.endsWith('.m3u8')) {
-      
-      console.log('📝 检测到 m3u8 文件，重写内部 URL...');
-      
+
       // 读取 m3u8 内容
       const m3u8Content = await videoResponse.text();
       

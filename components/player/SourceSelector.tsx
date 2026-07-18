@@ -16,9 +16,13 @@ interface SourceSelectorProps {
   sources: SourceInfo[];
   currentSourceKey: string | null;
   onSourceChange: (sourceKey: string, vodId: string | number) => void;
+  // 触发搜索多源（无缓存时点击按钮或主动刷新时调用）
+  onRefresh?: () => Promise<void>;
+  // 是否正在搜索
+  isRefreshing?: boolean;
 }
 
-export function SourceSelector({ sources, currentSourceKey, onSourceChange }: SourceSelectorProps) {
+export function SourceSelector({ sources, currentSourceKey, onSourceChange, onRefresh, isRefreshing }: SourceSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   // 是否移动端视口（<768px）。SSR 安全：初始 false，hydration 后按 matchMedia 更新
   const [isMobile, setIsMobile] = useState(false);
@@ -68,11 +72,6 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
     return confidenceOrder[b.match_confidence] - confidenceOrder[a.match_confidence];
   });
 
-  // 如果只有一个或没有源，不显示
-  if (sources.length <= 1) {
-    return null;
-  }
-
   const currentSource = sortedSources.find(s => s.source_key === currentSourceKey);
 
   const getConfidenceBadge = (confidence: 'high' | 'medium' | 'low') => {
@@ -89,11 +88,11 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
     );
   };
 
-  // 菜单内容：移动端 fixed 贴底弹层（Portal 到 body，绕开 nav 的 backdrop-filter 包含块），
-  // 桌面端 absolute 右对齐下拉（相对按钮，视口足够宽不溢出）
+  // 菜单容器：移动端 fixed 贴底弹层（Portal 到 body），桌面端 absolute 右对齐下拉
+  // PC 端顶部贴齐导航栏底部（top-full 而非 mt-3 间隙）
   const menuClassName = isMobile
     ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
-    : 'absolute right-0 mt-3 w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
+    : 'absolute right-0 top-full w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
 
   const menu = isOpen ? (
     <div ref={menuRef} className={menuClassName}>
@@ -112,8 +111,14 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
         </div>
       </div>
 
-      {/* 源列表 */}
-      <div className="overflow-y-auto p-3 space-y-2" style={{ maxHeight: isMobile ? 'calc(80vh - 120px)' : '60vh' }}>
+      {/* 源列表 - 无源时显示空状态提示 */}
+      {sources.length === 0 ? (
+        <div className="p-6 text-center">
+          <p className="text-sm text-gray-400 mb-2">未加载播放源数据</p>
+          <p className="text-xs text-gray-500">点击下方「刷新播放源」按钮重新搜索</p>
+        </div>
+      ) : (
+        <div className="overflow-y-auto p-3 space-y-2" style={{ maxHeight: isMobile ? 'calc(80vh - 120px)' : '60vh' }}>
         {sortedSources.map((source) => {
           const isCurrent = source.source_key === currentSourceKey;
           return (
@@ -125,30 +130,28 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
                 }
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${isCurrent
-                ? 'bg-red-600/30 border border-red-600/50'
-                : 'bg-gray-800/50 hover:bg-gray-800 border border-transparent'
-                }`}
+              className={`w-full text-left px-4 py-2.5 rounded-lg transition-all ${
+                isCurrent
+                  ? 'bg-red-600 text-white font-medium shadow-lg shadow-red-500/20'
+                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-800'
+              }`}
               disabled={isCurrent}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   {/* 源名称 */}
-                  <div className="flex items-center space-x-2 mb-1">
-                    <p className={`text-sm font-semibold truncate ${isCurrent ? 'text-red-400' : 'text-white'
-                      }`}>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm truncate ${isCurrent ? 'text-white' : 'text-white'}`}>
                       {source.source_name}
-                    </p>
+                    </span>
                     {isCurrent && (
-                      <span className="flex-shrink-0 text-red-400">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </span>
+                      <svg className="w-4 h-4 shrink-0 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     )}
                   </div>
                   {/* 视频名称 */}
-                  <p className="text-xs text-gray-400 truncate" title={source.vod_name}>
+                  <p className={`text-xs mt-0.5 truncate ${isCurrent ? 'text-red-100' : 'text-gray-500'}`} title={source.vod_name}>
                     {source.vod_name}
                   </p>
                 </div>
@@ -162,9 +165,34 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
           );
         })}
       </div>
+      )}
 
-      {/* 底部提示 */}
-      <div className="p-3 border-t border-gray-800 bg-gray-900/50">
+      {/* 底部：刷新按钮 + 提示 */}
+      <div className="p-3 border-t border-gray-800 bg-gray-900/50 space-y-2">
+        {onRefresh && (
+          <button
+            onClick={() => onRefresh()}
+            disabled={isRefreshing}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          >
+            {isRefreshing ? (
+              <>
+                <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-white text-sm">搜索中...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.582m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-white text-sm">刷新播放源</span>
+              </>
+            )}
+          </button>
+        )}
         <p className="text-xs text-gray-500 flex items-start space-x-2">
           <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -175,32 +203,61 @@ export function SourceSelector({ sources, currentSourceKey, onSourceChange }: So
     </div>
   ) : null;
 
+  // 点击按钮逻辑：
+  // - 搜索中：不响应
+  // - 有源：切换下拉
+  // - 无源且有 onRefresh：触发搜索，搜索完成后自动打开下拉
+  const handleButtonClick = async () => {
+    if (isRefreshing) return;
+    if (sources.length > 0) {
+      setIsOpen(!isOpen);
+      return;
+    }
+    if (onRefresh) {
+      await onRefresh();
+      // 搜索完成后自动打开下拉（让用户看到结果）
+      setIsOpen(true);
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
-    <div className="relative">
+    <div className="relative flex items-center h-[48px] md:h-[64px]">
       {/* 触发按钮 */}
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm"
+        onClick={handleButtonClick}
+        className="group flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-foreground/5 hover:bg-primary/10 rounded-full transition-all hover:scale-105 text-foreground text-xs md:text-sm font-medium shadow sm:shadow-lg backdrop-blur-sm disabled:opacity-60 disabled:cursor-not-allowed"
         aria-label="切换视频源"
         aria-expanded={isOpen}
+        disabled={isRefreshing}
       >
-        <svg
-          className={`w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-          />
-        </svg>
-        <span className="hidden sm:inline">{sources.length} 个播放源</span>
+        {isRefreshing ? (
+          <svg className="animate-spin w-4 h-4 sm:w-5 sm:h-5 text-primary" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : (
+          <svg
+            className={`w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+            />
+          </svg>
+        )}
+        <span className="hidden sm:inline">
+          {isRefreshing ? '搜索中...' : `${sources.length} 个播放源`}
+        </span>
         <span className="sm:hidden">{sources.length}</span>
-        {currentSource && (
+        {currentSource && !isRefreshing && (
           <span className="hidden md:inline text-muted-foreground">
             · {currentSource.source_name}
           </span>

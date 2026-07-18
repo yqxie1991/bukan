@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { validateSession } from '@/lib/auth';
 
 /**
  * 数据库状态 API (去数据库轻量版)
  * GET /api/database/status
- * 
- * 返回本地 JSON 文件存储状态
+ *
+ * 返回本地 JSON 文件存储状态（包含内部状态信息，仅管理员可访问，避免公开侦察）
  */
 export async function GET() {
+  // 鉴权：未登录禁止访问（防止泄露文件路径、collections 列表、错误细节）
+  const isAuthed = await validateSession();
+  if (!isAuthed) {
+    return NextResponse.json(
+      { code: 401, message: '未授权', data: null },
+      { status: 401 }
+    );
+  }
+
   const startTime = Date.now();
   const dataDir = path.join(process.cwd(), 'data');
   

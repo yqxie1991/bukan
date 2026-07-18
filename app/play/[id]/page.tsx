@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { DramaDetail, VodSource } from "@/types/drama";
 import { UnifiedPlayer } from "@/components/player/UnifiedPlayer";
@@ -39,6 +39,16 @@ function PlayPageContent() {
   const [availableSources, setAvailableSources] = useState<AvailableSource[]>(
     []
   );
+  // ref 同步 availableSources，供 fetchDetail 等不该重渲染的 useEffect 读取
+  // 避免 setAvailableSources 触发 fetchDetail 重新执行（导致页面整体刷新）
+  const availableSourcesRef = useRef<AvailableSource[]>([]);
+  useEffect(() => {
+    availableSourcesRef.current = availableSources;
+  }, [availableSources]);
+  // 是否正在搜索多源（点击播放源按钮或主动刷新时为 true）
+  const [isRefreshingSources, setIsRefreshingSources] = useState(false);
+  // 是否已自动触发过单源刷新（避免循环）
+  const autoRefreshTriggeredRef = useRef(false);
 
   // 视频源数据（从 API 获取）
   const [vodSources, setVodSources] = useState<VodSource[]>([]);
@@ -123,8 +133,11 @@ function PlayPageContent() {
     fetchPlayerConfig();
   }, []);
 
-  // 加载多源数据 - 校验缓存归属当前视频，避免显示上一个视频的源列表
+  // 加载多源数据 - 缓存归属当前视频时直接使用，否则从 URL ?source=xxx 构造当前播放源
+  // 避免显示"0个播放源"——既然能播放说明起码有当前源
   useEffect(() => {
+    let loaded = false;
+
     try {
       const stored = localStorage.getItem("multi_source_matches");
       if (stored) {
@@ -138,20 +151,59 @@ function PlayPageContent() {
           )
         ) {
           setAvailableSources(data.matches);
-        } else {
-          // 缓存不属于当前视频或已过期，清空源列表
-          setAvailableSources([]);
+          loaded = true;
         }
       }
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.error("[Multi-source Data Load Failed]", err);
       }
+    }
+
+    // 缓存不匹配：从 URL ?source=xxx 构造当前播放源作为 fallback
+    if (!loaded && currentSourceKey && vodSources.length > 0) {
+      const source = vodSources.find((s) => s.key === currentSourceKey);
+      if (source) {
+        // 从历史记录读 name 作为 vod_name
+        let vodName: string | undefined;
+        try {
+          const historyStored = localStorage.getItem(`play_history_${dramaId}`);
+          if (historyStored) {
+            const historyData = JSON.parse(historyStored);
+            vodName = historyData?.name;
+          }
+        } catch {
+          // 历史记录解析失败，忽略
+        }
+        if (vodName) {
+          setAvailableSources([
+            {
+              source_key: source.key,
+              source_name: source.name,
+              vod_id: dramaId,
+              vod_name: vodName,
+              match_confidence: "high", // 当前播放源视为精准匹配
+            },
+          ]);
+          loaded = true;
+        }
+      }
+    }
+
+    if (!loaded) {
       setAvailableSources([]);
     }
+  }, [dramaId, currentSourceKey, vodSources]);
+
+  // dramaId 变化时重置自动刷新标记，允许新视频触发单源自动刷新
+  // 独立成 useEffect 只依赖 dramaId，避免 vodSources/currentSourceKey 变化时意外重置导致死循环
+  useEffect(() => {
+    autoRefreshTriggeredRef.current = false;
   }, [dramaId]);
 
   // 获取影视详情
+  // 注意：依赖数组不含 availableSources —— 通过 availableSourcesRef 读取
+  // 避免 setAvailableSources 触发 fetchDetail 重新执行（导致页面整体刷新、视频重新加载）
   useEffect(() => {
     const fetchDetail = async () => {
       try {
@@ -159,8 +211,8 @@ function PlayPageContent() {
         setError(null);
 
         let sourceKey = currentSourceKey;
-        if (!sourceKey && availableSources.length > 0) {
-          sourceKey = availableSources[0].source_key;
+        if (!sourceKey && availableSourcesRef.current.length > 0) {
+          sourceKey = availableSourcesRef.current[0].source_key;
         }
 
         if (!sourceKey && selectedVodSource) {
@@ -181,11 +233,11 @@ function PlayPageContent() {
         setCurrentVodSource(source);
 
         // 获取详情 - 查找当前源对应的 vod_name（用于代理搜索）
-        // 优先从 availableSources 查找，如果为空则直接从 localStorage 查找
+        // 优先从 availableSourcesRef 查找，如果为空则直接从 localStorage 查找
         let vodName: string | undefined;
 
-        // 方法1：从 availableSources 查找
-        const matchedSource = availableSources.find(
+        // 方法1：从 availableSourcesRef 查找
+        const matchedSource = availableSourcesRef.current.find(
           (s) => s.source_key === source.key
         );
         vodName = matchedSource?.vod_name;
@@ -253,10 +305,109 @@ function PlayPageContent() {
   }, [
     dramaId,
     currentSourceKey,
-    availableSources,
     vodSources,
     selectedVodSource,
   ]);
+
+  // 主动搜索多源 - 由 SourceSelector 触发（点击按钮无缓存时 / 点击「刷新播放源」时 / 单源时自动触发）
+  // title 三级 fallback：dramaDetail.name → 历史记录 name → 放弃
+  const handleRefreshSources = useCallback(async () => {
+    if (isRefreshingSources) return;
+
+    // 解析搜索 title：优先 dramaDetail.name，否则从历史记录取
+    let searchTitle = dramaDetail?.name;
+    if (!searchTitle) {
+      try {
+        const historyStored = localStorage.getItem(`play_history_${dramaId}`);
+        if (historyStored) {
+          const historyData = JSON.parse(historyStored);
+          searchTitle = historyData?.name;
+        }
+      } catch {
+        // 历史记录解析失败，忽略
+      }
+    }
+    if (!searchTitle) {
+      // 无 title 无法搜索
+      return;
+    }
+
+    setIsRefreshingSources(true);
+    try {
+      const response = await fetch(
+        `/api/douban/match-vod-stream?title=${encodeURIComponent(searchTitle)}`
+      );
+      if (!response.ok || !response.body) return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const allMatches: AvailableSource[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === "result" && data.match) {
+              allMatches.push(data.match);
+            }
+          } catch {
+            // 忽略单行 SSE 解析错误
+          }
+        }
+      }
+
+      // 搜索完成后合并当前播放源，避免搜索结果丢失当前播放源（如该源暂时不可用）
+      const currentSources = availableSourcesRef.current;
+      const existingKeys = new Set(allMatches.map((m) => m.source_key));
+      const merged = [...allMatches];
+      for (const cur of currentSources) {
+        if (!existingKeys.has(cur.source_key)) {
+          merged.push(cur);
+        }
+      }
+
+      // 一次性更新状态 + 写入缓存
+      if (merged.length > 0) {
+        setAvailableSources(merged);
+        try {
+          localStorage.setItem(
+            "multi_source_matches",
+            JSON.stringify({
+              title: searchTitle,
+              matches: merged,
+              timestamp: Date.now(),
+            })
+          );
+        } catch {
+          // localStorage 写入失败不影响功能
+        }
+      }
+    } catch {
+      // 静默失败，不影响播放
+    } finally {
+      setIsRefreshingSources(false);
+    }
+  }, [dramaDetail, dramaId, isRefreshingSources]);
+
+  // 单源时自动触发刷新 - 进入播放页只有 1 个播放源时（从历史记录等入口构造的当前源）
+  // 自动执行一次搜索填充多源列表。用 ref 避免循环触发。
+  useEffect(() => {
+    if (autoRefreshTriggeredRef.current) return;
+    if (availableSources.length !== 1) return;
+    if (isRefreshingSources) return;
+
+    autoRefreshTriggeredRef.current = true;
+    handleRefreshSources();
+  }, [availableSources.length, isRefreshingSources, handleRefreshSources]);
 
   // 切换视频源
   const switchSource = useCallback(
@@ -412,15 +563,7 @@ function PlayPageContent() {
   }
 
   return (
-    <div
-      className="w-full h-screen"
-      style={{
-        backgroundAttachment: "fixed",
-        backgroundPosition: "center",
-        backgroundSize: "cover",
-        backgroundImage: "url(/movie-default-bg.jpg)",
-      }}
-    >
+    <div className="w-full min-h-screen bg-background">
       {/* 顶部导航栏 - Netflix风格 */}
       <nav className="sticky top-0 z-450 bg-surface/95 backdrop-blur-md border-b border-border-color">
         <div className="w-full mx-auto px-4 md:px-6 h-[48px] md:h-[64px] flex items-center justify-between">
@@ -438,6 +581,8 @@ function PlayPageContent() {
               sources={availableSources}
               currentSourceKey={currentSourceKey}
               onSourceChange={switchSource}
+              onRefresh={handleRefreshSources}
+              isRefreshing={isRefreshingSources}
             />
             {/* 播放器设置 */}
             {playerConfig && (
@@ -679,12 +824,10 @@ function PlayPageContent() {
                           className={`text-xs lg:text-sm text-muted-foreground leading-relaxed transition-all duration-300 ${
                             isDescriptionExpanded ? "" : "line-clamp-4"
                           }`}
-                          dangerouslySetInnerHTML={{
-                            __html: dramaDetail.blurb
-                              .replace(/<[^>]*>/g, "")
-                              .replace(/&nbsp;/g, " "),
-                          }}
-                        />
+                        >
+                          {/* 安全渲染：blurb 来自外部影视 API 不可信源，使用 textContent 而非 dangerouslySetInnerHTML，杜绝 XSS */}
+                          {dramaDetail.blurb.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")}
+                        </p>
                         {dramaDetail.blurb.length > 100 && (
                           <button
                             onClick={() =>

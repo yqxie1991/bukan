@@ -124,12 +124,13 @@ export function PlayerSettingsPanel({
   })();
 
   // 菜单容器：移动端 fixed 贴底弹层（Portal 到 body），桌面端 absolute 右对齐下拉
+  // PC 端顶部贴齐导航栏底部（top-full 而非 mt-3 间隙）
   const menuClassName = isMobile
     ? 'fixed inset-x-2 bottom-2 z-[2000] max-h-[80vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in'
-    : 'absolute right-0 mt-3 w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
+    : 'absolute right-0 top-full w-80 md:w-96 max-h-[60vh] bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden animate-fade-in z-50';
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative flex items-center h-[48px] md:h-[64px]" ref={panelRef}>
       {/* 触发按钮 */}
       <button
         onClick={() => setIsOpen(!isOpen)}

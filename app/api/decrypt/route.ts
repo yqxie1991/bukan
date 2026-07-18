@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { validateSession } from '@/lib/auth';
 
 const { subtle } = crypto.webcrypto;
 const PBKDF2_ITERATIONS = 100000;
@@ -147,20 +148,68 @@ function parseEncryptedString(input: string): EncryptedPackage {
   }
 }
 
-// POST - 解密配置或代理拉取订阅配置
+// SSRF 防护：协议白名单 + 内网 IP 黑名单 + 禁止主机名列表
+const ALLOWED_PROTOCOLS = ['http:', 'https:'];
+const BLOCKED_HOSTS = [
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  '169.254.169.254', // AWS / Azure 元数据
+  'metadata.google.internal', // GCP 元数据
+];
+const BLOCKED_IP_PREFIXES = [
+  '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.',
+  '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.',
+  '172.29.', '172.30.', '172.31.', '192.168.',
+];
+
+function isValidSubscriptionUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    if (!ALLOWED_PROTOCOLS.includes(url.protocol)) return false;
+    if (BLOCKED_HOSTS.includes(url.hostname)) return false;
+    for (const prefix of BLOCKED_IP_PREFIXES) {
+      if (url.hostname.startsWith(prefix)) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// POST - 解密配置或代理拉取订阅配置（管理员专用：可解密敏感配置 + 可触发外部订阅 URL 拉取，存在 SSRF 风险，必须鉴权）
 export async function POST(request: NextRequest) {
   try {
+    // 鉴权：未登录禁止使用本接口（避免未授权 SSRF / 配置泄露）
+    const isAuthed = await validateSession();
+    if (!isAuthed) {
+      return NextResponse.json(
+        { code: 401, message: '未授权：请先登录', data: null },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { password, encryptedData, subscriptionUrl } = body;
 
     let parsedPayload: any = null;
 
     if (subscriptionUrl) {
+      // SSRF 防护：仅允许 http/https，禁止内网地址与云元数据服务
+      if (!isValidSubscriptionUrl(subscriptionUrl)) {
+        return NextResponse.json(
+          { code: 400, message: '订阅 URL 不合法（仅允许 http/https，禁止内网地址）', data: null },
+          { status: 400 }
+        );
+      }
+
       // 1. 从 URL 获取配置内容
       const response = await fetch(subscriptionUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        }
+        },
+        signal: AbortSignal.timeout(8000),
       });
       if (!response.ok) {
         throw new Error(`获取订阅配置失败，HTTP 状态码: ${response.status}`);

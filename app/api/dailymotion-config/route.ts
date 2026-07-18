@@ -30,7 +30,7 @@ export async function GET() {
   }
 }
 
-// POST - 更新配置（使用 MongoDB + Redis 缓存）
+// POST - 更新配置（持久化至本地 JSON 文件）
 export async function POST(request: NextRequest) {
   try {
     // 验证会话权限
