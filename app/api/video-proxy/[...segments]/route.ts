@@ -49,10 +49,7 @@ export async function GET(
     // 重建目标URL
     targetUrl = decodeURIComponent(resolvedParams.segments.join('/'));
 
-    console.log('🔄 代理请求 segments:', resolvedParams.segments);
-    console.log('🔄 代理请求 targetUrl:', targetUrl);
-
-    // 安全验证
+    // 安全验证（保持静默，避免高频切片请求刷盘）
     if (!isValidUrl(targetUrl)) {
       return NextResponse.json(
         { error: '无效的URL' },
@@ -109,18 +106,15 @@ export async function GET(
 
     // 尝试第一个策略
     let fetchHeaders = strategies[0]();
-    console.log('🔧 请求headers (策略1):', JSON.stringify(fetchHeaders, null, 2));
 
     let response: Response | null = null;
     let lastError: Error | null = null;
 
-    // 尝试所有策略
+    // 尝试所有策略（错误才记录日志，避免高频切片刷盘）
     for (let i = 0; i < strategies.length; i++) {
       try {
         if (i > 0) {
-          console.log(`⚠️ 策略${i}失败，尝试策略${i + 1}...`);
           fetchHeaders = strategies[i]();
-          console.log(`🔧 请求headers (策略${i + 1}):`, JSON.stringify(fetchHeaders, null, 2));
         }
 
         // 转发请求
@@ -168,23 +162,12 @@ export async function GET(
       }
     }
 
-    // 检查响应状态
+    // 检查响应状态（仅在错误时记录日志，避免高频切片刷盘）
     if (!response.ok && response.status !== 206) {
-      console.error('❌ 代理请求失败:', response.status, response.statusText);
-      console.error('❌ 目标URL:', targetUrl);
-      console.error('❌ 响应headers:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
-
-      // 尝试读取错误响应体
-      try {
-        const errorText = await response.text();
-        console.error('❌ 错误响应内容:', errorText.substring(0, 500));
-      } catch (e) {
-        console.error('❌ 无法读取错误响应:', e);
-      }
+      console.error('❌ 代理请求失败:', response.status, response.statusText, 'URL:', targetUrl);
 
       // 如果是403，可能是IP封锁，返回原始URL供前端直接请求
       if (response.status === 403) {
-        console.log('🔄 所有代理策略失败，可能是IP封锁，返回原始URL');
         return NextResponse.json(
           {
             error: 'proxy_blocked',
@@ -215,19 +198,12 @@ export async function GET(
     // 获取响应内容类型
     const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
 
-    console.log('📌 Content-Type:', contentType);
-    console.log('📌 targetUrl:', targetUrl);
-    console.log('📌 是否m3u8:', targetUrl.endsWith('.m3u8'));
-
     // 先处理m3u8文件（优先级最高）
     if (contentType.includes('mpegurl') || contentType.includes('m3u8') || targetUrl.endsWith('.m3u8')) {
-      console.log('✅ 开始处理m3u8文件');
       const text = await response.text();
-      console.log('📄 原始m3u8内容 (前200字符):', text.substring(0, 200));
 
       // 处理m3u8中的相对路径
       const processedM3u8 = processM3u8Content(text, targetUrl);
-      console.log('📄 处理后m3u8内容 (前200字符):', processedM3u8.substring(0, 200));
 
       return new NextResponse(processedM3u8, {
         status: 200,
@@ -261,8 +237,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('❌ 代理错误:', error);
-
     // 解析错误类型
     const err = error as Error;
     let errorMessage = '代理请求失败';
@@ -302,12 +276,7 @@ export async function GET(
       }
     }
 
-    console.error('📋 错误详情:', {
-      code: errorCode,
-      message: errorMessage,
-      original: err.message,
-      url: targetUrl,
-    });
+    console.error('❌ 代理错误:', errorCode, err.message, 'URL:', targetUrl);
 
     return NextResponse.json(
       {
@@ -343,27 +312,24 @@ export async function OPTIONS() {
   });
 }
 
-// URL安全验证
+// URL安全验证（保持静默，避免高频请求刷盘）
 function isValidUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString);
 
     // 只允许HTTP和HTTPS协议
     if (!['http:', 'https:'].includes(url.protocol)) {
-      console.warn('不允许的协议:', url.protocol);
       return false;
     }
 
     // 检查阻止的主机名
     if (BLOCKED_HOSTS.includes(url.hostname)) {
-      console.warn('阻止的主机名:', url.hostname);
       return false;
     }
 
     // 检查阻止的IP前缀
     for (const prefix of BLOCKED_IP_PREFIXES) {
       if (url.hostname.startsWith(prefix)) {
-        console.warn('阻止的IP前缀:', url.hostname);
         return false;
       }
     }
@@ -378,9 +344,6 @@ function isValidUrl(urlString: string): boolean {
 function processM3u8Content(content: string, baseUrl: string): string {
   const lines = content.split('\n');
   const base = new URL(baseUrl);
-
-  console.log('📝 processM3u8Content baseUrl:', baseUrl);
-  console.log('📝 processM3u8Content base.href:', base.href);
 
   // 辅助函数：解析并代理URL
   const resolveAndProxy = (urlString: string): string => {
@@ -405,7 +368,6 @@ function processM3u8Content(content: string, baseUrl: string): string {
       if (uriMatch && uriMatch[1]) {
         const originalUri = uriMatch[1];
         const proxiedUri = resolveAndProxy(originalUri);
-        console.log(`🔑 密钥URI: "${originalUri}" => "${proxiedUri}"`);
         return line.replace(/URI=["']?[^"',]+["']?/, `URI="${proxiedUri}"`);
       }
       return line;
@@ -419,7 +381,6 @@ function processM3u8Content(content: string, baseUrl: string): string {
     // 处理片段URL
     const trimmedLine = line.trim();
     const proxiedUrl = resolveAndProxy(trimmedLine);
-    console.log(`📝 片段: "${trimmedLine}" => "${proxiedUrl}"`);
     return proxiedUrl;
   });
 

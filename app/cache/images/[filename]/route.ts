@@ -15,20 +15,26 @@ export async function GET(
     }
 
     // 2. 拼接容器内的物理图片路径
-    const filePath = path.join(process.cwd(), 'public', 'cache', 'images', filename);
+    const safeDir = path.resolve(process.cwd(), 'public', 'cache', 'images');
+    const filePath = path.resolve(safeDir, filename);
 
-    // 3. 读取物理图片文件
+    // 3. 二次校验：确保解析后的绝对路径仍在安全目录内（防御 URL 编码、UNC 路径、~ 等绕过手段）
+    if (!filePath.startsWith(safeDir + path.sep)) {
+      return new NextResponse('Forbidden', { status: 403 });
+    }
+
+    // 4. 读取物理图片文件
     try {
       const buffer = await fs.readFile(filePath);
       
-      // 4. 根据后缀确定 Content-Type
+      // 5. 根据后缀确定 Content-Type
       let contentType = 'image/jpeg';
       const ext = path.extname(filename).toLowerCase();
       if (ext === '.png') contentType = 'image/png';
       else if (ext === '.webp') contentType = 'image/webp';
       else if (ext === '.gif') contentType = 'image/gif';
 
-      // 5. 返回图片，并带上强缓存头，让浏览器/CDN缓存它，绝不重复消耗 Node I/O
+      // 6. 返回图片，并带上强缓存头，让浏览器/CDN缓存它，绝不重复消耗 Node I/O
       return new NextResponse(buffer, {
         headers: {
           'Content-Type': contentType,

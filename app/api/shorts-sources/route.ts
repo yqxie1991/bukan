@@ -16,8 +16,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const includeDisabled = searchParams.get('all') === 'true';
-    
+
+    // 包含禁用源的完整列表含 API 地址等敏感信息，仅管理员可访问
     if (includeDisabled) {
+      if (!(await validateSession())) {
+        return NextResponse.json(
+          { code: 401, message: '未授权访问', data: null },
+          { status: 401 }
+        );
+      }
       const allSources = await getAllShortsSourcesFromDB();
       return NextResponse.json({
         code: 200,

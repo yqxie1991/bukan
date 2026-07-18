@@ -22,7 +22,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   return (
     <div
       onClick={() => onSelect(movie)}
-      className="group relative cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[var(--card-shadow-hover)] rounded-lg"
+      className="group relative cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:z-10 hover:shadow-[var(--card-shadow-hover)] rounded-lg"
     >
       {/* 海报图片 */}
       <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-foreground/5 dark:bg-surface border border-black/5 dark:border-white/5 transition-colors duration-300">
@@ -52,7 +52,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
             </svg>
           </div>
         )}
-        
+
         {/* 加载状态 */}
         {isLoading && !imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground/5 dark:bg-gray-800">
@@ -67,36 +67,29 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
             <span>{movie.rate}</span>
           </div>
         )}
- 
+
+        {/* 悬浮播放按钮层 - 仅桌面端，仅覆盖海报区域，不影响常驻标题 */}
+        <div className="hidden md:flex absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex-col justify-end p-4 pointer-events-none">
+          <div className="flex items-center pointer-events-auto">
+            <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 hover:scale-105 transition-all duration-200 shadow-lg">
+              <Play className="w-4 h-4 fill-current" />
+              <span>立即播放</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 移动端常驻标题 */}
-      <div className="mt-2 md:hidden">
-        <h3 className="text-foreground text-sm font-medium line-clamp-1">{movie.title}</h3>
-        {movie.episode_info && movie.episode_info.length > 0 && (
-          <p className="text-muted-foreground text-xs mt-0.5 line-clamp-1">{movie.episode_info}</p>
-        )}
-      </div>
-
-      {/* 悬浮信息层 - 仅桌面端 */}
-      <div className="hidden md:flex absolute inset-0 bg-linear-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex-col justify-end p-4">
-        <h3 className="text-white font-bold text-base mb-2 line-clamp-2">
+      {/* 常驻标题 - PC+移动端默认显示 */}
+      <div className="mt-2.5 px-0.5">
+        <h3 className="text-foreground text-sm md:text-[15px] font-semibold leading-tight line-clamp-1 group-hover:text-primary transition-colors">
           {movie.title}
         </h3>
-        
         {movie.episode_info && movie.episode_info.length > 0 && (
-          <p className="text-gray-300 text-xs mb-2">
-            {movie.episode_info}
+          <p className="text-muted-foreground text-xs mt-1 line-clamp-1 flex items-center gap-1">
+            <span className="inline-block w-1 h-1 rounded-full bg-primary/60 shrink-0" />
+            <span className="truncate">{movie.episode_info}</span>
           </p>
         )}
-
-        {/* 播放按钮 */}
-        <div className="mt-3 flex items-center space-x-2">
-          <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 hover:scale-105 transition-all duration-200 shadow-lg">
-            <Play className="w-4 h-4 fill-current" />
-            <span>立即播放</span>
-          </button>
-        </div>
       </div>
     </div>
   );

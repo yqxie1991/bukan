@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-// 允许 Node.js 忽略未授权的 SSL 证书，解决在部分没有内置根证书的 Docker 容器中代理外部图片失败的问题
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 // 代理池配置
 const PROXY_POOL = [
   {
@@ -41,12 +38,10 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
       });
 
       if (response.ok) {
-        console.log(`✓ ${proxy.name} 成功`);
         return response;
       }
       throw new Error(`HTTP ${response.status}`);
     } catch (error) {
-      console.log(`✗ ${proxy.name} 失败`);
       throw error;
     }
   });
@@ -55,7 +50,7 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
   try {
     return await Promise.any(fastPromises);
   } catch {
-    console.log('⚠ 前2个代理都失败，尝试直接访问...');
+    // 前2个代理都失败，降级到直接访问
   }
 
   // 策略 2: 直接访问（防盗链 Referer）
