@@ -5,17 +5,22 @@
  * 服务地址通过环境变量 NEXT_PUBLIC_DOUBAN_API_URL 配置
  */
 
+import { fetchWithRetry } from './fetch-with-retry';
+
 const DOUBAN_API_URL = process.env.NEXT_PUBLIC_DOUBAN_API_URL || 'https://iamyourfather.link0.me'
 
 /**
- * 通用请求函数
+ * 通用请求函数（带自动重试）
  */
 async function fetchFromService<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${DOUBAN_API_URL}${endpoint}`;
   
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       ...options,
+      maxRetries: 2,
+      baseDelay: 500,
+      timeout: 8000,
       headers: {
         'Content-Type': 'application/json',
         ...options?.headers,
@@ -139,13 +144,13 @@ export async function clearDetailCache(id: string): Promise<void> {
 
 // ==================== Latest ====================
 
-export interface CategoryData {
+export interface DoubanCategoryData {
   name: string;
   data: Subject[];
 }
 
-export async function getLatestContent(): Promise<CategoryData[]> {
-  return fetchFromService<CategoryData[]>('/api/v1/latest');
+export async function getLatestContent(): Promise<DoubanCategoryData[]> {
+  return fetchFromService<DoubanCategoryData[]>('/api/v1/latest');
 }
 
 export async function clearLatestCache(): Promise<void> {
@@ -154,8 +159,8 @@ export async function clearLatestCache(): Promise<void> {
 
 // ==================== Movies ====================
 
-export async function getMoviesCategories(): Promise<CategoryData[]> {
-  return fetchFromService<CategoryData[]>('/api/v1/movies');
+export async function getMoviesCategories(): Promise<DoubanCategoryData[]> {
+  return fetchFromService<DoubanCategoryData[]>('/api/v1/movies');
 }
 
 export async function clearMoviesCache(): Promise<void> {
@@ -164,8 +169,8 @@ export async function clearMoviesCache(): Promise<void> {
 
 // ==================== TV ====================
 
-export async function getTVCategories(): Promise<CategoryData[]> {
-  return fetchFromService<CategoryData[]>('/api/v1/tv');
+export async function getTVCategories(): Promise<DoubanCategoryData[]> {
+  return fetchFromService<DoubanCategoryData[]>('/api/v1/tv');
 }
 
 export async function clearTVCache(): Promise<void> {
@@ -185,7 +190,7 @@ export interface NewFilters {
 }
 
 export interface NewContentResponse {
-  data: CategoryData[];
+  data: DoubanCategoryData[];
   pagination?: {
     page: number;
     pageSize: number;
@@ -194,7 +199,7 @@ export interface NewContentResponse {
   };
 }
 
-export async function getNewContent(filters: NewFilters = {}): Promise<CategoryData[]> {
+export async function getNewContent(filters: NewFilters = {}): Promise<DoubanCategoryData[]> {
   const params = new URLSearchParams();
   if (filters.type) params.append('type', filters.type);
   if (filters.year) params.append('year', filters.year);
@@ -207,7 +212,7 @@ export async function getNewContent(filters: NewFilters = {}): Promise<CategoryD
   const queryString = params.toString();
   const endpoint = queryString ? `/api/v1/new?${queryString}` : '/api/v1/new';
   
-  return fetchFromService<CategoryData[]>(endpoint);
+  return fetchFromService<DoubanCategoryData[]>(endpoint);
 }
 
 export async function clearNewCache(): Promise<void> {

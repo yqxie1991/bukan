@@ -28,7 +28,7 @@ import {
   getTVCategories,
   getNewContent,
 } from "@/lib/douban-service";
-import type { CategoryData as ServiceCategoryData } from "@/lib/douban-service";
+import type { DoubanCategoryData as ServiceCategoryData } from "@/lib/douban-service";
 
 // ============ 页面配置 ============
 interface PageConfig {

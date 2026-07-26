@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { VodSource } from "@/types/drama";
 import { ShortDramaSource } from "@/types/shorts-source";
 import { Toast, ConfirmDialog } from "@/components/Toast";
-import type { PlayerConfig } from "@/app/api/player-config/route";
+import type { PlayerConfig } from "@/types/player";
 import { VodSourcesTab } from "@/components/admin/VodSourcesTab";
 import { PlayerConfigTab } from "@/components/admin/PlayerConfigTab";
 import { DailymotionChannelsTab } from "@/components/admin/DailymotionChannelsTab";

@@ -9,7 +9,7 @@ import { PlayerSettingsPanel } from "@/components/player/PlayerSettingsPanel";
 import { DanmakuSelector } from "@/components/player/DanmakuSelector";
 import { NavActions } from "@/components/play/NavActions";
 import type { DanmakuItem } from "@/lib/player/danmaku-service";
-import type { PlayerConfig } from "@/app/api/player-config/route";
+import type { PlayerConfig } from "@/types/player";
 import { ArrowLeft, X, ChevronLeft } from "lucide-react";
 
 interface AvailableSource {

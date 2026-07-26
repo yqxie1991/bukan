@@ -1,8 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { DoubanMovie } from "@/types/douban";
-import type { NewApiMovie } from "@/types/home";
 import { Toast } from "@/components/Toast";
 
 // Hooks
@@ -14,11 +12,11 @@ import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 // Components
 import { Navbar } from "@/components/home/Navbar";
 import { LoadingSkeleton } from "@/components/home/LoadingSkeleton";
-import { ErrorState } from "@/components/home/ErrorState";
-import { EmptyState } from "@/components/home/EmptyState";
+import { PageError } from "@/components/ui/PageError";
+import { PageEmpty } from "@/components/ui/PageEmpty";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { CategoryRow } from "@/components/home/CategoryRow";
-import { LoadingOverlay } from "@/components/home/LoadingOverlay";
+import { PageLoading } from "@/components/ui/PageLoading";
 import { Footer } from "@/components/home/Footer";
 
 // Utils
@@ -46,10 +44,10 @@ export default function HomePage() {
         <LoadingSkeleton />
       ) : error ? (
         /* 错误状态 */
-        <ErrorState error={error} onRetry={refetch} />
+        <PageError message={error} onRetry={refetch} />
       ) : heroMovies.length === 0 && categories.length === 0 ? (
         /* 空状态 - 只有当所有数据都为空时才显示 */
-        <EmptyState onRetry={refetch} />
+        <PageEmpty onAction={refetch} />
       ) : (
         <>
           {/* Hero Banner */}
@@ -65,28 +63,12 @@ export default function HomePage() {
             {/* 渲染所有新 API 返回的分类 */}
             {categories.length > 0
               ? categories.map((category, index) => {
-                  // 转换数据格式为 DoubanMovie
-                  const movies: DoubanMovie[] = category.data.map(
-                    (item: NewApiMovie) => ({
-                      id: item.id,
-                      title: item.title,
-                      cover: item.cover || "",
-                      url: item.url || "",
-                      rate: item.rate || "",
-                      episode_info: (item.episode_info as string) || "",
-                      cover_x: (item.cover_x as number) || 0,
-                      cover_y: (item.cover_y as number) || 0,
-                      playable: (item.playable as boolean) || false,
-                      is_new: (item.is_new as boolean) || false,
-                    })
-                  );
-
                   return (
                     <CategoryRow
                       key={index}
                       title={category.name}
                       icon={getCategoryIcon(category.name)}
-                      movies={movies}
+                      movies={category.data}
                       onMovieClick={handleMovieClick}
                       onViewMore={() =>
                         router.push(
@@ -102,7 +84,7 @@ export default function HomePage() {
       )}
 
       {/* 匹配中遮罩 */}
-      {matchingMovie && <LoadingOverlay />}
+      {matchingMovie && <PageLoading />}
 
       {/* Toast 通知 */}
       {toast && (

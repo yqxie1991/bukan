@@ -4,6 +4,7 @@ import Script from "next/script";
 import { SWRProvider } from "@/components/providers/swr-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SearchProvider } from "@/components/providers/search-provider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MobileTabBar } from "@/components/home/MobileTabBar";
 import "./globals.css";
 import "cn-fontsource-lxgw-wen-kai-gb-screen/font.css";
@@ -95,7 +96,9 @@ export default function RootLayout({
         <ThemeProvider>
           <SWRProvider>
             <SearchProvider>
-              {children}
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
               <MobileTabBar />
             </SearchProvider>
           </SWRProvider>

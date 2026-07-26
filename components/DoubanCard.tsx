@@ -22,23 +22,18 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   return (
     <div
       onClick={() => onSelect(movie)}
-      className="group relative cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:z-10 hover:shadow-[var(--card-shadow-hover)] rounded-lg"
+      className="group relative cursor-pointer transition-all duration-500 hover:-translate-y-1.5 hover:z-10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-xl"
     >
       {/* 海报图片 */}
-      <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-foreground/5 dark:bg-surface border border-black/5 dark:border-white/5 transition-colors duration-300">
+      <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-foreground/5 dark:bg-surface border border-black/5 dark:border-white/5 transition-colors duration-300">
         {!imageError ? (
           <img
             src={imageUrl}
             alt={movie.title}
-            // 非首屏图片使用懒加载，不阻塞 hydration
             loading={priority ? "eager" : "lazy"}
-            // 首屏图片优先加载
             fetchPriority={priority ? "high" : "auto"}
-            // 提供尺寸提示，避免布局偏移
             decoding="async"
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              isLoading ? 'opacity-0' : 'opacity-100'
-            }`}
+            className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 opacity-100`}
             onLoad={() => setIsLoading(false)}
             onError={() => {
               setImageError(true);
@@ -46,7 +41,7 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600 transition-transform duration-700 group-hover:scale-110">
             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -60,33 +55,33 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
           </div>
         )}
 
-        {/* 评分标签 */}
-        {movie.rate  && (
-          <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 backdrop-blur-sm rounded text-yellow-400 text-sm font-bold flex items-center space-x-1">
+        {/* 评分标签 (毛玻璃效果) */}
+        {movie.rate && (
+          <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg text-yellow-400 text-sm font-bold flex items-center space-x-1 shadow-lg transform transition-transform duration-300 group-hover:scale-105 group-hover:bg-black/60">
             <Star className="w-4 h-4 fill-current" />
             <span>{movie.rate}</span>
           </div>
         )}
 
-        {/* 悬浮播放按钮层 - 仅桌面端，仅覆盖海报区域，不影响常驻标题 */}
-        <div className="hidden md:flex absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex-col justify-end p-4 pointer-events-none">
-          <div className="flex items-center pointer-events-auto">
-            <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 hover:scale-105 transition-all duration-200 shadow-lg">
-              <Play className="w-4 h-4 fill-current" />
-              <span>立即播放</span>
+        {/* 悬浮播放按钮层 - 玻璃拟物风 (Glassmorphism) */}
+        <div className="hidden md:flex absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex-col justify-end p-4 pointer-events-none">
+          <div className="flex items-center justify-center h-full w-full pointer-events-auto transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)">
+            {/* 带有高光反射和柔和阴影的弹性播放按钮 */}
+            <button className="flex items-center justify-center gap-2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:bg-white/30 hover:scale-110 hover:border-white/50 hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)] active:scale-95 transition-all duration-300 ease-out group/btn">
+              <Play className="w-5 h-5 fill-current ml-1 group-hover/btn:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* 常驻标题 - PC+移动端默认显示 */}
-      <div className="mt-2.5 px-0.5">
-        <h3 className="text-foreground text-sm md:text-[15px] font-semibold leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+      {/* 常驻标题 - 微妙颜色渐变 */}
+      <div className="mt-3 px-1 transform transition-transform duration-300 group-hover:translate-x-1">
+        <h3 className="text-foreground text-sm md:text-[15px] font-semibold leading-tight line-clamp-1 transition-colors duration-300">
           {movie.title}
         </h3>
         {movie.episode_info && movie.episode_info.length > 0 && (
-          <p className="text-muted-foreground text-xs mt-1 line-clamp-1 flex items-center gap-1">
-            <span className="inline-block w-1 h-1 rounded-full bg-primary/60 shrink-0" />
+          <p className="text-muted-foreground text-xs mt-1 line-clamp-1 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-foreground/40 shrink-0 group-hover:bg-foreground group-hover:shadow-[0_0_8px_rgba(255,255,255,0.4)] dark:group-hover:shadow-[0_0_8px_rgba(255,255,255,0.1)] transition-all duration-300" />
             <span className="truncate">{movie.episode_info}</span>
           </p>
         )}

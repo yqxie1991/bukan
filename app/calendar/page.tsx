@@ -14,7 +14,7 @@ import { useMovieMatch } from '@/hooks/useMovieMatch';
 // Components
 import { Navbar } from '@/components/home/Navbar';
 import { Footer } from '@/components/home/Footer';
-import { LoadingOverlay } from '@/components/home/LoadingOverlay';
+import { PageLoading } from '@/components/ui/PageLoading';
 
 const REGIONS = [
   { code: 'CN', label: '中国', emoji: '🇨🇳' },
@@ -431,7 +431,7 @@ export default function CalendarPage() {
       )}
 
       {/* 匹配中遮罩 */}
-      {matchingMovie && <LoadingOverlay />}
+      {matchingMovie && <PageLoading />}
 
       {/* Toast 通知 */}
       {toast && (

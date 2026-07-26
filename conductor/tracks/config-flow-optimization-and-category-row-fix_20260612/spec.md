@@ -19,8 +19,8 @@
   - `/api/dailymotion-config`
 
 ### 2.2 订阅链接管理与定时刷新
-- **数据库设计**：
-  - 在 MongoDB 中创建 `subscription_urls` 集合。
+- **数据结构设计**：
+  - 基于 `lib/json-store.ts` 在 `data/subscription-urls.json` 中持久化订阅链接数组（无外部数据库）。
   - 字段：`id` (主键), `name` (订阅名称), `url` (订阅地址), `type` ('vod' | 'shorts' | 'dailymotion'), `last_synced_at` (上次同步时间), `status` ('success' | 'failed'), `error_message` (错误说明)。
 - **API 端点**：
   - `/api/subscription-urls` (GET, POST, PUT, DELETE)：支持管理员增删改查订阅源（受管理员会话验证保护）。
