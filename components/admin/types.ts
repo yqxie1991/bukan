@@ -1,6 +1,6 @@
 import { VodSource } from "@/types/drama";
 import { ShortDramaSource } from "@/types/shorts-source";
-import type { PlayerConfig } from "@/app/api/player-config/route";
+import type { PlayerConfig } from "@/types/player";
 import type { DailymotionChannelConfig } from "@/types/dailymotion-config";
 
 export interface ToastState {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
-import type { PlayerConfig, IframePlayer } from "@/app/api/player-config/route";
+import type { PlayerConfig, IframePlayer } from "@/types/player";
 import type { PlayerConfigTabProps } from "./types";
 
 export function PlayerConfigTab({

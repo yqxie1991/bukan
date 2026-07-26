@@ -1,15 +1,20 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 import type { DoubanMovie } from '@/types/douban';
-import type { CategoryData, HeroData, HeroMovie } from '@/types/home';
-import { getHeroMovies, getNewContent } from '@/lib/douban-service';
+import type { HeroData, HeroMovie } from '@/types/home';
 
 // SWR 缓存键
 const SWR_KEY_HERO = 'home-hero';
 const SWR_KEY_CATEGORIES = 'home-categories';
 
+// 首页分类数据（已转换为 DoubanMovie 格式）
+export interface HomeCategory {
+  name: string;
+  data: DoubanMovie[];
+}
+
 interface UseHomeDataReturn {
-  categories: CategoryData[];
+  categories: HomeCategory[];
   heroMovies: DoubanMovie[];
   heroDataList: HeroData[];
   loading: boolean;
@@ -26,13 +31,13 @@ const fetchHero = async (): Promise<any[]> => {
   return json.data;
 };
 
-const fetchCategories = async (): Promise<CategoryData[]> => {
+const fetchCategories = async () => {
   const res = await fetch('/api/home/categories');
   const json = await res.json();
   if (json.code !== 200) {
     throw new Error(json.message || '获取分类列表缓存数据失败');
   }
-  return json.data as CategoryData[];
+  return json.data;
 };
 
 /**
@@ -85,21 +90,25 @@ export function useHomeData(): UseHomeDataReturn {
     return { heroMovies: heroMoviesList, heroDataList: heroDataArray };
   }, [heroData]);
 
-  // 转换分类数据格式
-  const categories = useMemo(() => {
+  // 转换分类数据格式为 DoubanMovie[]，供 page.tsx 直接使用
+  const categories: HomeCategory[] = useMemo(() => {
     if (!categoryData || !Array.isArray(categoryData)) {
       return [];
     }
 
-    return categoryData.map((cat) => ({
+    return categoryData.map((cat: { name: string; data: Record<string, unknown>[] }) => ({
       name: cat.name,
-      data: cat.data.map((item) => ({
-        id: item.id,
-        title: item.title,
-        rate: item.rate,
-        cover: item.cover,
-        url: item.url,
-        episode_info: item.episode_info,
+      data: cat.data.map((item: Record<string, unknown>) => ({
+        id: String(item.id || ''),
+        title: String(item.title || ''),
+        cover: String(item.cover || ''),
+        url: String(item.url || ''),
+        rate: String(item.rate || ''),
+        episode_info: String(item.episode_info || ''),
+        cover_x: Number(item.cover_x) || 0,
+        cover_y: Number(item.cover_y) || 0,
+        playable: Boolean(item.playable),
+        is_new: Boolean(item.is_new),
       })),
     }));
   }, [categoryData]);

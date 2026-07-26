@@ -2,28 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readStore, writeStore } from '@/lib/json-store';
 import { validateSession } from '@/lib/auth';
+import type { PlayerConfig, IframePlayer, LocalPlayerSettings } from '@/types/player';
 
-export interface PlayerConfig {
-  mode: 'iframe' | 'local' | 'auto'; // 播放器模式
-  enableProxy: boolean; // 是否启用代理
-  iframePlayers: IframePlayer[]; // iframe播放器列表
-  localPlayerSettings: LocalPlayerSettings; // 本地播放器设置
-}
-
-export interface IframePlayer {
-  id: string;
-  name: string;
-  url: string;
-  priority: number;
-  timeout: number;
-  enabled: boolean;
-}
-
-export interface LocalPlayerSettings {
-  autoSaveProgress: boolean; // 自动保存进度
-  progressSaveInterval: number; // 进度保存间隔（秒）
-  theme: string; // 主题颜色
-}
+// Re-export types for backward compatibility
+export type { PlayerConfig, IframePlayer, LocalPlayerSettings };
 
 // 默认配置
 const DEFAULT_CONFIG: PlayerConfig = {
