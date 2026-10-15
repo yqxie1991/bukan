@@ -251,7 +251,7 @@ function convertToDanmakuItem(comment: RawComment): DanmakuItem {
   }
 
   // 转换颜色：数字转十六进制
-  const colorHex = "***REMOVED***" + colorFromP.toString(16).padStart(6, "0").toUpperCase();
+  const colorHex = "#" + colorFromP.toString(16).padStart(6, "0").toUpperCase();
 
   return {
     text: comment.m,

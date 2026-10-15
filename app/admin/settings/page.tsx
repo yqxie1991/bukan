@@ -62,7 +62,9 @@ function SettingsContent() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const vodResponse = await fetch("/api/vod-sources");
+        // 管理页需要完整配置（含 api / parseProxy 等）用于编辑，
+        // 故显式请求 all=true 走鉴权分支；公开分支仅返回最小字段。
+        const vodResponse = await fetch("/api/vod-sources?all=true");
         const vodResult = await vodResponse.json();
 
         if (vodResult.code === 200 && vodResult.data) {
@@ -71,7 +73,7 @@ function SettingsContent() {
         }
 
         // 加载短剧源配置
-        const shortsResponse = await fetch("/api/shorts-sources");
+        const shortsResponse = await fetch("/api/shorts-sources?all=true");
         const shortsResult = await shortsResponse.json();
 
         if (shortsResult.code === 200 && shortsResult.data) {

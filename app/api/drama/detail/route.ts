@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, DramaDetail, Episode, VodSource } from '@/types/drama';
+import { getVodSourceByKey } from '@/lib/vod-sources-db';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 interface DetailItem {
   vod_id: number;
@@ -62,7 +64,7 @@ function parseEpisodes(playUrl: string): Episode[] {
   try {
     // 解析剧集列表
     // 格式通常为: 播放源1$$$播放源2$$$...
-    // 每个播放源内部: 第1集$url1***REMOVED***第2集$url2***REMOVED***...
+    // 每个播放源内部: 第1集$url1#第2集$url2#...
     const sources = playUrl.split('$$$').filter(Boolean);
     
     // 优先使用包含m3u8的播放源
@@ -72,7 +74,7 @@ function parseEpisodes(playUrl: string): Episode[] {
     if (!targetSource) return [];
     
     const episodes: Episode[] = [];
-    const episodeList = targetSource.split('***REMOVED***').filter(Boolean);
+    const episodeList = targetSource.split('#').filter(Boolean);
 
     for (const episode of episodeList) {
       const [name, url] = episode.split('$');
@@ -97,14 +99,31 @@ function errorResponse(msg: string, status: number = 500): NextResponse {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const source: VodSource = body.source;
     const vodName: string = body.vodName; // 用于代理搜索
-    
-    let response: Response;
+
+    // SSRF 防护：不信任请求体中的 source，改为按 key 回查数据库真实配置。
+    // 本端点由浏览器直接调用（播放页），故不能加会话鉴权，
+    // 安全性依赖「服务端配置为准 + URL 校验」而非身份校验。
+    const source: VodSource | null = body.source?.key
+      ? await getVodSourceByKey(body.source.key)
+      : null;
+
+    if (!source) {
+      return errorResponse('视频源不存在或未启用', 400);
+    }
+
+    if (!(await isValidExternalUrlAsync(source.api))) {
+      return errorResponse('视频源 API 地址不合法', 400);
+    }
+    if (source.searchProxy && !(await isValidExternalUrlAsync(source.searchProxy))) {
+      return errorResponse('视频源搜索代理地址不合法', 400);
+    }
+
+    let response: Response | null;
 
     // 如果有搜索代理，使用代理搜索获取详情
     if (source.searchProxy && vodName) {
-      response = await fetch(source.searchProxy, {
+      response = await safeFetch(source.searchProxy, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,14 +146,18 @@ export async function POST(request: NextRequest) {
         ids: body.ids,
       });
       const apiUrl = `${source.api}?${apiParams.toString()}`;
-      
-      response = await fetch(apiUrl, {
+
+      response = await safeFetch(apiUrl, {
         method: 'GET',
         headers: {
           'User-Agent': 'Mozilla/5.0',
         },
         signal: AbortSignal.timeout(15000),
       });
+    }
+
+    if (!response) {
+      return errorResponse('目标地址不合法', 400);
     }
 
     if (!response.ok) {

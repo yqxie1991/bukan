@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VodSource } from '@/types/drama';
+import { getVodSourceByKey } from '@/lib/vod-sources-db';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 interface ParseResponse {
   code: number;
@@ -20,7 +22,7 @@ function generateRandomToken(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, source } = body as { url: string; source: VodSource };
+    const { url } = body as { url: string };
 
     if (!url) {
       return NextResponse.json(
@@ -29,13 +31,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 如果没有解析代理，直接返回原始URL
+    // SSRF 防护：不信任请求体中的 source.parseProxy，改为按 key 回查数据库真实配置。
+    // 本端点由播放器直接调用，故不能加会话鉴权。
+    const requestedSource = body.source as VodSource | undefined;
+    const source: VodSource | null = requestedSource?.key
+      ? await getVodSourceByKey(requestedSource.key)
+      : null;
+
+    // 如果没有解析代理（或源不存在/未启用），直接返回原始URL
     if (!source?.parseProxy) {
       return NextResponse.json({
         code: 200,
         msg: 'success',
         data: { url },
       });
+    }
+
+    if (!(await isValidExternalUrlAsync(source.parseProxy))) {
+      return NextResponse.json(
+        { code: 400, msg: '解析代理地址不合法', data: null },
+        { status: 400 }
+      );
     }
 
     // 构建解析请求URL
@@ -52,8 +68,8 @@ export async function POST(request: NextRequest) {
     // 从 parseProxy URL 提取 origin 用于 Referer 和 Origin 头
     const parseOrigin = new URL(source.parseProxy).origin;
 
-    // 调用解析API
-    const response = await fetch(parseUrl, {
+    // 调用解析API（safeFetch 逐跳校验重定向，阻断 SSRF）
+    const response = await safeFetch(parseUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -63,6 +79,13 @@ export async function POST(request: NextRequest) {
       },
       signal: AbortSignal.timeout(15000),
     });
+
+    if (!response) {
+      return NextResponse.json(
+        { code: 400, msg: '解析代理地址不合法', data: null },
+        { status: 400 }
+      );
+    }
 
     if (!response.ok) {
       // 不抛出错误，返回正常响应但带有错误码
@@ -77,12 +100,12 @@ export async function POST(request: NextRequest) {
     const data: ParseResponse = await response.json();
 
     if (data.code !== 200 || !data.url) {
-      // 解析服务返回错误，正常返回错误信息
-      const errorMsg = data.msg || 'url字段为空或格式错误';
-      console.warn(`[Parse API] 解析失败: ${errorMsg}`);
+      // 解析服务返回错误。
+      // 安全考量：不回显上游 msg 原文，避免把内网响应内容透传给未鉴权调用方。
+      console.warn('[Parse API] 解析失败');
       return NextResponse.json({
         code: 400,
-        msg: errorMsg,
+        msg: '解析失败，请检查播放源或稍后重试',
         data: null,
       });
     }
@@ -90,17 +113,26 @@ export async function POST(request: NextRequest) {
     // 处理URL格式（移除转义的斜杠）
     const parsedUrl = data.url.replace(/\\\//g, '/');
 
+    // 仅允许返回 http/https 地址，避免上游返回 javascript: 等协议注入
+    if (!/^https?:\/\//i.test(parsedUrl)) {
+      return NextResponse.json(
+        { code: 400, msg: '解析结果地址不合法', data: null },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json({
       code: 200,
       msg: 'success',
       data: { url: parsedUrl },
     });
   } catch (error) {
-    // 仅在开发模式下用 warn 输出，避免触发 Next.js 错误覆盖层
+    // 仅在开发模式下用 warn 输出，避免触发 Next.js 错误覆盖层。
+    // 安全考量：不回显 error.message（可能含内网地址与栈信息）。
     console.warn('[Parse API] 请求异常:', error instanceof Error ? error.message : error);
     return NextResponse.json({
       code: 500,
-      msg: error instanceof Error ? error.message : '解析请求异常',
+      msg: '解析请求异常',
       data: null,
     });
   }

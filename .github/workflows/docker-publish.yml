@@ -1,7 +1,7 @@
 name: Build and Push Docker Image
 
 on:
-  workflow_dispatch: ***REMOVED*** 允许在 GitHub Actions 页面手动触发构建与推送
+  workflow_dispatch: # 允许在 GitHub Actions 页面手动触发构建与推送
     inputs:
       version:
         description: 'Docker 镜像的版本号 (例如: v1.0.0)'
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write ***REMOVED*** 赋予流水线写入 GitHub 镜像仓库的权限
+      packages: write # 赋予流水线写入 GitHub 镜像仓库的权限
 
     steps:
       - name: Checkout repository
@@ -24,7 +24,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} ***REMOVED*** 使用内置令牌自动登录
+          password: ${{ secrets.GITHUB_TOKEN }} # 使用内置令牌自动登录
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

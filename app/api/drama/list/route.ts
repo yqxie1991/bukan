@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, DramaListData, VodSource } from '@/types/drama';
+import { getVodSourceByKey } from '@/lib/vod-sources-db';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 interface DramaListItem {
   vod_id: number;
@@ -69,13 +71,42 @@ function formatDramaList(list: DramaListItem[]) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const source: VodSource = body.source;
-    
-    let response: Response;
-    
+    const requestedSource: VodSource = body.source;
+
+    // SSRF 防护：source.api / source.searchProxy 完全由请求体控制，
+    // 若直接 fetch 则可被用于探测内网。此处先按 key 回查数据库中的真实配置，
+    // 以服务端配置为准，杜绝客户端伪造任意抓取目标。
+    let source: VodSource | null = null;
+    if (requestedSource?.key) {
+      source = await getVodSourceByKey(requestedSource.key);
+    }
+
+    if (!source) {
+      return NextResponse.json(
+        { code: 400, msg: '视频源不存在或未启用', data: null },
+        { status: 400 }
+      );
+    }
+
+    // 双重保险：即便配置本身被写入恶意地址，也在此处拦截
+    if (source.searchProxy && !(await isValidExternalUrlAsync(source.searchProxy))) {
+      return NextResponse.json(
+        { code: 400, msg: '视频源搜索代理地址不合法', data: null },
+        { status: 400 }
+      );
+    }
+    if (!(await isValidExternalUrlAsync(source.api))) {
+      return NextResponse.json(
+        { code: 400, msg: '视频源 API 地址不合法', data: null },
+        { status: 400 }
+      );
+    }
+
+    let response: Response | null;
+
     // 如果有搜索代理且有关键词，使用 POST 请求
     if (source.searchProxy && body.keyword) {
-      response = await fetch(source.searchProxy, {
+      response = await safeFetch(source.searchProxy, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,13 +137,17 @@ export async function POST(request: NextRequest) {
       const queryString = new URLSearchParams(apiParams).toString();
       const apiUrl = `${source.api}?${queryString}`;
 
-      response = await fetch(apiUrl, {
+      response = await safeFetch(apiUrl, {
         method: 'GET',
         headers: {
           'User-Agent': 'Mozilla/5.0',
         },
         signal: AbortSignal.timeout(15000),
       });
+    }
+
+    if (!response) {
+      throw new Error('请求目标地址不合法');
     }
 
     if (!response.ok) {

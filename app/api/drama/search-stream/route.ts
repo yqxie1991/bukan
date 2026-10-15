@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getVodSourcesFromDB } from '@/lib/vod-sources-db';
+import { safeFetch } from '@/lib/url-guard';
 import { VodSource } from '@/types/drama';
 
 interface DramaListItem {
@@ -60,18 +61,27 @@ function formatDramaList(list: DramaListItem[], source: VodSource) {
     blurb: item.vod_blurb || '',
     tags: item.vod_class ? item.vod_class.split(',').map((tag: string) => tag.trim()) : [],
     vod_class: item.vod_class || '',
-    source: source,
+    // 安全考量：不下发完整 source 对象。
+    // 其中含 api / searchProxy / parseProxy / parseToken 等敏感字段，
+    // 而本接口无需鉴权，明文下发等同于泄露全部采集源与解析站凭据。
+    // 客户端已通过 /api/vod-sources 获取源列表，此处仅回传标识即可。
+    source: {
+      key: source.key,
+      name: source.name,
+      priority: source.priority,
+    } as VodSource,
   }));
 }
 
 // 搜索单个源
 async function searchSingleSource(source: VodSource, keyword: string) {
   try {
-    let response: Response;
+    let response: Response | null;
 
-    // 如果有搜索代理，使用 POST 请求
+    // SSRF 防护：源地址虽来自数据库，但配置可被管理员或注入篡改，
+    // 仍需逐跳校验重定向，防止上游 302 指向内网
     if (source.searchProxy) {
-      response = await fetch(source.searchProxy, {
+      response = await safeFetch(source.searchProxy, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,14 +101,18 @@ async function searchSingleSource(source: VodSource, keyword: string) {
         pg: '1',
         wd: keyword,
       });
-      
+
       const apiUrl = `${source.api}?${apiParams.toString()}`;
-      
-      response = await fetch(apiUrl, {
+
+      response = await safeFetch(apiUrl, {
         method: 'GET',
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: AbortSignal.timeout(15000),
       });
+    }
+
+    if (!response) {
+      return { source, results: [], error: '目标地址不合法' };
     }
 
     if (!response.ok) {

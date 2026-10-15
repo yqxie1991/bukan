@@ -1,25 +1,25 @@
-***REMOVED***!/bin/sh
+#!/bin/sh
 
-***REMOVED*** ============================================================
-***REMOVED*** 不看 (bukan) 一键部署脚本
-***REMOVED*** ============================================================
-***REMOVED*** 适配架构: 单容器 + 本地 JSON 存储（零外部数据库依赖）
-***REMOVED*** 支持系统: Ubuntu, Debian, CentOS, RHEL, Alpine, macOS, Arch Linux
-***REMOVED*** 使用方法:
-***REMOVED***   curl -fsSL https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | sh
-***REMOVED***   或
-***REMOVED***   wget -qO- https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | sh
-***REMOVED*** ============================================================
+# ============================================================
+# 不看 (bukan) 一键部署脚本
+# ============================================================
+# 适配架构: 单容器 + 本地 JSON 存储（零外部数据库依赖）
+# 支持系统: Ubuntu, Debian, CentOS, RHEL, Alpine, macOS, Arch Linux
+# 使用方法:
+#   curl -fsSL https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | sh
+#   或
+#   wget -qO- https://raw.githubusercontent.com/yqxie1991/bukan/master/scripts/install.sh | sh
+# ============================================================
 
 set -e
 
-***REMOVED*** ==================== 系统检测 ====================
+# ==================== 系统检测 ====================
 detect_os() {
     OS=""
     ARCH=""
     PKG_MANAGER=""
 
-    ***REMOVED*** 检测架构
+    # 检测架构
     case "$(uname -m)" in
         x86_64|amd64) ARCH="amd64" ;;
         aarch64|arm64) ARCH="arm64" ;;
@@ -27,7 +27,7 @@ detect_os() {
         *) ARCH="unknown" ;;
     esac
 
-    ***REMOVED*** 检测操作系统
+    # 检测操作系统
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS="$ID"
@@ -40,7 +40,7 @@ detect_os() {
         OS="unknown"
     fi
 
-    ***REMOVED*** 检测包管理器
+    # 检测包管理器
     case "$OS" in
         ubuntu|debian|linuxmint|pop) PKG_MANAGER="apt" ;;
         centos|rhel|fedora|rocky|almalinux) PKG_MANAGER="yum" ;;
@@ -51,10 +51,10 @@ detect_os() {
     esac
 }
 
-***REMOVED*** 初始化系统检测
+# 初始化系统检测
 detect_os
 
-***REMOVED*** ==================== 颜色定义 ====================
+# ==================== 颜色定义 ====================
 if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
     RED='\033[0;31m'
     GREEN='\033[0;32m'
@@ -73,7 +73,7 @@ else
     NC=''
 fi
 
-***REMOVED*** ==================== 配置 ====================
+# ==================== 配置 ====================
 SCRIPT_VERSION="2.0.0"
 SCRIPT_DATE="2026-07-18"
 DOCKER_IMAGE="ghcr.io/yqxie1991/bukan"
@@ -81,7 +81,7 @@ DEFAULT_VERSION="v1.0-lite"
 DEFAULT_PORT="3009"
 INSTALL_DIR="${BUKAN_INSTALL_DIR:-$HOME/bukan}"
 
-***REMOVED*** ==================== 工具函数 ====================
+# ==================== 工具函数 ====================
 print_color() {
     printf '%b' "$1"
 }
@@ -121,7 +121,7 @@ print_error() {
     printf '%b✖%b  %s\n' "${RED}" "${NC}" "$1"
 }
 
-***REMOVED*** 读取用户输入（支持默认值和密码模式，从 /dev/tty 读取以兼容 curl | sh）
+# 读取用户输入（支持默认值和密码模式，从 /dev/tty 读取以兼容 curl | sh）
 read_input() {
     _prompt="$1"
     _default="$2"
@@ -186,39 +186,39 @@ check_port_available() {
     return 0
 }
 
-***REMOVED*** ==================== Docker 安装提示 ====================
+# ==================== Docker 安装提示 ====================
 install_docker_hint() {
     echo ""
     print_info "根据您的系统，可以使用以下命令安装 Docker:"
     echo ""
     case "$PKG_MANAGER" in
         apt)
-            echo "   ***REMOVED*** Ubuntu/Debian"
+            echo "   # Ubuntu/Debian"
             echo "   curl -fsSL https://get.docker.com | sh"
             echo "   sudo usermod -aG docker \$USER"
             ;;
         yum)
-            echo "   ***REMOVED*** CentOS/RHEL"
+            echo "   # CentOS/RHEL"
             echo "   curl -fsSL https://get.docker.com | sh"
             echo "   sudo systemctl enable --now docker"
             echo "   sudo usermod -aG docker \$USER"
             ;;
         apk)
-            echo "   ***REMOVED*** Alpine"
+            echo "   # Alpine"
             echo "   apk add docker docker-compose"
             echo "   rc-update add docker boot"
             echo "   service docker start"
             ;;
         pacman)
-            echo "   ***REMOVED*** Arch Linux"
+            echo "   # Arch Linux"
             echo "   pacman -S docker docker-compose"
             echo "   systemctl enable --now docker"
             echo "   usermod -aG docker \$USER"
             ;;
         brew)
-            echo "   ***REMOVED*** macOS"
+            echo "   # macOS"
             echo "   brew install --cask docker"
-            echo "   ***REMOVED*** 然后启动 Docker Desktop"
+            echo "   # 然后启动 Docker Desktop"
             ;;
         *)
             echo "   请访问: https://docs.docker.com/get-docker/"
@@ -228,7 +228,7 @@ install_docker_hint() {
     print_info "安装完成后，请重新登录或执行 'newgrp docker'，然后重新运行此脚本"
 }
 
-***REMOVED*** ==================== 检查依赖 ====================
+# ==================== 检查依赖 ====================
 check_dependencies() {
     print_step "检查系统依赖"
 
@@ -281,7 +281,7 @@ check_dependencies() {
     print_success "Docker 运行正常"
 }
 
-***REMOVED*** ==================== 检测已存在安装 ====================
+# ==================== 检测已存在安装 ====================
 check_existing_installation() {
     if [ -f "$INSTALL_DIR/.env" ] && [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
         print_warning "检测到已存在的安装: $INSTALL_DIR"
@@ -315,17 +315,17 @@ check_existing_installation() {
     fi
 }
 
-***REMOVED*** ==================== 交互式配置 ====================
+# ==================== 交互式配置 ====================
 interactive_config() {
     print_step "配置部署参数"
     echo ""
     print_info "请根据提示输入配置信息（直接回车使用默认值）"
     echo ""
 
-    ***REMOVED*** 安装目录
+    # 安装目录
     INSTALL_DIR=$(read_input "安装目录" "$INSTALL_DIR")
 
-    ***REMOVED*** 应用端口
+    # 应用端口
     while true; do
         APP_PORT=$(read_input "应用端口" "$DEFAULT_PORT")
         if ! validate_port "$APP_PORT"; then
@@ -344,7 +344,7 @@ interactive_config() {
         fi
     done
 
-    ***REMOVED*** 镜像版本
+    # 镜像版本
     IMAGE_VERSION=$(read_input "镜像版本" "$DEFAULT_VERSION")
 
     echo ""
@@ -352,14 +352,14 @@ interactive_config() {
     print_warning "由于项目已在 GitHub 公开，强烈建议不要使用默认值 'bukan'。"
     echo ""
 
-    ***REMOVED*** 管理员密码（默认 bukan，开箱即用，但警告）
+    # 管理员密码（默认 bukan，开箱即用，但警告）
     ADMIN_PASSWORD=$(read_input "管理员密码（回车使用默认 bukan）" "" "true")
     if [ -z "$ADMIN_PASSWORD" ]; then
         ADMIN_PASSWORD="bukan"
         print_warning "已使用默认密码 'bukan'，公网部署前请务必修改"
     fi
 
-    ***REMOVED*** 确认配置
+    # 确认配置
     echo ""
     print_step "配置确认"
     echo ""
@@ -381,7 +381,7 @@ interactive_config() {
     esac
 }
 
-***REMOVED*** ==================== 创建配置文件 ====================
+# ==================== 创建配置文件 ====================
 create_config_files() {
     print_step "创建配置文件"
 
@@ -389,43 +389,43 @@ create_config_files() {
     cd "$INSTALL_DIR"
     print_success "创建目录: $INSTALL_DIR"
 
-    ***REMOVED*** 创建 .env 文件
+    # 创建 .env 文件
     cat > .env << EOF
-***REMOVED*** ============================================================
-***REMOVED*** 不看 (bukan) 环境配置
-***REMOVED*** 生成时间: $(date '+%Y-%m-%d %H:%M:%S')
-***REMOVED*** ============================================================
-***REMOVED*** 修改配置后请执行: ./bukan.sh restart
-***REMOVED*** ============================================================
+# ============================================================
+# 不看 (bukan) 环境配置
+# 生成时间: $(date '+%Y-%m-%d %H:%M:%S')
+# ============================================================
+# 修改配置后请执行: ./bukan.sh restart
+# ============================================================
 
-***REMOVED*** ==================== Docker 镜像配置 ====================
+# ==================== Docker 镜像配置 ====================
 DOCKER_USERNAME=yqxie1991
 IMAGE_VERSION=${IMAGE_VERSION}
 
-***REMOVED*** ==================== 应用配置 ====================
+# ==================== 应用配置 ====================
 APP_PORT=${APP_PORT}
 NODE_ENV=production
 
-***REMOVED*** ==================== 安全配置 ====================
-***REMOVED*** 管理员密码（访问 /login 页面时使用）
+# ==================== 安全配置 ====================
+# 管理员密码（访问 /login 页面时使用）
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
 EOF
     chmod 600 .env
     print_success "创建 .env 配置文件（权限: 600）"
 
-    ***REMOVED*** 创建 docker-compose.yml（单容器极简版，与仓库根目录保持一致）
+    # 创建 docker-compose.yml（单容器极简版，与仓库根目录保持一致）
     cat > docker-compose.yml << 'EOF'
-***REMOVED*** =====================================================================
-***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 极致精简版部署配置
-***REMOVED*** =====================================================================
-***REMOVED*** 💡 提示：
-***REMOVED***    1. 本配置为去数据库极致精简版，无外部数据库服务。
-***REMOVED***    2. 整个系统仅包含一个 App 容器，内存占用极低，磁盘几乎完全静默。
-***REMOVED***    3. 配置数据持久化在本地 JSON 文件中（挂载在 bukan-data 卷）。
-***REMOVED*** =====================================================================
+# =====================================================================
+# 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 极致精简版部署配置
+# =====================================================================
+# 💡 提示：
+#    1. 本配置为去数据库极致精简版，无外部数据库服务。
+#    2. 整个系统仅包含一个 App 容器，内存占用极低，磁盘几乎完全静默。
+#    3. 配置数据持久化在本地 JSON 文件中（挂载在 bukan-data 卷）。
+# =====================================================================
 
 services:
-  ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
+  # 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
     image: ghcr.io/yqxie1991/bukan:v1.0-lite
     container_name: bukan-app
@@ -453,16 +453,16 @@ volumes:
 EOF
     print_success "创建 docker-compose.yml"
 
-    ***REMOVED*** 创建管理脚本 bukan.sh（备份改用 tar 打包 data/ 目录，无需 mongodump）
+    # 创建管理脚本 bukan.sh（备份改用 tar 打包 data/ 目录，无需 mongodump）
     cat > bukan.sh << 'SCRIPT'
-***REMOVED***!/bin/sh
+#!/bin/sh
 
-***REMOVED*** 不看 (bukan) 管理脚本
-***REMOVED*** 版本: 2.0.0
+# 不看 (bukan) 管理脚本
+# 版本: 2.0.0
 
 cd "$(dirname "$0")"
 
-***REMOVED*** 检测 Docker Compose 命令
+# 检测 Docker Compose 命令
 if command -v docker-compose > /dev/null 2>&1; then
     COMPOSE="docker-compose"
 elif docker compose version > /dev/null 2>&1; then
@@ -472,7 +472,7 @@ else
     exit 1
 fi
 
-***REMOVED*** 加载环境变量
+# 加载环境变量
 if [ -f .env ]; then
     set -a
     . ./.env
@@ -512,7 +512,7 @@ case "$1" in
         echo "📦 备份数据（本地 JSON 文件）..."
         BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
         mkdir -p "$BACKUP_DIR"
-        ***REMOVED*** 备份 bukan-data 卷：启动临时容器挂载卷并打包
+        # 备份 bukan-data 卷：启动临时容器挂载卷并打包
         if docker run --rm -v "$(docker volume inspect bukan-data --format '{{.Name}}')":/data:ro -v "$PWD/$BACKUP_DIR":/backup alpine tar czf /backup/bukan-data.tar.gz -C /data . 2>/dev/null; then
             cp .env "$BACKUP_DIR/.env"
             cp docker-compose.yml "$BACKUP_DIR/docker-compose.yml"
@@ -538,7 +538,7 @@ case "$1" in
             exit 1
         fi
         echo "📦 恢复数据..."
-        ***REMOVED*** 恢复 bukan-data 卷：启动临时容器挂载卷并解压
+        # 恢复 bukan-data 卷：启动临时容器挂载卷并解压
         docker run --rm -v "$(docker volume inspect bukan-data --format '{{.Name}}')":/data -v "$PWD/$2":/backup alpine sh -c "rm -rf /data/* /data/.* 2>/dev/null; tar xzf /backup/bukan-data.tar.gz -C /data"
         echo "✅ 恢复完成"
         echo "   建议执行: ./bukan.sh restart"
@@ -588,7 +588,7 @@ SCRIPT
     print_success "创建管理脚本 bukan.sh"
 }
 
-***REMOVED*** ==================== 部署服务 ====================
+# ==================== 部署服务 ====================
 deploy_services() {
     print_step "部署服务"
 
@@ -612,11 +612,11 @@ deploy_services() {
         exit 1
     fi
 
-    ***REMOVED*** 等待服务就绪（单容器启动快，缩短到 8 秒）
+    # 等待服务就绪（单容器启动快，缩短到 8 秒）
     print_info "等待服务就绪..."
     sleep 8
 
-    ***REMOVED*** 健康检查
+    # 健康检查
     if command_exists curl; then
         print_info "执行健康检查..."
         _retries=10
@@ -642,7 +642,7 @@ deploy_services() {
     fi
 }
 
-***REMOVED*** ==================== 显示完成信息 ====================
+# ==================== 显示完成信息 ====================
 show_completion() {
     echo ""
     print_color "${GREEN}╔═══════════════════════════════════════════════════════════╗${NC}\n"
@@ -659,12 +659,12 @@ show_completion() {
     echo ""
     printf "%b📝 常用命令:%b\n" "${BOLD}" "${NC}"
     echo "   cd $INSTALL_DIR"
-    echo "   ./bukan.sh start    ***REMOVED*** 启动服务"
-    echo "   ./bukan.sh stop     ***REMOVED*** 停止服务"
-    echo "   ./bukan.sh logs     ***REMOVED*** 查看日志"
-    echo "   ./bukan.sh update   ***REMOVED*** 更新版本"
-    echo "   ./bukan.sh status   ***REMOVED*** 查看状态"
-    echo "   ./bukan.sh backup   ***REMOVED*** 备份数据"
+    echo "   ./bukan.sh start    # 启动服务"
+    echo "   ./bukan.sh stop     # 停止服务"
+    echo "   ./bukan.sh logs     # 查看日志"
+    echo "   ./bukan.sh update   # 更新版本"
+    echo "   ./bukan.sh status   # 查看状态"
+    echo "   ./bukan.sh backup   # 备份数据"
     echo ""
     printf "%b⚙️  修改配置:%b\n" "${BOLD}" "${NC}"
     printf "   配置文件位置: %b%s/.env%b\n" "${CYAN}" "$INSTALL_DIR" "${NC}"
@@ -676,19 +676,19 @@ show_completion() {
     printf "   修改后执行: %b./bukan.sh restart%b\n" "${CYAN}" "${NC}"
     echo ""
 
-    ***REMOVED*** 显示服务状态
+    # 显示服务状态
     printf "%b📊 当前状态:%b\n" "${BOLD}" "${NC}"
     cd "$INSTALL_DIR"
     $COMPOSE_CMD ps
     echo ""
 
-    ***REMOVED*** 显示项目链接
+    # 显示项目链接
     printf "%b📖 项目主页:%b\n" "${BOLD}" "${NC}"
     echo "   https://github.com/yqxie1991/bukan"
     echo ""
 }
 
-***REMOVED*** ==================== 主流程 ====================
+# ==================== 主流程 ====================
 main() {
     print_banner
 

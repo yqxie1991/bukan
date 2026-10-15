@@ -35,13 +35,21 @@ export async function GET(request: NextRequest) {
     
     const sources = await getShortsSourcesFromDB();
     const selectedSource = await getSelectedShortsSourceFromDB();
-    
+
+    // 安全考量：与 /api/vod-sources 一致，公开分支只暴露前端渲染所需的最小字段，
+    // 完整配置（含 api 等）仅在鉴权分支（?all=true）返回。
+    const toPublicSource = (s: ShortDramaSource) => ({
+      key: s.key,
+      name: s.name,
+      priority: s.priority,
+    });
+
     return NextResponse.json({
       code: 200,
       message: '获取成功',
       data: {
-        sources,
-        selected: selectedSource,
+        sources: sources.map(toPublicSource),
+        selected: selectedSource ? toPublicSource(selectedSource) : null,
       },
     });
   } catch (error) {

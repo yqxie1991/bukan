@@ -13,15 +13,18 @@ export interface AdFilterConfig {
 export const DEFAULT_AD_FILTER_CONFIG: AdFilterConfig = {
   enabled: true,
   adUrlPatterns: [
-    /[_\-\/]ad[s]?[_\-\/\.]/i,
-    /advertisement/i,
-    /advert/i,
-    /midroll/i,
-    /preroll/i,
-    /postroll/i,
-    /commerc/i,
-    /sponsor/i,
-    /promo[_\-\/\.]/i,
+    // 使用 new RegExp() 而非正则字面量：
+    // 字符类中的转义斜杠（如 [_\-\/]）会让 TS scanner 与 esbuild
+    // 在缺少正则上下文时误判字面量起止，导致解析报错。
+    new RegExp("[_\\-\\/]ad[s]?[_\\-\\/\\.]", "i"),
+    new RegExp("advertisement", "i"),
+    new RegExp("advert", "i"),
+    new RegExp("midroll", "i"),
+    new RegExp("preroll", "i"),
+    new RegExp("postroll", "i"),
+    new RegExp("commerc", "i"),
+    new RegExp("sponsor", "i"),
+    new RegExp("promo[_\\-\\/\\.]", "i"),
   ],
   maxAdBlockDuration: 120,
   minAdBlockDuration: 3,
@@ -51,7 +54,7 @@ function shouldFilterDiscontinuityBlock(
 
   for (const line of lines) {
     const trimmedLine = line.trim();
-    if (!trimmedLine.startsWith("***REMOVED***") && trimmedLine.length > 0) {
+    if (!trimmedLine.startsWith("#") && trimmedLine.length > 0) {
       if (isAdUrl(trimmedLine, config)) {
         return true;
       }
@@ -82,7 +85,7 @@ export function filterAdsFromM3u8(
     const line = lines[i];
     const trimmedLine = line.trim();
 
-    if (trimmedLine === "***REMOVED***EXT-X-DISCONTINUITY") {
+    if (trimmedLine === "#EXT-X-DISCONTINUITY") {
       if (inDiscontinuityBlock) {
         if (
           shouldFilterDiscontinuityBlock(
@@ -111,8 +114,8 @@ export function filterAdsFromM3u8(
     if (inDiscontinuityBlock) {
       discontinuityBlockLines.push(line);
 
-      if (trimmedLine.startsWith("***REMOVED***EXTINF:")) {
-        const match = trimmedLine.match(/***REMOVED***EXTINF:([0-9.]+)/);
+      if (trimmedLine.startsWith("#EXTINF:")) {
+        const match = trimmedLine.match(/#EXTINF:([0-9.]+)/);
         if (match) {
           discontinuityBlockDuration += parseFloat(match[1]);
         }
@@ -136,11 +139,11 @@ export function filterAdsFromM3u8(
         inDiscontinuityBlock = false;
       }
     } else {
-      if (!trimmedLine.startsWith("***REMOVED***") && trimmedLine.length > 0) {
+      if (!trimmedLine.startsWith("#") && trimmedLine.length > 0) {
         if (isAdUrl(trimmedLine, config)) {
           if (
             result.length > 0 &&
-            result[result.length - 1].trim().startsWith("***REMOVED***EXTINF:")
+            result[result.length - 1].trim().startsWith("#EXTINF:")
           ) {
             result.pop();
           }
@@ -182,7 +185,7 @@ export function createAdFilterLoader(DefaultLoader: any) {
         if (
           typeof response.data === "string" &&
           (context.url?.includes(".m3u8") ||
-            response.data.includes("***REMOVED***EXTM3U"))
+            response.data.includes("#EXTM3U"))
         ) {
           console.log("🚫 开始过滤广告...");
           response.data = filterAdsFromM3u8(

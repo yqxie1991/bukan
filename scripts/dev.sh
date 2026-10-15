@@ -1,29 +1,29 @@
-***REMOVED***!/bin/bash
+#!/bin/bash
 
-***REMOVED*** 开发环境一键启动脚本
-***REMOVED*** 用途：快速启动本地开发环境（Docker + 热重载）
+# 开发环境一键启动脚本
+# 用途：快速启动本地开发环境（Docker + 热重载）
 
 set -e
 
-***REMOVED*** 颜色输出
+# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' ***REMOVED*** No Color
+NC='\033[0m' # No Color
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}   Bukan 开发环境启动脚本${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-***REMOVED*** 检查 Docker 是否运行
+# 检查 Docker 是否运行
 if ! docker info > /dev/null 2>&1; then
   echo -e "${RED}❌ Docker 未运行，请先启动 Docker${NC}"
   exit 1
 fi
 
-***REMOVED*** 检查 .env 文件
+# 检查 .env 文件
 if [ ! -f .env ]; then
   echo -e "${YELLOW}⚠️  未找到 .env 文件，正在从 .env.example 复制...${NC}"
   if [ -f .env.example ]; then
@@ -35,7 +35,7 @@ if [ ! -f .env ]; then
   fi
 fi
 
-***REMOVED*** 清理旧容器（可选）
+# 清理旧容器（可选）
 read -p "$(echo -e ${YELLOW}"是否清理旧的开发容器？(y/N): "${NC})" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -44,24 +44,24 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo -e "${GREEN}✅ 清理完成${NC}"
 fi
 
-***REMOVED*** 构建开发镜像
+# 构建开发镜像
 echo -e "${BLUE}🔨 构建开发环境镜像...${NC}"
 docker-compose -f docker-compose.dev.yml build
 
-***REMOVED*** 启动服务
+# 启动服务
 echo -e "${BLUE}🚀 启动开发服务...${NC}"
 docker-compose -f docker-compose.dev.yml up -d
 
-***REMOVED*** 等待服务启动
+# 等待服务启动
 echo -e "${BLUE}⏳ 等待服务启动...${NC}"
 sleep 5
 
-***REMOVED*** 检查服务状态
+# 检查服务状态
 echo ""
 echo -e "${BLUE}📊 服务状态：${NC}"
 docker-compose -f docker-compose.dev.yml ps
 
-***REMOVED*** 显示日志提示
+# 显示日志提示
 echo ""
 echo -e "${GREEN}✅ 开发环境启动成功！${NC}"
 echo ""
@@ -78,7 +78,7 @@ echo ""
 echo -e "${YELLOW}💡 提示：代码修改会自动热重载${NC}"
 echo ""
 
-***REMOVED*** 跟踪日志（可选）
+# 跟踪日志（可选）
 read -p "$(echo -e ${YELLOW}"是否实时查看应用日志？(y/N): "${NC})" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then

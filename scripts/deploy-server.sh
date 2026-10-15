@@ -1,14 +1,14 @@
-***REMOVED***!/bin/sh
+#!/bin/sh
 
-***REMOVED*** 服务器部署脚本
-***REMOVED*** 用途：从 Docker Hub 拉取最新镜像并部署
-***REMOVED*** 兼容：sh, bash, zsh
+# 服务器部署脚本
+# 用途：从 Docker Hub 拉取最新镜像并部署
+# 兼容：sh, bash, zsh
 
 set -e
 
-***REMOVED*** ==================== 工具函数 ====================
+# ==================== 工具函数 ====================
 
-***REMOVED*** 打印彩色消息（兼容 sh）
+# 打印彩色消息（兼容 sh）
 print_color() {
   color_code="$1"
   message="$2"
@@ -31,7 +31,7 @@ print_error() {
   print_color "0;31" "$1"
 }
 
-***REMOVED*** 读取用户输入（兼容 sh）
+# 读取用户输入（兼容 sh）
 read_input() {
   prompt="$1"
   default="$2"
@@ -44,24 +44,24 @@ read_input() {
   fi
 }
 
-***REMOVED*** 验证端口号
+# 验证端口号
 validate_port() {
   port="$1"
   if [ -z "$port" ]; then
     return 1
   fi
-  ***REMOVED*** 检查是否为数字
+  # 检查是否为数字
   case "$port" in
     ''|*[!0-9]*) return 1 ;;
   esac
-  ***REMOVED*** 检查端口范围 (1-65535)
+  # 检查端口范围 (1-65535)
   if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
     return 1
   fi
   return 0
 }
 
-***REMOVED*** 检查端口是否被占用
+# 检查端口是否被占用
 check_port_available() {
   port="$1"
   if command -v lsof > /dev/null 2>&1; then
@@ -76,14 +76,14 @@ check_port_available() {
   return 0
 }
 
-***REMOVED*** ==================== 主程序 ====================
+# ==================== 主程序 ====================
 
 print_info "========================================"
 print_info "   Kerkerker 服务器部署脚本"
 print_info "========================================"
 printf "\n"
 
-***REMOVED*** 检查 Docker 是否运行
+# 检查 Docker 是否运行
 print_info "🔍 检查 Docker 状态..."
 if ! docker info > /dev/null 2>&1; then
   print_error "❌ Docker 未运行，请先启动 Docker"
@@ -92,7 +92,7 @@ fi
 print_success "✅ Docker 运行正常"
 printf "\n"
 
-***REMOVED*** 加载环境变量（如果 .env 文件存在）
+# 加载环境变量（如果 .env 文件存在）
 if [ -f .env ]; then
   print_info "📄 加载 .env 配置文件..."
   set -a
@@ -104,7 +104,7 @@ else
 fi
 printf "\n"
 
-***REMOVED*** ==================== 配置 Docker Hub 用户名 ====================
+# ==================== 配置 Docker Hub 用户名 ====================
 print_info "📦 配置 Docker 镜像信息"
 print_info "----------------------------------------"
 
@@ -123,7 +123,7 @@ else
   print_success "✅ Docker Hub 用户名: $DOCKER_USERNAME"
 fi
 
-***REMOVED*** ==================== 配置镜像版本 ====================
+# ==================== 配置镜像版本 ====================
 printf "请输入要部署的镜像版本 (默认: latest): "
 read VERSION
 if [ -z "$VERSION" ]; then
@@ -134,23 +134,23 @@ IMAGE_NAME="${DOCKER_USERNAME}/kerkerker:${VERSION}"
 print_success "✅ 镜像: $IMAGE_NAME"
 printf "\n"
 
-***REMOVED*** ==================== 配置应用端口 ====================
+# ==================== 配置应用端口 ====================
 print_info "🌐 配置应用端口"
 print_info "----------------------------------------"
 
-***REMOVED*** 显示当前端口配置
+# 显示当前端口配置
 if [ -n "$APP_PORT" ]; then
   print_info "当前 .env 中配置的端口: $APP_PORT"
 fi
 
-***REMOVED*** 询问用户是否使用自定义端口
+# 询问用户是否使用自定义端口
 printf "请输入应用端口 (默认: 3000): "
 read APP_PORT
 if [ -z "$APP_PORT" ]; then
   APP_PORT="3000"
 fi
 
-***REMOVED*** 验证端口号
+# 验证端口号
 while ! validate_port "$APP_PORT"; do
   print_error "❌ 无效的端口号，请输入 1-65535 之间的数字"
   printf "请输入应用端口 (默认: 3000): "
@@ -160,7 +160,7 @@ while ! validate_port "$APP_PORT"; do
   fi
 done
 
-***REMOVED*** 检查端口是否被占用
+# 检查端口是否被占用
 if ! check_port_available "$APP_PORT"; then
   print_warning "⚠️  警告: 端口 $APP_PORT 可能已被占用"
   printf "是否继续使用此端口？(y/N): "
@@ -181,7 +181,7 @@ export APP_PORT
 print_success "✅ 应用端口: $APP_PORT"
 printf "\n"
 
-***REMOVED*** ==================== 检查必需的环境变量 ====================
+# ==================== 检查必需的环境变量 ====================
 print_info "🔐 检查环境变量配置"
 print_info "----------------------------------------"
 
@@ -215,7 +215,7 @@ else
 fi
 printf "\n"
 
-***REMOVED*** ==================== 显示部署信息 ====================
+# ==================== 显示部署信息 ====================
 print_info "📋 部署信息摘要"
 print_info "========================================"
 printf "  镜像:       %s\n" "$IMAGE_NAME"
@@ -224,7 +224,7 @@ printf "  环境:       生产环境\n"
 print_info "========================================"
 printf "\n"
 
-***REMOVED*** 确认部署
+# 确认部署
 printf "确认部署？(y/N): "
 read CONFIRM
 if [ -z "$CONFIRM" ]; then
@@ -239,15 +239,15 @@ case "$CONFIRM" in
 esac
 printf "\n"
 
-***REMOVED*** ==================== 执行部署 ====================
+# ==================== 执行部署 ====================
 
-***REMOVED*** 停止旧容器
+# 停止旧容器
 print_info "🛑 停止旧容器..."
 docker-compose -f docker-compose.server.yml down 2>/dev/null || true
 print_success "✅ 旧容器已停止"
 printf "\n"
 
-***REMOVED*** 拉取最新镜像
+# 拉取最新镜像
 print_info "📥 拉取镜像 $IMAGE_NAME..."
 if docker pull "$IMAGE_NAME"; then
   print_success "✅ 镜像拉取成功"
@@ -257,7 +257,7 @@ else
 fi
 printf "\n"
 
-***REMOVED*** 启动服务
+# 启动服务
 print_info "🚀 启动服务..."
 if docker-compose -f docker-compose.server.yml up -d; then
   print_success "✅ 服务启动成功"
@@ -267,11 +267,11 @@ else
 fi
 printf "\n"
 
-***REMOVED*** 等待服务启动
+# 等待服务启动
 print_info "⏳ 等待服务启动..."
 sleep 10
 
-***REMOVED*** 健康检查
+# 健康检查
 print_info "🏥 执行健康检查..."
 HEALTH_CHECK_PASSED=0
 i=1
@@ -293,18 +293,18 @@ if [ $HEALTH_CHECK_PASSED -eq 0 ]; then
 fi
 printf "\n"
 
-***REMOVED*** 显示服务状态
+# 显示服务状态
 print_info "📊 服务状态："
 docker-compose -f docker-compose.server.yml ps
 printf "\n"
 
-***REMOVED*** 清理旧镜像
+# 清理旧镜像
 print_info "🧹 清理未使用的镜像..."
 docker image prune -f > /dev/null 2>&1
 print_success "✅ 清理完成"
 printf "\n"
 
-***REMOVED*** ==================== 部署完成 ====================
+# ==================== 部署完成 ====================
 
 print_success "========================================"
 print_success "✅ 部署成功！"

@@ -1,41 +1,74 @@
-***REMOVED*** =====================================================================
-***REMOVED*** 🎬 “不看 (bukan)” 影视资源聚合平台 - 群晖 NAS 极致精简版部署配置
-***REMOVED*** =====================================================================
-***REMOVED*** 💡 提示：
-***REMOVED***    1. 本配置为去数据库极致精简版，已彻底移除 MongoDB 数据库服务。
-***REMOVED***    2. 整个系统仅包含一个 App 容器，内存占用极低（几毫瓦/几十MB），磁盘几乎完全静默。
-***REMOVED***    3. 配置数据持久化在本地 JSON 文件中（挂载在 bukan-data 卷）。
-***REMOVED*** =====================================================================
-
-version: '3.8'
+# =====================================================================
+# 不看 (bukan) — 影视资源聚合平台 · 群晖 NAS / VPS 单容器部署配置
+# ---------------------------------------------------------------------
+# 设计目标：零外部数据库、单容器、磁盘静默、服务器下行带宽趋近于 0
+#
+# 部署前必读
+#   1. 必须设置 ADMIN_PASSWORD（使用 :? 语法，缺失时部署直接失败）
+#   2. 数据持久化在 bukan-data 卷的 /app/data（JSON 文件），升级镜像不会丢配置
+#   3. 图片缓存卷 bukan-cache 请勿删除，否则升级后海报会重新拉取
+# =====================================================================
 
 services:
-  ***REMOVED*** 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v1.0-lite
+    # 生产镜像版本（修复 SSRF / 会话伪造 / 视频分片全量中转等问题）
+    image: ghcr.io/yqxie1991/bukan:v1.4-lite
     container_name: bukan-app
     ports:
-      - "3009:3000"              ***REMOVED*** Lucky 反代指向的群晖内网端口
+      # 宿主机端口:Lucky 反代指向此端口；如与已有服务冲突可自行修改左侧数字。
+      #
+      # 说明：绑定 0.0.0.0 表示内网任意主机都能直连 3009 端口。
+      # 当 Lucky 与本服务同机时这不影响正常使用（反代走回环路径），
+      # 仅意味着内网设备可绕过 Lucky 访问本服务。若 Lucky 使用
+      # 透传而非追加 X-Forwarded-For 的规则，登录限流可被伪造头绕过
+      # —— 属纵深防御事项，按需收紧为 "127.0.0.1:3009:3000" 即可。
+      - "3009:3000"
+
     environment:
       - NODE_ENV=production
-      
-      ***REMOVED*** ⚠️【安全警示】由于此项目已在 GitHub 公开，默认密码默认为 "bukan"！
-      ***REMOVED*** 强烈建议在部署前修改为您的自定义私有强密码，以防止他人扫描并越权登录您的后台！
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
-      
+      # 时区：alpine 默认 UTC，不设置会导致首页「0 点自动更新」实际在北京时间早上 8 点执行
+      - TZ=Asia/Shanghai
+
+      # 必须设置。使用 :? 语法强制校验——变量缺失时立即报错退出，
+      # 这样部署时不可能"忘记修改而回落到默认密码"。
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD 必须设置，请 export ADMIN_PASSWORD=<你的强密码>}
+
+      # 首页缓存的跨天判定时区（与 TZ 保持一致）
+      - HOME_CACHE_TIMEZONE=${HOME_CACHE_TIMEZONE:-Asia/Shanghai}
+
+      # 视频源鉴权解析站地址（反代场景填外网域名，否则留空使用内置默认解析）
+      - APP_URL=${APP_URL:-}
+
+      # 服务端自调用地址，供豆瓣多源匹配接口使用。
+      # Docker 单容器内回环可达；Serverless（Vercel）部署请留空由请求头推导。
+      - INTERNAL_ORIGIN=http://127.0.0.1:3000
+
+      # 登录限流是否信任反代写入的 X-Forwarded-For。
+      # 经 Lucky/Nginx 反代时保持 true；若为端口直连暴露公网，必须设为 false，
+      # 否则攻击者可伪造该头绕过限流。
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+
       - PORT=3000
+
     volumes:
-      - bukan-cache:/app/public/cache             ***REMOVED*** 缓存卷，防容器重建升级后海报裂图
-      - bukan-data:/app/data                      ***REMOVED*** 数据持久化卷，保存视频源、短剧源、播放器配置等
+      # 图片缓存卷：保存首页海报本地化文件，避免每次升级后重新拉取
+      - bukan-cache:/app/public/cache
+      # 数据持久化卷：视频源、短剧源、频道与播放器配置、管理员会话等
+      - bukan-data:/app/data
+
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"          ***REMOVED*** 限制单个日志文件最大为 10MB，防止长久运行撑爆群晖系统盘
+        # 限制日志体积，防止长期运行撑爆系统盘（高频切片请求已做静默处理）
+        max-size: "10m"
         max-file: "3"
+
     restart: unless-stopped
 
 volumes:
+  # 图片海报缓存卷
   bukan-cache:
-    driver: local  ***REMOVED*** 图片海报缓存卷
+    driver: local
+  # JSON 数据持久化卷（含管理员会话 sessions.json，删除将导致后台需重新登录）
   bukan-data:
-    driver: local  ***REMOVED*** 极致精简版 JSON 数据持久化卷
+    driver: local

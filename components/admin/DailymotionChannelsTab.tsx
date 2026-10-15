@@ -741,7 +741,7 @@ export function DailymotionChannelsTab({
                   </div>
                   <button
                     onClick={handleConfirmEncryptedImport}
-                    className="w-full px-4 py-2 bg-[***REMOVED***46d369] hover:bg-[***REMOVED***3cb85e] text-black font-medium rounded-lg transition"
+                    className="w-full px-4 py-2 bg-[#46d369] hover:bg-[#3cb85e] text-black font-medium rounded-lg transition"
                   >
                     ✅ 确认导入
                   </button>

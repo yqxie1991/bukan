@@ -1,5 +1,5 @@
 services:
-  ***REMOVED*** Next.js 应用（开发环境 - 热重载 - 极致精简版）
+  # Next.js 应用（开发环境 - 热重载 - 极致精简版）
   app-dev:
     build:
       context: .
@@ -9,15 +9,28 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      # 开发环境同样强制要求密码，避免误用默认密码形成习惯
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD 必须设置}
+      - TZ=Asia/Shanghai
+      - HOME_CACHE_TIMEZONE=${HOME_CACHE_TIMEZONE:-Asia/Shanghai}
+      - INTERNAL_ORIGIN=http://127.0.0.1:3000
+      # 外网反代域名（开发环境通常留空）
+      - APP_URL=${APP_URL:-}
+      # 开发环境通常无反代，默认不信任 X-Forwarded-For，
+      # 以便本地测试 TRUST_PROXY=false 的限流行为
+      - TRUST_PROXY=${TRUST_PROXY:-false}
+      - PORT=3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      ***REMOVED*** 挂载本地代码，支持热重载
+      # 挂载本地代码，支持热重载
       - .:/app
       - /app/node_modules
       - /app/.next
-      - ./data:/app/data                      ***REMOVED*** 数据挂载
+      - ./data:/app/data                      # 数据挂载
+      # 显式挂载 .env，保证容器内Next 能读取（.dockerignore 已排除该文件）
+      - ./.env:/app/.env
+    restart: unless-stopped
     stdin_open: true
     tty: true
     logging:

@@ -3,10 +3,30 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+/**
+ * 净化登录后的跳转目标
+ *
+ * `redirect` 来自 URL 查询串且完全由请求方控制。若直接 router.push(redirect)，
+ * 攻击者可构造 `/login?redirect=https://evil.example.com` —— 受害者输入正确密码后
+ * 即被跳转到钓鱼站点，而域名仍是自家合法域名，极难警觉。
+ *
+ * 规则：只允许站内绝对路径（以单个 / 开头），拒绝协议相对URL（//evil.com）、
+ * 反斜杠（\evil.com）与任何含 scheme 的地址。
+ */
+function sanitizeRedirect(raw: string | null): string {
+  const fallback = "/admin/settings";
+  if (!raw) return fallback;
+  // 拒绝：空串、非/ 开头（含 http://、https://、javascript:）、协议相对、含反斜杠
+  if (!raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//")) return fallback;
+  if (raw.includes("\\")) return fallback;
+  return raw;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/admin/settings";
+  const redirect = sanitizeRedirect(searchParams.get("redirect"));
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

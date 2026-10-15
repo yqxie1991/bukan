@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Category } from '@/types/drama';
+import { getVodSourceByKey } from '@/lib/vod-sources-db';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 interface CategoryResponse {
   code: number;
@@ -15,21 +17,44 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // SSRF 防护：不信任请求体中的 source.api，改为按 key 回查数据库真实配置
+    const source = body.source?.key
+      ? await getVodSourceByKey(body.source.key)
+      : null;
+
+    if (!source) {
+      return NextResponse.json(
+        { code: 400, msg: '视频源不存在或未启用', data: null },
+        { status: 400 }
+      );
+    }
+
+    if (!(await isValidExternalUrlAsync(source.api))) {
+      return NextResponse.json(
+        { code: 400, msg: '视频源 API 地址不合法', data: null },
+        { status: 400 }
+      );
+    }
+
     // 构建API请求参数
     const apiParams = new URLSearchParams({
       ac: 'list',
     });
 
-    const apiUrl = `${body.source.api}?${apiParams.toString()}`;
+    const apiUrl = `${source.api}?${apiParams.toString()}`;
 
-    // 调用影视API获取分类
-    const response = await fetch(apiUrl, {
+    // 调用影视API获取分类（safeFetch 逐跳校验重定向，阻断 SSRF）
+    const response = await safeFetch(apiUrl, {
       method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0',
       },
       signal: AbortSignal.timeout(15000),
     });
+
+    if (!response) {
+      throw new Error('目标地址不合法');
+    }
 
     if (!response.ok) {
       throw new Error('API请求失败');

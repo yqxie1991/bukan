@@ -392,7 +392,7 @@ export default function MovieDetailPage() {
       </div>
 
       {/* 导航栏 */}
-      <nav className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-[***REMOVED***0a0a0a]/95 backdrop-blur-xl border-b border-gray-200 dark:border-neutral-800/50 shadow-md transition-colors duration-300">
+      <nav className="sticky top-0 left-0 right-0 z-50 bg-background/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-gray-200 dark:border-neutral-800/50 shadow-md transition-colors duration-300">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
@@ -651,7 +651,7 @@ export default function MovieDetailPage() {
               </div>
 
               {/* 播放源区域 */}
-              <div className="bg-foreground/5 dark:bg-[***REMOVED***121212]/40 backdrop-blur-2xl rounded-3xl border border-gray-200 dark:border-white/5 p-6 md:p-8 shadow-xl transition-colors duration-300">
+              <div className="bg-foreground/5 dark:bg-[#121212]/40 backdrop-blur-2xl rounded-3xl border border-gray-200 dark:border-white/5 p-6 md:p-8 shadow-xl transition-colors duration-300">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
                     <span className="w-1 h-6 bg-red-600 rounded-full" />
@@ -765,8 +765,8 @@ export default function MovieDetailPage() {
                 {/* 错误状态 - 提示配置视频源 */}
                 {searchStatus === "error" && (
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
-                    <div className="w-16 h-16 bg-[***REMOVED***E50914]/10 rounded-full flex items-center justify-center">
-                      <AlertCircle className="w-8 h-8 text-[***REMOVED***E50914]" />
+                    <div className="w-16 h-16 bg-[#E50914]/10 rounded-full flex items-center justify-center">
+                      <AlertCircle className="w-8 h-8 text-[#E50914]" />
                     </div>
                     <div className="text-center">
                       <p className="text-foreground font-medium mb-2">
@@ -778,7 +778,7 @@ export default function MovieDetailPage() {
                     </div>
                     <a
                       href="/admin/settings"
-                      className="mt-2 px-6 py-2.5 bg-[***REMOVED***E50914] hover:bg-[***REMOVED***B20710] rounded-full text-sm text-white font-medium transition-colors shadow-lg shadow-[***REMOVED***E50914]/20 flex items-center gap-2"
+                      className="mt-2 px-6 py-2.5 bg-[#E50914] hover:bg-[#B20710] rounded-full text-sm text-white font-medium transition-colors shadow-lg shadow-[#E50914]/20 flex items-center gap-2"
                     >
                       <svg
                         className="w-4 h-4"

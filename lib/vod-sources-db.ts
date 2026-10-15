@@ -64,6 +64,23 @@ export async function getVodSourcesFromDB(): Promise<VodSource[]> {
     .map(docToVodSource);
 }
 
+/**
+ * 按 key 获取单个启用的视频源
+ *
+ * 用途：服务端接口回查客户端提交的 source.key 对应的**真实配置**，
+ * 避免直接信任请求体中的 api/searchProxy/parseProxy（那会构成 SSRF）。
+ * @param key 视频源唯一标识
+ * @returns 视频源；不存在或已禁用时返回 null
+ */
+export async function getVodSourceByKey(key: string): Promise<VodSource | null> {
+  if (!key || typeof key !== 'string') {
+    return null;
+  }
+  const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);
+  const doc = docs.find(d => d.key === key && d.enabled);
+  return doc ? docToVodSource(doc) : null;
+}
+
 // 获取所有视频源（包括禁用的，按 priority 排序）
 export async function getAllVodSourcesFromDB(): Promise<VodSourceDoc[]> {
   const docs = readStore<VodSourceDoc[]>(SOURCES_FILE, []);

@@ -6,7 +6,6 @@ import crypto from "crypto";
 
 const IMAGE_CACHE_DIR = path.join(process.cwd(), "public", "cache", "images");
 const CACHE_FILE = 'home-cache.json';
-let isCronStarted = false;
 
 // 首页二级内存缓存防线，防止频繁穿透慢速豆瓣微服务
 export const MEMORY_CACHE: Record<string, { data: unknown; updatedAt: number }> = {};
@@ -115,15 +114,11 @@ export async function getHomeCache(key: "hero" | "categories") {
     if (cache && cache.data) {
       MEMORY_CACHE[key] = { data: cache.data, updatedAt: now };
 
-      const updatedAtDate = new Date(cache.updated_at);
-      const nowDate = new Date();
-      
-      const isExpired =
-        updatedAtDate.getFullYear() !== nowDate.getFullYear() ||
-        updatedAtDate.getMonth() !== nowDate.getMonth() ||
-        updatedAtDate.getDate() !== nowDate.getDate();
+      // 跨天判定统一走显式时区（默认 Asia/Shanghai），避免容器 UTC 时区导致过期判定推迟 8 小时
+      const updatedDay = getDayStringInTz(new Date(cache.updated_at));
+      const todayDay = getDayStringInTz(new Date(now));
 
-      if (isExpired) {
+      if (updatedDay !== todayDay) {
         console.log(`⏰ [Home Cache] 检测到数据库缓存 [${key}] 已过0点，将在后台异步刷新同步，不阻塞当前返回`);
         syncHomeData(key).catch((err) => {
           console.error(`后台异步刷新首屏缓存失败 [key: ${key}]:`, err);
@@ -145,25 +140,77 @@ export async function getHomeCache(key: "hero" | "categories") {
 }
 
 /**
+ * 获取指定时区下的日期字符串（YYYY-MM-DD）
+ *
+ * Docker 容器若未设置 TZ，默认 UTC，会导致「0 点自动更新」实际发生在北京时间早上 8 点。
+ * 故统一以显式目标时区（默认 Asia/Shanghai）计算日期边界，与服务器本地时区解耦。
+ */
+function getDayStringInTz(date: Date = new Date()): string {
+  const timeZone = process.env.HOME_CACHE_TIMEZONE || 'Asia/Shanghai';
+  try {
+    // en-CA locale 输出即为 YYYY-MM-DD 格式
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  } catch {
+    // 运行环境缺少时区数据时回退到本地时区
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+}
+
+/**
  * 启动 0 点自动更新定时任务
+ *
+ * 防重入标记挂在 globalThis 上：home/hero 与 home/categories 两个路由在 dev 模式或
+ * 独立打包时各自持有一份模块实例，模块级变量会各自启动一个 setInterval 导致重复同步。
+ *
+ * 触发条件改为「今日尚未同步」而非「恰好处于 00:00 那一分钟」：
+ * setInterval 在负载下会漂移，一旦错过该分钟窗口会导致整天不更新。
  */
 export function startCronJob() {
-  if (isCronStarted) return;
-  isCronStarted = true;
+  const globalRef = globalThis as unknown as {
+    __homeCacheCronStarted?: boolean;
+    __homeCacheLastSyncDay?: string;
+  };
+
+  if (globalRef.__homeCacheCronStarted) return;
+  globalRef.__homeCacheCronStarted = true;
 
   console.log("⏰ [Home Cache] 首页 0 点自动更新定时任务已启动。");
 
+  // 启动时若今日尚未同步（例如容器在 0 点后重启），补一次检查
+  globalRef.__homeCacheLastSyncDay = undefined;
+
   setInterval(async () => {
-    const now = new Date();
-    if (now.getHours() === 0 && now.getMinutes() === 0) {
-      console.log("⏰ [Home Cache] 检测到当前时间为 00:00，开始自动同步首屏数据并缓存本地图片...");
-      try {
-        await syncHomeData("hero");
-        await syncHomeData("categories");
-        console.log("⏰ [Home Cache] 0 点自动更新首页缓存成功。");
-      } catch (err) {
-        console.error("⏰ [Home Cache] 0 点自动更新缓存失败:", err);
-      }
+    const today = getDayStringInTz();
+
+    // 今日已同步，等待下一个自然日
+    if (globalRef.__homeCacheLastSyncDay === today) return;
+
+    // 尚未到换日时刻：不执行（跨天前的轮询）
+    const nowInTz = new Date(
+      new Date().toLocaleString('en-US', { timeZone: process.env.HOME_CACHE_TIMEZONE || 'Asia/Shanghai' })
+    );
+    if (nowInTz.getHours() !== 0) return;
+
+    // 先占位再执行，避免长任务期间被后续 tick 重复触发
+    globalRef.__homeCacheLastSyncDay = today;
+
+    console.log("⏰ [Home Cache] 检测到已进入新的自然日，开始自动同步首屏数据并缓存本地图片...");
+    try {
+      await syncHomeData("hero");
+      await syncHomeData("categories");
+      console.log("⏰ [Home Cache] 0 点自动更新首页缓存成功。");
+    } catch (err) {
+      console.error("⏰ [Home Cache] 0 点自动更新缓存失败:", err);
+      // 失败时回滚标记，留待下一个 tick 重试
+      globalRef.__homeCacheLastSyncDay = undefined;
     }
   }, 60000);
 }

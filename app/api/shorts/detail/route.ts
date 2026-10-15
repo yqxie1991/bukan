@@ -26,12 +26,12 @@ export interface ShortDramaDetail {
 }
 
 // 解析播放地址字符串
-// 格式: "第1集$url1***REMOVED***第2集$url2***REMOVED***第3集$url3" 或 "01$url1***REMOVED***02$url2"
+// 格式: "第1集$url1#第2集$url2#第3集$url3" 或 "01$url1#02$url2"
 function parsePlayUrl(playUrl: string): Episode[] {
   if (!playUrl) return [];
 
   const episodes: Episode[] = [];
-  const parts = playUrl.split("***REMOVED***");
+  const parts = playUrl.split("#");
 
   for (const part of parts) {
     if (!part.trim()) continue;

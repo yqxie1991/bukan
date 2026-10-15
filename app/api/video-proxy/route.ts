@@ -191,8 +191,8 @@ function rewriteM3U8(content: string, baseUrl: string, proxyOrigin: string): str
   };
   
   const rewrittenLines = lines.map(line => {
-    // 通用处理带 URI 属性的标签 (包括 ***REMOVED***EXT-X-KEY, ***REMOVED***EXT-X-MEDIA, ***REMOVED***EXT-X-MAP 等)
-    if (line.startsWith('***REMOVED***')) {
+    // 通用处理带 URI 属性的标签 (包括 #EXT-X-KEY, #EXT-X-MEDIA, #EXT-X-MAP 等)
+    if (line.startsWith('#')) {
       if (line.includes('URI=')) {
         return line.replace(/URI=["']?([^"',]+)["']?/g, (match, p1) => {
           const absoluteUri = resolveUrl(p1);
@@ -203,7 +203,7 @@ function rewriteM3U8(content: string, baseUrl: string, proxyOrigin: string): str
     }
     
     // 跳过其他注释行和空行
-    if (line.startsWith('***REMOVED***') || line.trim() === '') {
+    if (line.startsWith('#') || line.trim() === '') {
       return line;
     }
     

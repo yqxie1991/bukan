@@ -1,16 +1,30 @@
-***REMOVED*** 服务器端 Docker Compose 配置 (去数据库极致精简版)
-***REMOVED*** 用途：使用 Docker Hub 镜像部署，无需本地构建
+# 服务器端 Docker Compose 配置（去数据库极致精简版）
+# 用途：使用 Docker Hub 远程镜像部署，无需本地构建
 
 services:
-  ***REMOVED*** Next.js 应用（生产环境 - 使用远程镜像）
+  # Next.js 应用（生产环境 - 使用远程镜像）
   app:
-    image: ${DOCKER_USERNAME:-your-dockerhub-username}/bukan:${IMAGE_VERSION:-latest}
+    # 用 :? 强制校验，避免未设置时拉取到占位镜像 "your-dockerhub-username/..."
+    image: ${DOCKER_USERNAME:?DOCKER_USERNAME 必须设置，请先 export DOCKER_USERNAME=你的用户名}/bukan:${IMAGE_VERSION:-latest}
     container_name: bukan-app
     ports:
+      # 说明：绑定 0.0.0.0 允许内网直连。Lucky 与本服务同机时不影响使用，
+      # 仅意味着内网设备可绕过反代；需要收紧时改为 "127.0.0.1:${APP_PORT:-3000}:3000"
       - "${APP_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      # 必须设置。:? 语法保证部署时不可能遗漏——变量缺失会直接报错退出，
+      # 而不是回落到公开的默认密码。
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD 必须设置}
+      - TZ=Asia/Shanghai
+      - HOME_CACHE_TIMEZONE=${HOME_CACHE_TIMEZONE:-Asia/Shanghai}
+      - INTERNAL_ORIGIN=http://127.0.0.1:3000
+      # 外网反代域名，用于 m3u8 分片直连判定（留空则按请求头推断）
+      - APP_URL=${APP_URL:-}
+      # 登录限流是否信任反代写入的 X-Forwarded-For。
+      # 经反代时保持 true；若为端口直连暴露公网，必须设为 false。
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+      - PORT=3000
     volumes:
       - bukan-cache:/app/public/cache
       - bukan-data:/app/data

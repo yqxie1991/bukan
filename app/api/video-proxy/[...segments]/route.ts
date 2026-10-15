@@ -362,8 +362,8 @@ function processM3u8Content(content: string, baseUrl: string): string {
   };
 
   const processedLines = lines.map(line => {
-    // 处理 ***REMOVED***EXT-X-KEY 标签中的 URI（加密密钥）
-    if (line.startsWith('***REMOVED***EXT-X-KEY:')) {
+    // 处理 #EXT-X-KEY 标签中的 URI（加密密钥）
+    if (line.startsWith('#EXT-X-KEY:')) {
       const uriMatch = line.match(/URI=["']?([^"',]+)["']?/);
       if (uriMatch && uriMatch[1]) {
         const originalUri = uriMatch[1];
@@ -374,7 +374,7 @@ function processM3u8Content(content: string, baseUrl: string): string {
     }
 
     // 跳过其他注释行和空行
-    if (line.startsWith('***REMOVED***') || !line.trim()) {
+    if (line.startsWith('#') || !line.trim()) {
       return line;
     }
 

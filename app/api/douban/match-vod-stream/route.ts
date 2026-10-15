@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getVodSourcesFromDB } from '@/lib/vod-sources-db';
+import { getInternalOrigin } from '@/lib/internal-origin';
+import { withInternalToken } from '@/lib/internal-token';
 import { VodSource } from '@/types/drama';
 
 interface VodItem {
@@ -40,10 +42,11 @@ function getMatchConfidence(vodName: string, title: string): 'high' | 'medium' |
 async function searchSingleSource(
   origin: string,
   source: VodSource,
-  title: string
+  title: string,
+  clientSignal?: AbortSignal
 ): Promise<MatchResult | null> {
   try {
-    // 使用 POST 请求，传递完整的 source 对象
+    // 使用 POST 请求，传递完整的 source 对象（自调用携带内部凭证）
     const response = await fetch(`${origin}/api/drama/list`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,7 +56,11 @@ async function searchSingleSource(
         limit: 20,
         keyword: title,
       }),
-      signal: AbortSignal.timeout(10000), // 10秒超时
+      // 10秒超时，并与客户端断开信号联动（任一触发即中止）
+      signal: clientSignal
+        ? AbortSignal.any([AbortSignal.timeout(10000), clientSignal])
+        : AbortSignal.timeout(10000),
+      ...withInternalToken(),
     });
     
     if (!response.ok) {
@@ -118,15 +125,31 @@ export async function GET(request: NextRequest) {
     return new Response('No video sources configured', { status: 404 });
   }
   
-  let origin = request.nextUrl.origin;
-  if (process.env.NODE_ENV === 'production') {
-    origin = `http://127.0.0.1:${process.env.PORT || 3000}`;
-  }
-  
+  // 服务端自调用地址：Docker 单容器用 INTERNAL_ORIGIN，
+  // Serverless（如 Vercel）回落到请求自身 Origin，避免回环地址不可达
+  const origin = getInternalOrigin(request);
+
   // 创建 SSE 流
   const encoder = new TextEncoder();
+  // 客户端断开时中止上游搜索，避免用户取消/关闭标签页后
+  // 上游请求仍对全部源跑完（高频切换关键词时形成请求洪水）
+  const upstreamAbort = new AbortController();
+  request.signal.addEventListener('abort', () => upstreamAbort.abort());
+
   const stream = new ReadableStream({
     async start(controller) {
+      let streamClosed = false;
+
+      // 安全写入：客户端断开后 enqueue 会抛 TypeError，此处静默跳过
+      const safeEnqueue = (payload: object) => {
+        if (streamClosed) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+        } catch {
+          streamClosed = true;
+        }
+      };
+
       // 发送初始化信息
       const initData = {
         type: 'init',
@@ -134,7 +157,7 @@ export async function GET(request: NextRequest) {
         title,
         totalSources: allSources.length,
       };
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(initData)}\n\n`));
+      safeEnqueue(initData);
       
       console.log(`\n🔍 开始流式搜索视频源: ${title}`);
       
@@ -144,57 +167,76 @@ export async function GET(request: NextRequest) {
       // 并行搜索所有源，但每个完成后立即发送结果
       const promises = allSources.map(async (source) => {
         try {
-          const result = await searchSingleSource(origin, source, title);
+          const result = await searchSingleSource(origin, source, title, upstreamAbort.signal);
           completedCount++;
-          
+
           if (result) {
             foundCount++;
             console.log(`  ✅ ${source.name} 找到: ${result.vod_name}`);
           } else {
             console.log(`  ❌ ${source.name} 未找到`);
           }
-          
+
           // 发送单个源的结果
-          const resultData = {
+          safeEnqueue({
             type: 'result',
             sourceKey: source.key,
             sourceName: source.name,
             match: result,
             completed: completedCount,
             total: allSources.length,
-          };
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(resultData)}\n\n`));
+          });
         } catch (error) {
+          // 上游被主动中止时不再刷错误日志
+          if (upstreamAbort.signal.aborted) {
+            return;
+          }
           completedCount++;
           console.error(`  ❌ ${source.name} 搜索出错:`, error);
-          
+
           // 发送错误结果
-          const errorData = {
+          safeEnqueue({
             type: 'result',
             sourceKey: source.key,
             sourceName: source.name,
             match: null,
             completed: completedCount,
             total: allSources.length,
-          };
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
+          });
         }
       });
-      
-      // 等待所有搜索完成
-      await Promise.all(promises);
-      
+
+      // 等待所有搜索完成；上游中止时静默收尾，避免未处理异常
+      try {
+        await Promise.all(promises);
+      } catch (error) {
+        if (!upstreamAbort.signal.aborted) {
+          console.error('流式搜索异常:', error);
+        }
+      }
+
+      if (upstreamAbort.signal.aborted || streamClosed) {
+        console.log(`\n⛔ 客户端已断开，中止剩余搜索: ${title}\n`);
+        return;
+      }
+
       console.log(`\n📊 搜索完成: 找到 ${foundCount} 个可用源\n`);
-      
+
       // 发送完成信号
-      const doneData = {
+      safeEnqueue({
         type: 'done',
         totalSources: allSources.length,
         foundCount,
-      };
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(doneData)}\n\n`));
-      
-      controller.close();
+      });
+
+      streamClosed = true;
+      try {
+        controller.close();
+      } catch {}
+    },
+    cancel() {
+      // 客户端主动取消流时终止上游搜索
+      upstreamAbort.abort();
     },
   });
   

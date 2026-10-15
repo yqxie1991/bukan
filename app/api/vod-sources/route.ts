@@ -35,13 +35,25 @@ export async function GET(request: NextRequest) {
     
     const sources = await getVodSourcesFromDB();
     const selectedSource = await getSelectedVodSourceFromDB();
-    
+
+    // 安全考量：公开分支只暴露前端渲染与「按 key 引用」所需的最小字段。
+    // 完整配置中的 api / searchProxy / parseProxy / parseToken 属运营敏感信息
+    // （采集源地址、解析站凭据），不应在未鉴权状态下下发。
+    // 服务端在处理 /api/drama/* 时会按 source.key 回查数据库取真实配置，
+    // 因此前端无需持有这些字段。
+    const toPublicSource = (s: VodSource) => ({
+      key: s.key,
+      name: s.name,
+      priority: s.priority,
+      type: s.type,
+    });
+
     return NextResponse.json({
       code: 200,
       message: '获取成功',
       data: {
-        sources,
-        selected: selectedSource,
+        sources: sources.map(toPublicSource),
+        selected: selectedSource ? toPublicSource(selectedSource) : null,
       },
     });
   } catch (error) {

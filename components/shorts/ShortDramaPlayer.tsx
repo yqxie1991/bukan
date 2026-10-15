@@ -72,7 +72,7 @@ export function ShortDramaPlayer({
           mutex: true,
           backdrop: true,
           playsInline: true,
-          theme: "***REMOVED***e50914", // Netflix红色
+          theme: "#e50914", // Netflix红色
           lang: "zh-cn",
           lock: false,
           fastForward: true,

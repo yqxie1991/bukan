@@ -72,7 +72,7 @@ const DEFAULT_CONFIG: PlayerConfig = {
   localPlayerSettings: {
     autoSaveProgress: true,
     progressSaveInterval: 5,
-    theme: '***REMOVED***ef4444',
+    theme: '#ef4444',
   },
 };
 

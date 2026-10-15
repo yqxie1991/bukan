@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
@@ -54,15 +55,47 @@ export function readStore<T>(filename: string, defaultValue: T): T {
 
 /**
  * 安全地写入 JSON 数据（采用原子级写入：先写临时文件再进行重命名替换，防止损坏）
+ *
+ * 健壮性措施：
+ * 1. 临时文件名带进程与随机后缀，避免多进程/多实例互相覆盖同一 .tmp 文件
+ * 2. rename 在 Windows 上可能因目标文件被短暂占用（编辑器/杀毒扫描）抛 EPERM，
+ *    故做有限次退避重试；仅在最终失败时清理临时文件并抛出
  */
 export function writeStore<T>(filename: string, data: T): void {
   ensureDataDir();
   const filePath = path.join(DATA_DIR, filename);
-  const tmpPath = filePath + '.tmp';
+  const tmpPath = `${filePath}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
 
   try {
     fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
-    fs.renameSync(tmpPath, filePath);
+
+    // rename 重试：EPERM/EBUSY 通常是瞬时的（目标文件被短暂占用）
+    const maxAttempts = 3;
+    let renamed = false;
+    let lastError: unknown = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        fs.renameSync(tmpPath, filePath);
+        renamed = true;
+        break;
+      } catch (error) {
+        lastError = error;
+        const code = (error as NodeJS.ErrnoException)?.code;
+        // 仅对文件占用类错误重试，其他错误立即失败
+        if (code !== 'EPERM' && code !== 'EBUSY' && code !== 'EACCES') {
+          break;
+        }
+        // 同步退避等待 50ms（本模块为同步 API，不能用 await setTimeout）
+        if (attempt < maxAttempts - 1) {
+          sleepSync(50);
+        }
+      }
+    }
+
+    if (!renamed) {
+      throw lastError ?? new Error('rename 失败');
+    }
 
     // 更新进程级内存缓存
     const stat = fs.statSync(filePath);
@@ -77,4 +110,13 @@ export function writeStore<T>(filename: string, data: T): void {
     }
     throw error;
   }
+}
+
+/**
+ * 同步阻塞指定的毫秒数
+ * 用于同步文件操作之间的退避等待（Atomics.wait 不占用事件循环之外的任何资源）
+ */
+function sleepSync(ms: number): void {
+  const sharedArrayBuffer = new SharedArrayBuffer(4);
+  Atomics.wait(new Int32Array(sharedArrayBuffer), 0, 0, ms);
 }

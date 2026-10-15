@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVodSourcesFromDB } from '@/lib/vod-sources-db';
+import { getInternalOrigin } from '@/lib/internal-origin';
+import { withInternalToken } from '@/lib/internal-token';
 import { VodSource } from '@/types/drama';
 
 interface VodItem {
@@ -25,6 +27,7 @@ async function matchSingleSource(
   year?: string | number
 ): Promise<VodItem | null> {
   try {
+    // 自调用携带内部凭证：使 /api/drama/list 能区分内部调用与外部请求
     const searchResponse = await fetch(`${origin}/api/drama/list`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,6 +37,9 @@ async function matchSingleSource(
         limit: 10,
         keyword: title,
       }),
+      // 超时保护：上游源挂起（TCP 连上但不响应）时避免 Promise.all 永久悬挂
+      signal: AbortSignal.timeout(15000),
+      ...withInternalToken(),
     });
 
     const searchResult = await searchResponse.json();
@@ -111,10 +117,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    let origin = request.nextUrl.origin;
-    if (process.env.NODE_ENV === 'production') {
-      origin = `http://127.0.0.1:${process.env.PORT || 3000}`;
-    }
+    // 服务端自调用地址：Docker 单容器用 INTERNAL_ORIGIN，
+    // Serverless（如 Vercel）回落到请求自身 Origin，避免回环地址不可达
+    const origin = getInternalOrigin(request);
 
     // 并行搜索所有源
     const matchPromises = allSources.map(async (source) => {

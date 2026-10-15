@@ -603,7 +603,7 @@ export function ShortsSourcesTab({
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xs px-2 py-1 bg-foreground/10 text-foreground rounded font-mono">
-                      ***REMOVED***{source.priority ?? 0}
+                      #{source.priority ?? 0}
                     </span>
                     <h3 className="text-lg font-semibold text-foreground">
                       {source.name}
@@ -731,14 +731,14 @@ export function ShortsSourcesTab({
                       </span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      ***REMOVED***{source.priority || 0}
+                      #{source.priority || 0}
                     </span>
                   </div>
                 ))}
               </div>
               <button
                 onClick={handleConfirmEncryptedImport}
-                className="w-full px-4 py-2 bg-[***REMOVED***46d369] hover:bg-[***REMOVED***3cb85e] text-black font-medium rounded-lg transition"
+                className="w-full px-4 py-2 bg-[#46d369] hover:bg-[#3cb85e] text-black font-medium rounded-lg transition"
               >
                 ✅ 确认导入
               </button>
