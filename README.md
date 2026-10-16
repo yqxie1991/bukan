@@ -166,7 +166,7 @@ docker compose up -d
 | `APP_URL` | | 外网访问域名，分片直连判定用 | 空（按请求头推断） |
 | `NEXT_PUBLIC_APP_URL` | | 同上，但构建期内联（优先于 `APP_URL`） | 空 |
 | `TRUST_PROXY` | | 是否信任反代写入的 `X-Forwarded-For` | `true` |
-| `SECURE_COOKIE` | | 会话 Cookie 是否带 `Secure` 标记 | `false` |
+| `SECURE_COOKIE` | | 会话 Cookie 是否带 `Secure` 标记 | 生产 compose 默认 `true`；本地开发 `false` |
 | `INTERNAL_TOKEN` | | 服务间内部调用凭证（多实例共享时才需设置） | 空（进程内随机生成） |
 | `NEXT_PUBLIC_DOUBAN_API_URL` | | 自定义豆瓣中转 API 地址 | 内置默认代理 |
 | `NEXT_PUBLIC_DANMU_API_URL` | | 弹幕接口地址 | 内置默认地址 |
@@ -176,7 +176,7 @@ docker compose up -d
 
 * **`ADMIN_PASSWORD` 是唯一必填项**，`docker-compose.yml` 使用 `${ADMIN_PASSWORD:?...}`，未设置时部署直接失败——因此不存在「忘记修改而悄悄回落默认密码」的风险。
 * **`TRUST_PROXY`**：经 Lucky/Nginx 反代时保持 `true`；若将端口直连暴露到公网，必须设为 `false`，否则攻击者可伪造 `X-Forwarded-For` 绕过登录限流。
-* **`SECURE_COOKIE`**：HTTPS 反代场景设为 `true`；纯 HTTP 本地开发保持 `false`（否则浏览器不回传 Cookie，表现为登录后又跳回登录页）。
+* **`SECURE_COOKIE`**：生产 compose **已默认注入 `true`**（面向 Lucky HTTPS 反代）。不带该标记时，由于 3009 绑定 `0.0.0.0`，内网 `http://` 直连会把 7 天有效的会话 Cookie 明文发出。⚠️ 如果你日常直接走 `http://内网IP:3009` 登录，需显式设为 `false`，否则浏览器会拒绝保存该 Cookie，表现为「登录后又跳回登录页」。
 * **端口绑定**：`3009:3000` 绑定 `0.0.0.0` 表示内网任意主机可直连。Lucky 与本服务同机时不影响正常使用（反代走回环路径）；若需收紧可改为 `"127.0.0.1:3009:3000"`。
 
 ---

@@ -24,6 +24,9 @@ services:
       # 登录限流是否信任反代写入的 X-Forwarded-For。
       # 经反代时保持 true；若为端口直连暴露公网，必须设为 false。
       - TRUST_PROXY=${TRUST_PROXY:-true}
+      # 会话 Cookie 的 Secure 标记。HTTPS 反代部署保持 true；
+      # 若服务仅以 http:// 直接对外，必须设为 false（否则浏览器不保存 Cookie）。
+      - SECURE_COOKIE=${SECURE_COOKIE:-true}
       - PORT=3000
     volumes:
       - bukan-cache:/app/public/cache

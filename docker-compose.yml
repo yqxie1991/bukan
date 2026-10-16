@@ -48,6 +48,13 @@ services:
       # 否则攻击者可伪造该头绕过限流。
       - TRUST_PROXY=${TRUST_PROXY:-true}
 
+      # 会话 Cookie 是否带 Secure 标记。默认 true —— 本配置面向 Lucky HTTPS 反代部署；
+      # 不带该标记时，由于 3009 绑定 0.0.0.0，内网 http:// 直连会把 7 天有效的
+      # admin_session 明文发出去。
+      # ⚠️ 若你日常直接走 http://内网IP:3009 登录，必须改为 false，
+      #    否则浏览器拒绝保存该 Cookie，表现为「登录后又跳回登录页」。
+      - SECURE_COOKIE=${SECURE_COOKIE:-true}
+
       - PORT=3000
 
     volumes:

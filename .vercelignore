@@ -12,7 +12,6 @@ data/*.json
 data/*.tmp
 
 # 仓库内的非运行时产物：不参与构建，也不应上传
-screenshot/
 docs/
 conductor/
 .trae/

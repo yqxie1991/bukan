@@ -19,6 +19,8 @@ services:
       # 开发环境通常无反代，默认不信任 X-Forwarded-For，
       # 以便本地测试 TRUST_PROXY=false 的限流行为
       - TRUST_PROXY=${TRUST_PROXY:-false}
+      # 开发环境走 http，必须为 false，否则登录后浏览器不会保存 Cookie
+      - SECURE_COOKIE=${SECURE_COOKIE:-false}
       - PORT=3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
