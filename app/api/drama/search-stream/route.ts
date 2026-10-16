@@ -74,9 +74,17 @@ function formatDramaList(list: DramaListItem[], source: VodSource) {
 }
 
 // 搜索单个源
-async function searchSingleSource(source: VodSource, keyword: string) {
+async function searchSingleSource(
+  source: VodSource,
+  keyword: string,
+  signal?: AbortSignal
+) {
   try {
     let response: Response | null;
+    // 上游超时与「客户端断开」两个信号取并集：任一方触发即中止请求，
+    // 避免客户端已经离开后，服务器仍在对 N 个源做无谓抓取。
+    const timeoutSignal = AbortSignal.timeout(15000);
+    const abortSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 
     // SSRF 防护：源地址虽来自数据库，但配置可被管理员或注入篡改，
     // 仍需逐跳校验重定向，防止上游 302 指向内网
@@ -92,7 +100,7 @@ async function searchSingleSource(source: VodSource, keyword: string) {
           keyword: keyword,
           page: 1,
         }),
-        signal: AbortSignal.timeout(15000),
+        signal: abortSignal,
       });
     } else {
       // 标准 GET 请求
@@ -107,7 +115,7 @@ async function searchSingleSource(source: VodSource, keyword: string) {
       response = await safeFetch(apiUrl, {
         method: 'GET',
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(15000),
+        signal: abortSignal,
       });
     }
 
@@ -171,13 +179,38 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // 客户端断开（关标签页 / 切路由）后 controller 会进入 closed 状态，
+  // 此时再 enqueue 会抛 "Controller is already closed" 并变成未捕获异常。
+  // 用标志位 + safeEnqueue 统一兜住；同时把 request.signal 传给上游抓取，
+  // 客户端一走就中止，不再对剩余视频源做无谓请求。
+  let closed = false;
+
+  const safeEnqueue = (
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    chunk: Uint8Array
+  ): boolean => {
+    if (closed) return false;
+    try {
+      controller.enqueue(chunk);
+      return true;
+    } catch {
+      // 流已被取消或关闭
+      closed = true;
+      return false;
+    }
+  };
+
   // 创建 ReadableStream 实现流式响应
-  const stream = new ReadableStream({
+  const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
+
+      request.signal.addEventListener('abort', () => {
+        closed = true;
+      });
       
       // 发送初始信息
-      controller.enqueue(encoder.encode(
+      safeEnqueue(controller, encoder.encode(
         `data: ${JSON.stringify({ 
           type: 'init', 
           totalSources: allSources.length,
@@ -187,10 +220,12 @@ export async function GET(request: NextRequest) {
 
       // 并行搜索所有源，但每个完成就立即推送
       const searchPromises = allSources.map(async (source) => {
-        const result = await searchSingleSource(source, keyword);
+        if (closed) return null;
+
+        const result = await searchSingleSource(source, keyword, request.signal);
         
         // 每个源完成后立即推送结果
-        controller.enqueue(encoder.encode(
+        safeEnqueue(controller, encoder.encode(
           `data: ${JSON.stringify({
             type: 'result',
             sourceKey: source.key,
@@ -207,12 +242,24 @@ export async function GET(request: NextRequest) {
       // 等待所有搜索完成
       await Promise.all(searchPromises);
 
+      // 客户端已断开则不再发送完成信号
+      if (closed) return;
+
       // 发送完成信号
-      controller.enqueue(encoder.encode(
+      safeEnqueue(controller, encoder.encode(
         `data: ${JSON.stringify({ type: 'done' })}\n\n`
       ));
       
-      controller.close();
+      try {
+        controller.close();
+      } catch {
+        // 忽略重复关闭
+      }
+      closed = true;
+    },
+    cancel() {
+      // 消费端取消（如浏览器中止 fetch）时同步标记，阻止后续入队
+      closed = true;
     },
   });
 
