@@ -49,14 +49,15 @@ All tasks follow a strict lifecycle:
    - Propose a clear, concise commit message e.g, `feat(ui): Create basic HTML structure for calculator`.
    - Perform the commit.
 
-9. **Attach Task Summary with Git Notes:**
-   - **Step 9.1: Get Commit Hash:** Obtain the hash of the *just-completed commit* (`git log -1 --format="%H"`).
-   - **Step 9.2: Draft Note Content:** Create a detailed summary for the completed task. This should include the task name, a summary of changes, a list of all created/modified files, and the core "why" for the change.
-   - **Step 9.3: Attach Note:** Use the `git notes` command to attach the summary to the commit.
-     ```bash
-     # The note content from the previous step is passed via the -m flag.
-     git notes add -m "<note content>" <commit_hash>
-     ```
+9. **Record the Task Summary:**
+   - **Step 9.1: Get Commit Hash:** Obtain the hash of the *just-completed commit* (`git log -1 --format="%h"`).
+   - **Step 9.2: Draft the Summary:** Create a detailed summary for the completed task. This should include the task name, a summary of changes, a list of all created/modified files, and the core "why" for the change.
+   - **Step 9.3: Record It in the Commit Message:** Put the summary in the **commit message body** (see Step 8). That is the reviewable, versioned record.
+     > ⚠️ This project does **not** use `git notes`. The `refs/notes/commits` ref was deliberately
+     > removed (locally and on the remote) because it had gone stale — it annotated commits that no
+     > longer exist after the history rewrite, and the published copy still carried superseded
+     > metadata. Do not add notes back.
+   - If the summary belongs to a task in `plan.md`, also append the commit hash on that task line (see Step 10).
 
 10. **Get and Record Task Commit SHA:**
     - **Step 10.1: Update Plan:** Read `plan.md`, find the line for the completed task, update its status from `[~]` to `[x]`, and append the first 7 characters of the *just-completed commit's* commit hash.
@@ -119,9 +120,9 @@ All tasks follow a strict lifecycle:
     -   Stage all changes. If no changes occurred in this step, proceed with an empty commit.
     -   Perform the commit with a clear and concise message (e.g., `conductor(checkpoint): Checkpoint end of Phase X`).
 
-7.  **Attach Auditable Verification Report using Git Notes:**
-    -   **Step 7.1: Draft Note Content:** Create a detailed verification report including the automated test command, the manual verification steps, and the user's confirmation.
-    -   **Step 7.2: Attach Note:** Use the `git notes` command and the full commit hash from the previous step to attach the full report to the checkpoint commit.
+7.  **Record the Auditable Verification Report:**
+    -   **Step 7.1: Draft the Report:** Create a detailed verification report including the automated test command, the manual verification steps, and the user's confirmation.
+    -   **Step 7.2: Record It in the Checkpoint Commit Message:** Put the report in the **commit message body** of the checkpoint commit created in Step 6. This project does not use `git notes` (see Step 9 of the Standard Task Workflow); keep the same text in the checkpoint's `plan.md` entry when it aids review.
 
 8.  **Get and Record Phase Checkpoint SHA:**
     -   **Step 8.1: Get Commit Hash:** Obtain the hash of the *just-created checkpoint commit* (`git log -1 --format="%H"`).
@@ -132,7 +133,7 @@ All tasks follow a strict lifecycle:
     - **Action:** Stage the modified `plan.md` file.
     - **Action:** Commit this change with a descriptive message following the format `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
 
-10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
+10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report recorded in the checkpoint commit message.
 
 ### Quality Gates
 
@@ -272,7 +273,7 @@ A task is complete when:
 6. Works beautifully on mobile (if applicable)
 7. Implementation notes added to `plan.md`
 8. Changes committed with proper message
-9. Git note with task summary attached to the commit
+9. Task summary recorded in the commit message body
 
 ## Emergency Procedures
 

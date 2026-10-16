@@ -77,7 +77,7 @@ fi
 SCRIPT_VERSION="2.0.0"
 SCRIPT_DATE="2026-07-18"
 DOCKER_IMAGE="ghcr.io/yqxie1991/bukan"
-DEFAULT_VERSION="v1.0-lite"
+DEFAULT_VERSION="v1.5-lite"
 DEFAULT_PORT="3009"
 INSTALL_DIR="${BUKAN_INSTALL_DIR:-$HOME/bukan}"
 
@@ -427,13 +427,20 @@ EOF
 services:
   # 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v1.0-lite
+    image: ghcr.io/yqxie1991/bukan:v1.5-lite
     container_name: bukan-app
     ports:
       - "${APP_PORT:-3009}:3000"
     environment:
       - NODE_ENV=production
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bukan}
+      - TZ=Asia/Shanghai
+      # :? 强制校验。本脚本已把 ADMIN_PASSWORD 写入 .env，
+      # 若该变量缺失则部署直接失败，不会静默回落到公开的默认密码。
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD 必须设置}
+      - HOME_CACHE_TIMEZONE=${HOME_CACHE_TIMEZONE:-Asia/Shanghai}
+      - APP_URL=${APP_URL:-}
+      - INTERNAL_ORIGIN=http://127.0.0.1:3000
+      - TRUST_PROXY=${TRUST_PROXY:-true}
       - PORT=3000
     volumes:
       - bukan-cache:/app/public/cache
@@ -563,7 +570,7 @@ case "$1" in
         echo "📋 当前环境变量:"
         echo "   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-未设置}"
         echo "   APP_PORT: ${APP_PORT:-3009}"
-        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-v1.0-lite}"
+        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-v1.5-lite}"
         ;;
     *)
         echo "不看 (bukan) 管理脚本 v2.0.0"
