@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # 需要标签对象本身，才能读取「注解标签的消息」作为发布说明
+          fetch-depth: 0
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -60,16 +63,31 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
 
-          # 幂等：若该 tag 的 Release 已存在（例如你已在网页手动发布），跳过而不报错
+          # 幂等：若该 tag 的 Release 已存在（例如已在网页手动发布），跳过而不报错
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag 已存在，跳过创建。"
             exit 0
           fi
 
-          # --generate-notes：由 GitHub 依据「上一个 Release 之后的提交」自动生成发布说明
-          # 末尾附加 docker-compose.yml，方便直接下载部署（与此前手动发布的做法一致）
-          gh release create "$tag" \
-            --title "$tag" \
-            --generate-notes \
-            --verify-tag \
-            docker-compose.yml
+          # 发布说明优先取「注解标签的消息」——本项目打 tag 时都写了详细说明。
+          # 注意：GitHub 的 --generate-notes 主要依据「合并的 PR」生成内容，
+          # 而本仓库是直接推分支、没有 PR，因此自动说明会退化成只剩对比链接，
+          # 故仅在标签没有消息（轻量标签）时才回退到它。
+          notes="$(git tag -l --format='%(contents)' "$tag")"
+
+          if [ -n "$notes" ]; then
+            printf '%s\n' "$notes" > /tmp/release-notes.md
+            echo "使用标签消息作为发布说明（$(wc -c < /tmp/release-notes.md) 字节）"
+            gh release create "$tag" \
+              --title "$tag" \
+              --notes-file /tmp/release-notes.md \
+              --verify-tag \
+              docker-compose.yml
+          else
+            echo "标签无消息，回退到 GitHub 自动生成的发布说明"
+            gh release create "$tag" \
+              --title "$tag" \
+              --generate-notes \
+              --verify-tag \
+              docker-compose.yml
+          fi
