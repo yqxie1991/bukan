@@ -86,7 +86,7 @@
 ```yaml
 services:
   app:
-    # 生产镜像版本（修复 SSRF / 会话伪造 / 视频分片全量中转等问题）
+    # 生产镜像版本（v2.0-lite：SSRF 加固 + Next.js 升级修 RCE + 分片直连重建 + UI 修复）
     image: ghcr.io/yqxie1991/bukan:v2.0-lite   # 👈 极致精简版生产镜像
     container_name: bukan-app
     ports:
@@ -102,6 +102,10 @@ services:
       - APP_URL=${APP_URL:-}
       - INTERNAL_ORIGIN=http://127.0.0.1:3000
       - TRUST_PROXY=${TRUST_PROXY:-true}
+      # 会话 Cookie 是否带 Secure 标记。默认 true（本配置面向 Lucky HTTPS 反代部署）。
+      # ⚠️ 若你日常直接走 http://内网IP:3009 登录，必须改为 false，
+      #    否则浏览器拒绝保存该 Cookie，表现为「登录后又跳回登录页」。
+      - SECURE_COOKIE=${SECURE_COOKIE:-true}
       - PORT=3000
     volumes:
       - bukan-cache:/app/public/cache
