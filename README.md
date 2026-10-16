@@ -87,7 +87,7 @@
 services:
   app:
     # 生产镜像版本（修复 SSRF / 会话伪造 / 视频分片全量中转等问题）
-    image: ghcr.io/yqxie1991/bukan:v1.5.1-lite   # 👈 极致精简版生产镜像
+    image: ghcr.io/yqxie1991/bukan:v2.0-lite   # 👈 极致精简版生产镜像
     container_name: bukan-app
     ports:
       # 宿主机端口:Lucky 反代指向此端口；如与已有服务冲突可自行修改左侧数字。
