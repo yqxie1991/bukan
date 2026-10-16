@@ -1,7 +1,7 @@
 name: Build and Push Docker Image
 
 on:
-  # 推送 v* 标签时自动构建并推送镜像（发版不再需要手动触发）
+  # 推送 v* 标签时：构建并推送镜像，然后创建对应的 GitHub Release
   push:
     tags:
       - 'v*'
@@ -16,7 +16,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # 创建 GitHub Release 需要（仅标签触发时用到）
       packages: write # 赋予流水线写入 GitHub 镜像仓库的权限
 
     steps:
@@ -49,3 +49,27 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      # 刻意放在镜像构建成功之后：镜像没推上去就不该发布 Release。
+      # 仅标签触发时执行（手动 workflow_dispatch 不建 Release）。
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+
+          # 幂等：若该 tag 的 Release 已存在（例如你已在网页手动发布），跳过而不报错
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag 已存在，跳过创建。"
+            exit 0
+          fi
+
+          # --generate-notes：由 GitHub 依据「上一个 Release 之后的提交」自动生成发布说明
+          # 末尾附加 docker-compose.yml，方便直接下载部署（与此前手动发布的做法一致）
+          gh release create "$tag" \
+            --title "$tag" \
+            --generate-notes \
+            --verify-tag \
+            docker-compose.yml
