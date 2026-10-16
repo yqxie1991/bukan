@@ -3,6 +3,16 @@ node_modules
 .git
 .next
 .env.local
-data/*.db
-data/*.db-shm
-data/*.db-wal
+
+# 数据文件：本地 JSON 存储（data/*.json）。
+# 说明：这些文件同时被 .gitignore 忽略，正常情况下不会进入部署包；
+# 此处保留一条显式规则以免将来有人误改 .gitignore 后把它们传上去。
+# （历史上这里是 MongoDB 时代的 data/*.db 规则，已随去数据库改造失效。）
+data/*.json
+data/*.tmp
+
+# 仓库内的非运行时产物：不参与构建，也不应上传
+screenshot/
+docs/
+conductor/
+.trae/

@@ -43,6 +43,15 @@ LICENSE
 # Scripts
 scripts/
 
+# 仓库内的非运行时产物：不参与镜像构建，排除以缩小构建上下文
+# （screenshot/ 约 7MB 且无任何代码/文档引用）
+screenshot/
+docs/
+conductor/
+.trae/
+.github/
+.vercelignore
+
 # Docker
 Dockerfile*
 docker-compose*.yml
