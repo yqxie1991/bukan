@@ -98,8 +98,8 @@ export function Navbar({ scrolled }: NavbarProps) {
 
           {/* 右侧功能区 */}
           <div className="flex items-center space-x-1 md:space-x-2">
-            {/* 主题切换按钮 */}
-            <ThemeToggle />
+            {/* 主题切换按钮（样式与右侧搜索/历史按钮保持一致，需传入 scrolled） */}
+            <ThemeToggle scrolled={scrolled} />
 
             {/* 搜索按钮 */}
             <button

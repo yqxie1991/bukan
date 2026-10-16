@@ -4,11 +4,25 @@ import { useState, useEffect } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
 
+interface ThemeToggleProps {
+  /**
+   * 与同一行的搜索 / 历史按钮保持一致所必需：
+   * 导航栏未滚动时浮在深色 Hero 图上，图标必须用白色。
+   */
+  scrolled?: boolean;
+}
+
 /**
  * 三态主题切换按钮
  * 循环切换：system → light → dark → system
+ *
+ * ⚠️ 样式必须与相邻的搜索按钮、历史按钮完全一致：
+ *   p-2 rounded-full、图标 w-5 h-5 md:w-6 md:h-6、
+ *   且随 scrolled 在 text-white / text-foreground 之间切换。
+ * 此前用的是 px-3 py-2 rounded-lg + 图标 w-4 h-4 + 写死的 text-muted-foreground，
+ * 导致未滚动时本按钮比邻居明显偏暗、形状也不一致。
  */
-export function ThemeToggle() {
+export function ThemeToggle({ scrolled = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -30,10 +44,11 @@ export function ThemeToggle() {
   };
 
   const getThemeIcon = () => {
-    if (!mounted) return <Monitor className="w-4 h-4" />;
-    if (theme === "light") return <Sun className="w-4 h-4" />;
-    if (theme === "dark") return <Moon className="w-4 h-4" />;
-    return <Monitor className="w-4 h-4" />;
+    const iconClass = "w-5 h-5 md:w-6 md:h-6";
+    if (!mounted) return <Monitor className={iconClass} />;
+    if (theme === "light") return <Sun className={iconClass} />;
+    if (theme === "dark") return <Moon className={iconClass} />;
+    return <Monitor className={iconClass} />;
   };
 
   const getThemeLabel = () => {
@@ -43,11 +58,18 @@ export function ThemeToggle() {
     return "系统";
   };
 
+  const label = getThemeLabel();
+
   return (
     <button
       onClick={toggleTheme}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-foreground/10 transition-colors text-muted-foreground hover:text-foreground"
-      title={`当前：${getThemeLabel()}模式`}
+      className={`p-2 rounded-full transition-colors ${
+        scrolled
+          ? "text-foreground hover:bg-foreground/5"
+          : "text-white hover:bg-white/10"
+      }`}
+      aria-label={`切换主题（当前：${label}）`}
+      title={`当前：${label}模式`}
     >
       {getThemeIcon()}
     </button>
