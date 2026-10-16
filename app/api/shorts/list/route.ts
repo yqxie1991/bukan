@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getShortsSourcesFromDB, getShortsSourceByKey } from "@/lib/shorts-sources-db";
 import type { ShortDramaSource } from "@/types/shorts-source";
+import { safeFetch } from "@/lib/url-guard";
 
 export interface ShortDrama {
   vod_id: number;
@@ -66,15 +67,17 @@ export async function GET(request: NextRequest) {
       apiUrl += `&t=${source.typeId}`;
     }
 
-    const response = await fetch(apiUrl, {
+    // 目标地址来自数据库中的短剧源配置（非请求体直传），仍走 safeFetch 作纵深防御：
+    // 校验目标与每一跳重定向，避免被恶意/被篡改的源配置指向内网。
+    const response = await safeFetch(apiUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
       next: { revalidate: 300 }, // 5分钟缓存
     });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+    if (!response || !response.ok) {
+      throw new Error(`API request failed: ${response ? response.status : 'blocked by url-guard'}`);
     }
 
     const data = await response.json();

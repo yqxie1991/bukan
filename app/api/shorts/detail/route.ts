@@ -4,6 +4,7 @@ import {
   getShortsSourceByKey,
 } from "@/lib/shorts-sources-db";
 import type { ShortDramaSource } from "@/types/shorts-source";
+import { safeFetch } from "@/lib/url-guard";
 
 export interface Episode {
   name: string;
@@ -78,7 +79,8 @@ export async function GET(request: NextRequest) {
 
     const apiUrl = `${source.api}?ac=detail&ids=${ids}`;
 
-    const response = await fetch(apiUrl, {
+    // 目标地址来自数据库中的短剧源配置（非请求体直传），仍走 safeFetch 作纵深防御。
+    const response = await safeFetch(apiUrl, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -86,8 +88,8 @@ export async function GET(request: NextRequest) {
       next: { revalidate: 3600 }, // 1小时缓存
     });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+    if (!response || !response.ok) {
+      throw new Error(`API request failed: ${response ? response.status : 'blocked by url-guard'}`);
     }
 
     const data = await response.json();

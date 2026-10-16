@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 // 代理池配置
 const PROXY_POOL = [
@@ -53,8 +54,9 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
     // 前2个代理都失败，降级到直接访问
   }
 
-  // 策略 2: 直接访问（防盗链 Referer）
-  const response = await fetch(url, {
+  // 策略 2: 直接访问（防盗链 Referer）。
+  // 用 safeFetch 逐跳校验重定向，防止上游 302 指向内网地址。
+  const response = await safeFetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       'Referer': 'https://movie.douban.com/',
@@ -62,7 +64,7 @@ async function fetchImageWithProxy(url: string): Promise<Response> {
     signal: AbortSignal.timeout(2500),
   });
 
-  if (response.ok) {
+  if (response && response.ok) {
     return response;
   }
 
@@ -82,7 +84,11 @@ export async function GET(request: NextRequest) {
       try {
         const safeDir = path.join(process.cwd(), 'public', 'cache', 'images');
         const filePath = path.resolve(process.cwd(), 'public', url.replace(/^\//, ''));
-        if (!filePath.startsWith(safeDir)) {
+        // 用 path.relative 判定越界：目标在 safeDir 之外时 rel 以 '..' 开头。
+        // 原实现用 filePath.startsWith(safeDir)，`/cache/images/../images_x/f.jpg`
+        // 这类前缀混淆可绕过（resolve 后落在同前缀的兄弟目录）。
+        const rel = path.relative(safeDir, filePath);
+        if (rel.startsWith('..') || path.isAbsolute(rel)) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
         const imageBuffer = await fs.readFile(filePath);
@@ -147,6 +153,12 @@ export async function GET(request: NextRequest) {
           }
         }
       }
+    }
+
+    // SSRF 防护：走到这里说明不是本地缓存路径，接下来会由服务器主动请求该地址，
+    // 必须先校验（禁止内网 IP、云元数据、以及解析到内网的域名）。
+    if (!(await isValidExternalUrlAsync(url))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // 使用代理池获取图片

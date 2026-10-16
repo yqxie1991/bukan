@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeFetch } from '@/lib/url-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,10 +52,19 @@ export async function GET(request: NextRequest) {
     // 移除高频 Headers 打印，防止 Docker 频繁刷盘写日志
     // console.log('🔧 请求headers:', JSON.stringify(fetchHeaders, null, 2));
     
-    const videoResponse = await fetch(videoUrl, {
+    // SSRF 防护：本端点的目标地址完全由客户端 ?url= 参数决定，必须先校验。
+    // safeFetch 会做「字面量内网 IP + DNS 解析到内网」双重校验，并逐跳校验重定向。
+    const videoResponse = await safeFetch(videoUrl, {
       headers: fetchHeaders,
       signal: AbortSignal.timeout(30000)
     });
+
+    if (!videoResponse) {
+      return NextResponse.json(
+        { code: 403, message: '目标地址不合法或不被允许' },
+        { status: 403 }
+      );
+    }
 
     if (!videoResponse.ok && videoResponse.status !== 206) {
       // 仅记录状态码，避免高频切片请求刷盘（一部电影几千个 .ts）

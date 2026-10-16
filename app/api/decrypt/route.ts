@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { validateSession } from '@/lib/auth';
+import { isValidExternalUrlAsync, safeFetch } from '@/lib/url-guard';
 
 const { subtle } = crypto.webcrypto;
 const PBKDF2_ITERATIONS = 100000;
@@ -148,35 +149,11 @@ function parseEncryptedString(input: string): EncryptedPackage {
   }
 }
 
-// SSRF 防护：协议白名单 + 内网 IP 黑名单 + 禁止主机名列表
-const ALLOWED_PROTOCOLS = ['http:', 'https:'];
-const BLOCKED_HOSTS = [
-  'localhost',
-  '127.0.0.1',
-  '0.0.0.0',
-  '::1',
-  '169.254.169.254', // AWS / Azure 元数据
-  'metadata.google.internal', // GCP 元数据
-];
-const BLOCKED_IP_PREFIXES = [
-  '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.',
-  '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.',
-  '172.29.', '172.30.', '172.31.', '192.168.',
-];
-
-function isValidSubscriptionUrl(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    if (!ALLOWED_PROTOCOLS.includes(url.protocol)) return false;
-    if (BLOCKED_HOSTS.includes(url.hostname)) return false;
-    for (const prefix of BLOCKED_IP_PREFIXES) {
-      if (url.hostname.startsWith(prefix)) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
+// SSRF 防护：统一改用 lib/url-guard。
+// 此前的本地实现是「协议白名单 + 内网字符串前缀黑名单」，可被
+// [::ffff:127.0.0.1] / [::7f00:1] 这类 IPv4-mapped IPv6 写法直接绕过，
+// 且域名解析到内网（localtest.me）也无法拦截，故整体移除。
+// url-guard 按 IP 值判定并追加 DNS 解析校验与逐跳重定向校验。
 
 // POST - 解密配置或代理拉取订阅配置（管理员专用：可解密敏感配置 + 可触发外部订阅 URL 拉取，存在 SSRF 风险，必须鉴权）
 export async function POST(request: NextRequest) {
@@ -196,21 +173,24 @@ export async function POST(request: NextRequest) {
     let parsedPayload: any = null;
 
     if (subscriptionUrl) {
-      // SSRF 防护：仅允许 http/https，禁止内网地址与云元数据服务
-      if (!isValidSubscriptionUrl(subscriptionUrl)) {
+      // SSRF 防护：仅允许 http/https，禁止字面量内网 IP 与「解析到内网」的域名
+      if (!(await isValidExternalUrlAsync(subscriptionUrl))) {
         return NextResponse.json(
           { code: 400, message: '订阅 URL 不合法（仅允许 http/https，禁止内网地址）', data: null },
           { status: 400 }
         );
       }
 
-      // 1. 从 URL 获取配置内容
-      const response = await fetch(subscriptionUrl, {
+      // 1. 从 URL 获取配置内容（safeFetch 逐跳校验重定向）
+      const response = await safeFetch(subscriptionUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
         signal: AbortSignal.timeout(8000),
       });
+      if (!response) {
+        throw new Error('订阅地址被安全策略拦截（内网地址，或重定向指向内网）');
+      }
       if (!response.ok) {
         throw new Error(`获取订阅配置失败，HTTP 状态码: ${response.status}`);
       }

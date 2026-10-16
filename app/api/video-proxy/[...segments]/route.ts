@@ -1,40 +1,13 @@
 // 视频代理API - 处理CORS和代理视频流
 import { NextRequest, NextResponse } from 'next/server';
+import { isValidExternalUrl } from '@/lib/url-guard';
 
 // 使用Node.js Runtime以支持完整的URL处理
 export const runtime = 'nodejs';
 
-// 阻止的主机名（防止SSRF攻击）
-const BLOCKED_HOSTS = [
-  'localhost',
-  '127.0.0.1',
-  '0.0.0.0',
-  '::1',
-  '169.254.169.254', // AWS元数据服务
-  'metadata.google.internal', // GCP元数据服务
-];
-
-// 阻止的IP前缀
-const BLOCKED_IP_PREFIXES = [
-  '10.',
-  '172.16.',
-  '172.17.',
-  '172.18.',
-  '172.19.',
-  '172.20.',
-  '172.21.',
-  '172.22.',
-  '172.23.',
-  '172.24.',
-  '172.25.',
-  '172.26.',
-  '172.27.',
-  '172.28.',
-  '172.29.',
-  '172.30.',
-  '172.31.',
-  '192.168.',
-];
+// SSRF 防护：统一使用 lib/url-guard 的同步校验（专为分片这类高频路径设计，
+// 不做 DNS 解析）。此前的本地实现是「主机名列表 + 内网字符串前缀」匹配，
+// 可被 IPv4-mapped IPv6（[::ffff:127.0.0.1]）、::7f00:1、2130706433 等写法绕过。
 
 export async function GET(
   request: NextRequest,
@@ -50,7 +23,7 @@ export async function GET(
     targetUrl = decodeURIComponent(resolvedParams.segments.join('/'));
 
     // 安全验证（保持静默，避免高频切片请求刷盘）
-    if (!isValidUrl(targetUrl)) {
+    if (!isValidExternalUrl(targetUrl)) {
       return NextResponse.json(
         { error: '无效的URL' },
         { status: 400 }
@@ -153,12 +126,25 @@ export async function GET(
       throw lastError || new Error('所有请求策略失败');
     }
 
-    // 处理重定向
+    // 处理重定向：只允许跳到合法的外部地址（防开放重定向）。
+    // 相对 Location 先按上游地址解析为绝对地址——NextResponse.redirect 要求绝对
+    // URL，直接传相对地址会抛错变成 500。
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('Location');
       if (location) {
-        // 返回重定向地址
-        return NextResponse.redirect(location);
+        let nextUrl: string | null = null;
+        try {
+          nextUrl = new URL(location, targetUrl).href;
+        } catch {
+          nextUrl = null;
+        }
+        if (nextUrl && isValidExternalUrl(nextUrl)) {
+          return NextResponse.redirect(nextUrl);
+        }
+        return NextResponse.json(
+          { error: '上游重定向指向不被允许的地址' },
+          { status: 502 }
+        );
       }
     }
 
@@ -319,34 +305,6 @@ export async function OPTIONS() {
       'Access-Control-Max-Age': '86400',
     },
   });
-}
-
-// URL安全验证（保持静默，避免高频请求刷盘）
-function isValidUrl(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-
-    // 只允许HTTP和HTTPS协议
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      return false;
-    }
-
-    // 检查阻止的主机名
-    if (BLOCKED_HOSTS.includes(url.hostname)) {
-      return false;
-    }
-
-    // 检查阻止的IP前缀
-    for (const prefix of BLOCKED_IP_PREFIXES) {
-      if (url.hostname.startsWith(prefix)) {
-        return false;
-      }
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 // 获取请求的真实外网 Origin（用于判定本服务是否运行在 HTTPS 之下）
