@@ -77,7 +77,7 @@ fi
 SCRIPT_VERSION="2.0.0"
 SCRIPT_DATE="2026-07-18"
 DOCKER_IMAGE="ghcr.io/yqxie1991/bukan"
-DEFAULT_VERSION="v1.5-lite"
+DEFAULT_VERSION="v1.5.1-lite"
 DEFAULT_PORT="3009"
 INSTALL_DIR="${BUKAN_INSTALL_DIR:-$HOME/bukan}"
 
@@ -427,7 +427,7 @@ EOF
 services:
   # 🌐 App 服务：Next.js 前端与 API 聚合网关
   app:
-    image: ghcr.io/yqxie1991/bukan:v1.5-lite
+    image: ghcr.io/yqxie1991/bukan:v1.5.1-lite
     container_name: bukan-app
     ports:
       - "${APP_PORT:-3009}:3000"
@@ -570,7 +570,7 @@ case "$1" in
         echo "📋 当前环境变量:"
         echo "   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-未设置}"
         echo "   APP_PORT: ${APP_PORT:-3009}"
-        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-v1.5-lite}"
+        echo "   IMAGE_VERSION: ${IMAGE_VERSION:-v1.5.1-lite}"
         ;;
     *)
         echo "不看 (bukan) 管理脚本 v2.0.0"

@@ -35,7 +35,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          # 标签规则：手动触发用输入的版本号；标签触发时自动取标签名（如 v1.5-lite）
+          # 标签规则：手动触发用输入的版本号；标签触发时自动取标签名（如 v1.5.1-lite）
           tags: |
             type=raw,value=latest
             type=raw,value=${{ github.event.inputs.version || github.ref_name }}
