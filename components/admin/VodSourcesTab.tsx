@@ -15,6 +15,28 @@ interface UnifiedImportPreview {
   dailymotionChannels?: Omit<DailymotionChannelConfig, "id" | "createdAt">[];
 }
 
+// 导入包结构不固定（支持标准打包 / sources / TVBox sites / 纯数组等多种格式），
+// 故按「可选字段 + unknown 值」建模，取值处一律先用 Array.isArray 等收窄，
+// 避免用 any 逃逸类型检查。
+interface ImportPayloadShape {
+  version?: unknown;
+  algorithm?: unknown;
+  data?: unknown;
+  vodSources?: unknown;
+  shortsSources?: unknown;
+  dailymotionChannels?: unknown;
+  sources?: unknown;
+  sites?: unknown;
+}
+
+// TVBox 风格的 sites 条目（兼容导入用），字段全部可选
+interface TvboxSite {
+  key?: string;
+  name?: string;
+  api?: string;
+  playUrl?: string;
+}
+
 export function VodSourcesTab({
   sources,
   selectedKey,
@@ -79,9 +101,9 @@ export function VodSourcesTab({
 
     // 1. 尝试直接作为明文 JSON 解析
     try {
-      let rawText = importData.trim();
+      const rawText = importData.trim();
       let isPlainJson = false;
-      let parsedPayload: any = null;
+      let parsedPayload: ImportPayloadShape | null = null;
 
       if (isSubscriptionUrl(rawText)) {
         try {
@@ -125,7 +147,7 @@ export function VodSourcesTab({
           }
           // 格式 C: 兼容 TVBox 的 sites 字段
           else if (parsedPayload.sites && Array.isArray(parsedPayload.sites)) {
-            const mappedSources = parsedPayload.sites.map((site: any) => ({
+            const mappedSources = parsedPayload.sites.map((site) => ({
               key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
               name: site.name || '未命名视频源',
               api: site.api || '',
@@ -133,7 +155,7 @@ export function VodSourcesTab({
               priority: 0,
               type: "json" as const,
               usePlayUrl: true
-            })).filter((s: any) => s.api); // 过滤无 api 地址的源
+            })).filter((s) => s.api); // 过滤无 api 地址的源
 
             if (mappedSources.length > 0) {
               preview.vodSources = mappedSources;
@@ -217,7 +239,7 @@ export function VodSourcesTab({
       }
       // 格式 C: 兼容 TVBox 的 sites 字段
       else if (payload.sites && Array.isArray(payload.sites)) {
-        const mappedSources = payload.sites.map((site: any) => ({
+        const mappedSources = payload.sites.map((site: TvboxSite) => ({
           key: site.key || `tvbox_${Math.random().toString(36).substr(2, 5)}`,
           name: site.name || '未命名视频源',
           api: site.api || '',
@@ -225,7 +247,7 @@ export function VodSourcesTab({
           priority: 0,
           type: "json" as const,
           usePlayUrl: true
-        })).filter((s: any) => s.api);
+        })).filter((s: { api: string }) => s.api);
 
         if (mappedSources.length > 0) {
           preview.vodSources = mappedSources;

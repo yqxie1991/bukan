@@ -12,6 +12,17 @@ interface UseDanmakuProps {
   onDanmakuCountChange?: (count: number) => void;
 }
 
+/** artplayer-plugin-danmuku 实例的最小接口（本项目只用到 config / load） */
+interface DanmakuPluginLike {
+  config: (options: { danmuku: DanmakuItem[] }) => void;
+  load: () => void;
+}
+
+/** 插件工厂的返回类型（即挂在播放器实例上的插件对象） */
+type DanmakuPluginInstance = ReturnType<
+  typeof import("artplayer-plugin-danmuku").default
+>;
+
 export function useDanmaku({
   title,
   artRef,
@@ -25,7 +36,7 @@ export function useDanmaku({
     matchedTitle?: string;
   }>({ loading: false, message: "" });
   
-  const danmakuPluginRef = useRef<any>(null);
+  const danmakuPluginRef = useRef<DanmakuPluginInstance | null>(null);
   const autoLoadAttemptedRef = useRef(false);
   const isMountedRef = useRef(true);
 
@@ -42,7 +53,7 @@ export function useDanmaku({
       onDanmakuCountChange?.(danmaku.length);
       if (artRef.current && danmakuPluginRef.current) {
         // 清空现有弹幕并加载新弹幕
-        const plugin = artRef.current.plugins.artplayerPluginDanmuku as any;
+        const plugin = artRef.current.plugins.artplayerPluginDanmuku as unknown as DanmakuPluginLike | undefined;
         if (plugin) {
           plugin.config({ danmuku: danmaku });
           plugin.load();
@@ -55,6 +66,9 @@ export function useDanmaku({
 
   useEffect(() => {
     if (externalDanmaku && externalDanmaku.length > 0) {
+      // 需要把外部传入的弹幕同步进播放器插件实例（外部系统），
+      // 同时更新本地计数状态。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       handleDanmakuLoad(externalDanmaku);
     }
   }, [externalDanmaku, handleDanmakuLoad]);
@@ -78,7 +92,7 @@ export function useDanmaku({
           });
 
           // 加载弹幕到播放器
-          const plugin = artRef.current?.plugins.artplayerPluginDanmuku as any;
+          const plugin = artRef.current?.plugins.artplayerPluginDanmuku as unknown as DanmakuPluginLike | undefined;
           if (plugin) {
             plugin.config({ danmuku: result.danmaku });
             plugin.load();

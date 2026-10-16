@@ -19,6 +19,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme;
     if (savedTheme) {
+      // 主题偏好只存在客户端 localStorage 中，渲染期无法读取
+      //（会 hydration mismatch），属与外部存储同步的正当用法。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThemeState(savedTheme);
     }
     setMounted(true);

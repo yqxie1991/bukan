@@ -12,7 +12,13 @@ interface ToastProps {
 export function Toast({ message, type = 'info', onClose, duration = 3000 }: ToastProps) {
   // Use ref to avoid dependency issues with onClose callback
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  // 在 effect 中同步 ref。渲染期间直接写 ref 会破坏 React 的渲染纯度约束
+  // （并发渲染下同一次渲染可能被重复执行或丢弃）。定时器触发时读到的仍是
+  // 最新回调，行为与原来一致。
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -25,6 +25,13 @@ interface ConfigPayload {
   dailymotionChannels?: unknown[];
 }
 
+/** 解析阶段的宽松包形状：字段可能缺失，实际类型在解密时校验 */
+interface LoosePackageShape {
+  version?: unknown;
+  algorithm?: unknown;
+  data?: unknown;
+}
+
 /**
  * 使用 Web Crypto API 派生密钥，确保与客户端加密格式 100% 兼容
  */
@@ -170,7 +177,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { password, encryptedData, subscriptionUrl } = body;
 
-    let parsedPayload: any = null;
+    let parsedPayload: unknown = null;
 
     if (subscriptionUrl) {
       // SSRF 防护：仅允许 http/https，禁止字面量内网 IP 与「解析到内网」的域名
@@ -196,7 +203,7 @@ export async function POST(request: NextRequest) {
       }
 
       const text = (await response.text()).trim();
-      let parsedJson: any = null;
+      let parsedJson: LoosePackageShape | null = null;
       let isJson = false;
 
       // 尝试解析为明文 JSON
@@ -226,7 +233,7 @@ export async function POST(request: NextRequest) {
           throw new Error('该订阅配置已加密，请输入解密密码');
         }
         // 解密
-        parsedPayload = await decryptConfigServer(parsedJson, password);
+        parsedPayload = await decryptConfigServer(parsedJson as unknown as EncryptedPackage, password);
       } else {
         // 明文，直接透传
         parsedPayload = parsedJson;

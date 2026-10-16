@@ -13,6 +13,9 @@ export function NavActions() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // 水合安全的挂载检测：system 主题偏好只能在挂载后读取，
+    // 否则首屏与 SSR 不一致会产生 hydration mismatch。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

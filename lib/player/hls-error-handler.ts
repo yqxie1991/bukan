@@ -4,7 +4,7 @@ import type { ErrorType, HlsErrorData } from "@/lib/player/types";
 export function handleHlsError(
   data: HlsErrorData,
   hls: HlsType,
-  Hls: any,
+  Hls: typeof HlsType,
   useDirectPlay: boolean,
   setUseDirectPlay: (v: boolean) => void,
   setPlayMode: (v: "direct" | "proxy" | "detecting") => void,

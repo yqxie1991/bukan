@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         page: data.page,
         pagecount: data.pagecount,
         total: data.total,
-        list: data.list.map((item: any) => ({
+        list: data.list.map((item: ShortDrama) => ({
           vod_id: item.vod_id,
           vod_name: item.vod_name,
           vod_pic: item.vod_pic || "",

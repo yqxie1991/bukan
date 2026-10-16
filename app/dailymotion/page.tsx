@@ -49,6 +49,9 @@ function DailymotionContent() {
       const pageFromUrl = parseInt(searchParams.get("page") || "1", 10);
       const channelFromUrl = searchParams.get("channel");
 
+      // 首次进入时用 URL 查询参数初始化分页状态；此后分页由用户交互驱动，
+      // 仍需 state 承载。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage(pageFromUrl);
 
       if (channelFromUrl) {

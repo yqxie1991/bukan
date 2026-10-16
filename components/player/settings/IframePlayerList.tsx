@@ -1,10 +1,10 @@
 "use client";
 
-import type { PlayerConfig } from "@/types/player";
+import type { PlayerConfig, IframePlayer } from "@/types/player";
 
 interface IframePlayerListProps {
   currentMode: "iframe" | "local";
-  enabledIframePlayers: any[];
+  enabledIframePlayers: IframePlayer[];
   currentIframePlayerIndex: number;
   onIframePlayerChange: (index: number) => void;
 }

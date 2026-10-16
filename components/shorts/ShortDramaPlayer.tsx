@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type Artplayer from "artplayer";
+import type HlsType from "hls.js";
+import type { HlsErrorData } from "@/lib/player/types";
 
 interface ShortDramaPlayerProps {
   videoUrl: string;
@@ -18,7 +20,7 @@ export function ShortDramaPlayer({
 }: ShortDramaPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const artRef = useRef<Artplayer | null>(null);
-  const hlsRef = useRef<any>(null);
+  const hlsRef = useRef<HlsType | null>(null);
   const isMountedRef = useRef(true);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +124,7 @@ export function ShortDramaPlayer({
                   setIsLoading(false);
                 });
 
-                hls.on(Hls.Events.ERROR, (_: string, data: any) => {
+                hls.on(Hls.Events.ERROR, (_: string, data: HlsErrorData) => {
                   if (data.fatal) {
                     setError("视频加载失败");
                     setIsLoading(false);

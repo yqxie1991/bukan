@@ -223,7 +223,7 @@ export default function HistoryPage() {
               未找到相关记录
             </h2>
             <p className="text-muted-foreground">
-              没有找到包含 "{searchKeyword}" 的历史记录
+              没有找到包含 &quot;{searchKeyword}&quot; 的历史记录
             </p>
           </div>
         ) : (

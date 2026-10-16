@@ -27,6 +27,8 @@ export function useSearchHistory() {
 
   // 初始加载
   useEffect(() => {
+    // 搜索历史保存在 localStorage，属只能在挂载后读取的客户端外部存储。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadHistory();
   }, [loadHistory]);
 

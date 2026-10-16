@@ -6,6 +6,15 @@ import { Modal } from "@/components/Modal";
 import type { ShortsSourcesTabProps } from "./types";
 import { isSubscriptionUrl } from "@/lib/utils";
 
+// 导入包结构不固定，按「可选字段 + unknown 值」建模，取值处先用 Array.isArray 收窄
+interface ImportPayloadShape {
+  version?: unknown;
+  algorithm?: unknown;
+  data?: unknown;
+  shortsSources?: unknown;
+  sources?: unknown;
+}
+
 export function ShortsSourcesTab({
   sources,
   selectedKey,
@@ -63,9 +72,9 @@ export function ShortsSourcesTab({
 
     // 1. 尝试直接作为明文 JSON 解析
     try {
-      let rawText = importData.trim();
+      const rawText = importData.trim();
       let isPlainJson = false;
-      let parsedPayload: any = null;
+      let parsedPayload: ImportPayloadShape | null = null;
 
       if (isSubscriptionUrl(rawText)) {
         try {
@@ -87,7 +96,7 @@ export function ShortsSourcesTab({
         const isEncrypted = parsedPayload && typeof parsedPayload === 'object' && parsedPayload.version && parsedPayload.algorithm && parsedPayload.data;
         if (!isEncrypted) {
           isJson = true;
-          let shortsSourcesList: any[] = [];
+          let shortsSourcesList: ShortDramaSource[] = [];
           
           // 格式 A: 标准打包格式
           if (parsedPayload.shortsSources && Array.isArray(parsedPayload.shortsSources)) {
@@ -150,7 +159,7 @@ export function ShortsSourcesTab({
 
       const payload = result.data;
 
-      let shortsSourcesList: any[] = [];
+      let shortsSourcesList: ShortDramaSource[] = [];
       if (payload.shortsSources && Array.isArray(payload.shortsSources)) {
         shortsSourcesList = payload.shortsSources;
       } else if (payload.sources && Array.isArray(payload.sources)) {

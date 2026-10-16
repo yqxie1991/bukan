@@ -73,7 +73,7 @@ export default function ShortsPage() {
 
         // 并行获取每个短剧的详情
         const dramasWithEpisodes = await Promise.all(
-          dramaList.map(async (drama: any) => {
+          dramaList.map(async (drama: ShortDrama) => {
             const episodes = await fetchDramaDetail(drama.vod_id, source);
             return {
               vod_id: drama.vod_id,

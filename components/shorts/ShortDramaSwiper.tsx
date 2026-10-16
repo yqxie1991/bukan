@@ -193,6 +193,9 @@ export function ShortDramaSwiper({
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTo({ top: 0, behavior: "instant" });
+      // 模式/集数变化时把滚动容器与受控索引重新对齐
+      // （此处正是在同步外部 DOM 滚动系统）。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveIndex(
         mode === "watch" ? currentEpisodeIndex : currentDramaIndex
       );

@@ -13,6 +13,9 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // 水合安全的挂载检测：首屏必须渲染成与 SSR 一致的形态，挂载后再切换。
+    // 改成渲染期判断会造成 hydration mismatch。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

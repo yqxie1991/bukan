@@ -22,7 +22,7 @@ interface UseHomeDataReturn {
   refetch: () => Promise<void>;
 }
 
-const fetchHero = async (): Promise<any[]> => {
+const fetchHero = async (): Promise<(HeroMovie & HeroData)[]> => {
   const res = await fetch('/api/home/hero');
   const json = await res.json();
   if (json.code !== 200) {
