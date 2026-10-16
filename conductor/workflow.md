@@ -1,6 +1,6 @@
-***REMOVED*** Project Workflow
+# Project Workflow
 
-***REMOVED******REMOVED*** Guiding Principles
+## Guiding Principles
 
 1. **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
 2. **The Tech Stack is Deliberate:** Changes to the tech stack must be documented in `tech-stack.md` *before* implementation
@@ -9,11 +9,11 @@
 5. **User Experience First:** Every decision should prioritize user experience
 6. **Non-Interactive & CI-Aware:** Prefer non-interactive commands. Use `CI=true` for watch-mode tools (tests, linters) to ensure single execution.
 
-***REMOVED******REMOVED*** Task Workflow
+## Task Workflow
 
 All tasks follow a strict lifecycle:
 
-***REMOVED******REMOVED******REMOVED*** Standard Task Workflow
+### Standard Task Workflow
 
 1. **Select Task:** Choose the next available task from `plan.md` in sequential order
 
@@ -54,7 +54,7 @@ All tasks follow a strict lifecycle:
    - **Step 9.2: Draft Note Content:** Create a detailed summary for the completed task. This should include the task name, a summary of changes, a list of all created/modified files, and the core "why" for the change.
    - **Step 9.3: Attach Note:** Use the `git notes` command to attach the summary to the commit.
      ```bash
-     ***REMOVED*** The note content from the previous step is passed via the -m flag.
+     # The note content from the previous step is passed via the -m flag.
      git notes add -m "<note content>" <commit_hash>
      ```
 
@@ -66,7 +66,7 @@ All tasks follow a strict lifecycle:
     - **Action:** Stage the modified `plan.md` file.
     - **Action:** Commit this change with a descriptive message (e.g., `conductor(plan): Mark task 'Create user model' as complete`).
 
-***REMOVED******REMOVED******REMOVED*** Phase Completion Verification and Checkpointing Protocol
+### Phase Completion Verification and Checkpointing Protocol
 
 **Trigger:** This protocol is executed immediately after a task is completed that also concludes a phase in `plan.md`.
 
@@ -134,7 +134,7 @@ All tasks follow a strict lifecycle:
 
 10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
 
-***REMOVED******REMOVED******REMOVED*** Quality Gates
+### Quality Gates
 
 Before marking any task complete, verify:
 
@@ -148,55 +148,55 @@ Before marking any task complete, verify:
 - [ ] Documentation updated if needed
 - [ ] No security vulnerabilities introduced
 
-***REMOVED******REMOVED*** Development Commands
+## Development Commands
 
 **AI AGENT INSTRUCTION: This section should be adapted to the project's specific language, framework, and build tools.**
 
-***REMOVED******REMOVED******REMOVED*** Setup
+### Setup
 ```bash
-***REMOVED*** Example: Commands to set up the development environment (e.g., install dependencies, configure database)
-***REMOVED*** e.g., for a Node.js project: npm install
-***REMOVED*** e.g., for a Go project: go mod tidy
+# Example: Commands to set up the development environment (e.g., install dependencies, configure database)
+# e.g., for a Node.js project: npm install
+# e.g., for a Go project: go mod tidy
 ```
 
-***REMOVED******REMOVED******REMOVED*** Daily Development
+### Daily Development
 ```bash
-***REMOVED*** Example: Commands for common daily tasks (e.g., start dev server, run tests, lint, format)
-***REMOVED*** e.g., for a Node.js project: npm run dev, npm test, npm run lint
-***REMOVED*** e.g., for a Go project: go run main.go, go test ./..., go fmt ./...
+# Example: Commands for common daily tasks (e.g., start dev server, run tests, lint, format)
+# e.g., for a Node.js project: npm run dev, npm test, npm run lint
+# e.g., for a Go project: go run main.go, go test ./..., go fmt ./...
 ```
 
-***REMOVED******REMOVED******REMOVED*** Before Committing
+### Before Committing
 ```bash
-***REMOVED*** Example: Commands to run all pre-commit checks (e.g., format, lint, type check, run tests)
-***REMOVED*** e.g., for a Node.js project: npm run check
-***REMOVED*** e.g., for a Go project: make check (if a Makefile exists)
+# Example: Commands to run all pre-commit checks (e.g., format, lint, type check, run tests)
+# e.g., for a Node.js project: npm run check
+# e.g., for a Go project: make check (if a Makefile exists)
 ```
 
-***REMOVED******REMOVED*** Testing Requirements
+## Testing Requirements
 
-***REMOVED******REMOVED******REMOVED*** Unit Testing
+### Unit Testing
 - Every module must have corresponding tests.
 - Use appropriate test setup/teardown mechanisms (e.g., fixtures, beforeEach/afterEach).
 - Mock external dependencies.
 - Test both success and failure cases.
 
-***REMOVED******REMOVED******REMOVED*** Integration Testing
+### Integration Testing
 - Test complete user flows
 - Verify database transactions
 - Test authentication and authorization
 - Check form submissions
 
-***REMOVED******REMOVED******REMOVED*** Mobile Testing
+### Mobile Testing
 - Test on actual iPhone when possible
 - Use Safari developer tools
 - Test touch interactions
 - Verify responsive layouts
 - Check performance on 3G/4G
 
-***REMOVED******REMOVED*** Code Review Process
+## Code Review Process
 
-***REMOVED******REMOVED******REMOVED*** Self-Review Checklist
+### Self-Review Checklist
 Before requesting review:
 
 1. **Functionality**
@@ -232,9 +232,9 @@ Before requesting review:
    - Performance acceptable on mobile
    - Interactions feel native
 
-***REMOVED******REMOVED*** Commit Guidelines
+## Commit Guidelines
 
-***REMOVED******REMOVED******REMOVED*** Message Format
+### Message Format
 ```
 <type>(<scope>): <description>
 
@@ -243,7 +243,7 @@ Before requesting review:
 [optional footer]
 ```
 
-***REMOVED******REMOVED******REMOVED*** Types
+### Types
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -252,7 +252,7 @@ Before requesting review:
 - `test`: Adding missing tests
 - `chore`: Maintenance tasks
 
-***REMOVED******REMOVED******REMOVED*** Examples
+### Examples
 ```bash
 git commit -m "feat(auth): Add remember me functionality"
 git commit -m "fix(posts): Correct excerpt generation for short posts"
@@ -260,7 +260,7 @@ git commit -m "test(comments): Add tests for emoji reaction limits"
 git commit -m "style(mobile): Improve button touch targets"
 ```
 
-***REMOVED******REMOVED*** Definition of Done
+## Definition of Done
 
 A task is complete when:
 
@@ -274,9 +274,9 @@ A task is complete when:
 8. Changes committed with proper message
 9. Git note with task summary attached to the commit
 
-***REMOVED******REMOVED*** Emergency Procedures
+## Emergency Procedures
 
-***REMOVED******REMOVED******REMOVED*** Critical Bug in Production
+### Critical Bug in Production
 1. Create hotfix branch from main
 2. Write failing test for bug
 3. Implement minimal fix
@@ -284,23 +284,23 @@ A task is complete when:
 5. Deploy immediately
 6. Document in plan.md
 
-***REMOVED******REMOVED******REMOVED*** Data Loss
+### Data Loss
 1. Stop all write operations
 2. Restore from latest backup
 3. Verify data integrity
 4. Document incident
 5. Update backup procedures
 
-***REMOVED******REMOVED******REMOVED*** Security Breach
+### Security Breach
 1. Rotate all secrets immediately
 2. Review access logs
 3. Patch vulnerability
 4. Notify affected users (if any)
 5. Document and update security procedures
 
-***REMOVED******REMOVED*** Deployment Workflow
+## Deployment Workflow
 
-***REMOVED******REMOVED******REMOVED*** Pre-Deployment Checklist
+### Pre-Deployment Checklist
 - [ ] All tests passing
 - [ ] Coverage >80%
 - [ ] No linting errors
@@ -309,7 +309,7 @@ A task is complete when:
 - [ ] Database migrations ready
 - [ ] Backup created
 
-***REMOVED******REMOVED******REMOVED*** Deployment Steps
+### Deployment Steps
 1. Merge feature branch to main
 2. Tag release with version
 3. Push to deployment service
@@ -318,13 +318,13 @@ A task is complete when:
 6. Test critical paths
 7. Monitor for errors
 
-***REMOVED******REMOVED******REMOVED*** Post-Deployment
+### Post-Deployment
 1. Monitor analytics
 2. Check error logs
 3. Gather user feedback
 4. Plan next iteration
 
-***REMOVED******REMOVED*** Continuous Improvement
+## Continuous Improvement
 
 - Review workflow weekly
 - Update based on pain points

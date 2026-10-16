@@ -1,28 +1,28 @@
-***REMOVED*** Initial Concept
-***REMOVED*** 🎬 不看 (bukan) - 影视资源聚合平台 产品指南
+# Initial Concept
+# 🎬 不看 (bukan) - 影视资源聚合平台 产品指南
 
-***REMOVED******REMOVED*** 1. 核心愿景 (Vision)
+## 1. 核心愿景 (Vision)
 “不看 (bukan)”旨在成为一个现代化、自适应的轻量级影视资源聚合平台。通过聚合外部公共视频源（如 Dailymotion、YouTube、Vimeo 等）以及引入 IPTV 直播流，配合豆瓣的影视元数据智能匹配，为用户提供一个美观、流畅且零服务器带宽压力的个人影音空间。
 
-***REMOVED******REMOVED*** 2. 目标受众 (Target Audience)
+## 2. 目标受众 (Target Audience)
 * **自建媒体库爱好者**：不愿折腾重度媒体库（如 Plex / Emby），偏爱开箱即用、轻量简洁 of 的影视聚合体验。
 * **多视频平台与直播用户**：希望在一个入口中，既能观看多渠道聚合 of 的视频，又能流畅收看 IPTV 电视直播。
 * **低带宽 VPS/NAS 部署者**：受限于家庭宽带或便宜服务器带宽，希望视频流量完全直连、不占用服务端网络。
 
-***REMOVED******REMOVED*** 3. 核心功能版图 (Core Features)
+## 3. 核心功能版图 (Core Features)
 
-***REMOVED******REMOVED******REMOVED*** 3.1 点播与聚合 (VOD & Aggregation)
+### 3.1 点播与聚合 (VOD & Aggregation)
 * **多渠道视频源**：深度整合 Dailymotion，并逐步扩展 YouTube、Vimeo 等外部公共检索源。
 * **豆瓣元数据匹配**：输入视频标题即可一键匹配对应的豆瓣评分、海报和演员等完整元数据。
 * **Artplayer 播放器**：支持 HLS 流畅播放，内置倍速、快捷键，智能防盗链中转。
 
-***REMOVED******REMOVED******REMOVED*** 3.2 📺 电视直播 (IPTV Live) [未来主力演进]
+### 3.2 📺 电视直播 (IPTV Live) [未来主力演进]
 * **IPTV 播放支持**：支持用户导入 IPTV 订阅链接（如 M3U / M3U8），为平台引入流畅 of 的电视直播与全球直播流播放能力。
 * **极速流畅度优化**：优化直播源握手、首帧渲染与路由加载速度，消除界面交互 of 的抖动，提升首开秒播的流畅度。
 
-***REMOVED******REMOVED******REMOVED*** 3.3 弹幕社交 (Danmaku)
+### 3.3 弹幕社交 (Danmaku)
 * **多源弹幕检索**：自动匹配弹幕库（如 Bilibili 弹幕映射），支持用户手动关键字搜索及弹幕过滤。
 
-***REMOVED******REMOVED*** 4. Technical and Bandwidth Strategies (Engineering Philosophy)
+## 4. Technical and Bandwidth Strategies (Engineering Philosophy)
 * **客户端直连优先**：采用客户端直连播放策略，绕过防盗链限制，极大节省服务端的流量与带宽消耗。
 * **自愈式静态化缓存**：针对容易裂图的豆瓣海报和关键元数据，提供服务器本地化物理缓存与抽查自愈机制，确保持久可访问。

@@ -3,7 +3,7 @@
 import { Play } from "lucide-react";
 import type { DoubanMovie } from "@/types/douban";
 import type { HeroData } from "@/types/home";
-import { getImageUrl } from "@/lib/utils/image-utils";
+import SmartImage from "@/components/SmartImage";
 
 interface HeroCardProps {
   movie: DoubanMovie;
@@ -32,8 +32,8 @@ export function HeroCard({
       {/* 背景图层 */}
       <div className="absolute inset-0">
         {/* 移动端：9:16 竖向海报 */}
-        <img
-          src={getImageUrl(heroData.poster_vertical)}
+        <SmartImage
+          src={heroData.poster_vertical}
           alt={movie.title}
           loading={isFirst ? "eager" : "lazy"}
           fetchPriority={isFirst ? "high" : "auto"}
@@ -42,8 +42,8 @@ export function HeroCard({
         />
 
         {/* PC端：16:9 横向海报 */}
-        <img
-          src={getImageUrl(heroData.poster_horizontal)}
+        <SmartImage
+          src={heroData.poster_horizontal}
           alt={movie.title}
           loading={isFirst ? "eager" : "lazy"}
           fetchPriority={isFirst ? "high" : "auto"}

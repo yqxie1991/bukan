@@ -1,6 +1,6 @@
-***REMOVED*** 🎬 不看 (bukan) - 技术栈定义
+# 🎬 不看 (bukan) - 技术栈定义
 
-***REMOVED******REMOVED*** 1. 核心技术栈 (Core Tech Stack)
+## 1. 核心技术栈 (Core Tech Stack)
 
 | 维度 | 选用技术 | 说明 |
 | :--- | :--- | :--- |
@@ -11,6 +11,6 @@
 | **影视播放器** | Artplayer 5.x & hls.js 1.x | 支持 HLS H.264 画质在线播放，配置快捷键与防盗链代理 |
 | **状态同步** | SWR 2.x | 客户端懒加载与缓存机制，优化接口请求频次 |
 
-***REMOVED******REMOVED*** 2. 工程部署 (Deployment)
+## 2. 工程部署 (Deployment)
 * **容器化支持**：Docker (Docker Compose V2)，支持生产多环境部署。
 * **无服务器部署**：适配 Vercel（需配合可持久化卷或外部 KV，默认 JSON 存储适用于单实例部署）。

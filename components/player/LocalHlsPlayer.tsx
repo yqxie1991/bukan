@@ -44,6 +44,10 @@ export function LocalHlsPlayer({
   const [retryCount, setRetryCount] = useState(0);
   const [useDirectPlay, setUseDirectPlay] = useState(true);
   const [, setPlayMode] = useState<"direct" | "proxy" | "detecting">("detecting");
+  // smart 模式下若分片/密钥直连失败（多为源站未开 CORS），单向升级为全量代理。
+  // 设计为不可逆：避免在 smart/full 之间反复切换造成播放抖动。
+  const [forceFullProxy, setForceFullProxy] = useState(false);
+  const forceFullProxyRef = useRef(false);
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -101,6 +105,9 @@ export function LocalHlsPlayer({
     networkRetryCount.current = 0;
     mediaRetryCount.current = 0;
     keyErrorCount.current = 0;
+    // 切换视频时重置代理模式，让新视频重新从 smart 开始尝试
+    forceFullProxyRef.current = false;
+    setForceFullProxy(false);
   }, [videoUrl]);
 
   const getProxiedUrl = useCallback(
@@ -108,9 +115,13 @@ export function LocalHlsPlayer({
       if (!url) return "";
       if (url.startsWith("/api/video-proxy/")) return url;
       if (useDirectPlay) return url;
-      return `/api/video-proxy/${encodeURIComponent(url)}`;
+      // smart：仅混合内容分片走中转，其余分片由浏览器直连源站 CDN；
+      // 直连失败时经 forceFullProxy 单向升级为 full（全量中转）
+      return `/api/video-proxy/${encodeURIComponent(url)}?mode=${
+        forceFullProxy ? "full" : "smart"
+      }`;
     },
-    [useDirectPlay]
+    [useDirectPlay, forceFullProxy]
   );
 
   const setPlayerError = useCallback(
@@ -279,6 +290,26 @@ export function LocalHlsPlayer({
               });
 
               hls.on(Hls.Events.ERROR, (_event: string, data: HlsErrorData) => {
+                // smart → full 单向升级：分片或加密密钥的「直连」失败（多为源站未开 CORS），
+                // 回退到全量代理。404 属资源确实不存在，升级无意义故排除。
+                // forceFullProxyRef 保证每个视频只升级一次，避免反复重建播放器。
+                const isDirectResourceFailure =
+                  (data.details === "fragLoadError" ||
+                    data.details === "keyLoadError" ||
+                    data.details === "keyLoadTimeOut") &&
+                  data.response?.code !== 404;
+
+                if (isDirectResourceFailure && !forceFullProxyRef.current) {
+                  console.log("🔄 分片直连失败，升级为全量代理模式...");
+                  forceFullProxyRef.current = true;
+                  setForceFullProxy(true);
+                  // 若此前是「整条链路直连」，需同时切到代理模式，
+                  // 否则 forceFullProxy 不生效（getProxiedUrl 仍返回原始地址）
+                  if (useDirectPlay) setUseDirectPlay(false);
+                  setRetryCount((prev) => prev + 1);
+                  return;
+                }
+
                 handleHlsError(
                   data,
                   hls,

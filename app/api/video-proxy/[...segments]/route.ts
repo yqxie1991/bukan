@@ -202,14 +202,23 @@ export async function GET(
     if (contentType.includes('mpegurl') || contentType.includes('m3u8') || targetUrl.endsWith('.m3u8')) {
       const text = await response.text();
 
+      // 播放模式：
+      //   smart（默认）—— 仅在「本服务 HTTPS、分片 HTTP」的混合内容场景中转，
+      //                    其余分片改写为绝对地址由客户端直连 CDN，服务器带宽趋近 0
+      //   full          —— 全部分片一律经服务器中转（客户端直连失败时的兜底）
+      const mode = request.nextUrl.searchParams.get('mode') === 'full' ? 'full' : 'smart';
+      const realOrigin = getRealOrigin(request);
+
       // 处理m3u8中的相对路径
-      const processedM3u8 = processM3u8Content(text, targetUrl);
+      const processedM3u8 = processM3u8Content(text, targetUrl, realOrigin, mode);
 
       return new NextResponse(processedM3u8, {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.apple.mpegurl',
-          'Cache-Control': 'public, max-age=300',
+          // smart 模式的重写结果内嵌了与访问域名相关的绝对直连地址，
+          // 一旦被 CDN/浏览器缓存会导致跨域名串号，必须禁止公共缓存。
+          'Cache-Control': mode === 'smart' ? 'no-cache, private' : 'public, max-age=300',
           'Access-Control-Allow-Origin': '*',
         },
       });
@@ -340,21 +349,71 @@ function isValidUrl(urlString: string): boolean {
   }
 }
 
-// 处理m3u8内容，转换相对路径为代理路径
-function processM3u8Content(content: string, baseUrl: string): string {
+// 获取请求的真实外网 Origin（用于判定本服务是否运行在 HTTPS 之下）
+function getRealOrigin(request: NextRequest): string {
+  // 1. 优先使用环境变量
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.APP_URL) {
+    return process.env.APP_URL;
+  }
+
+  // 2. 其次从 Referer 提取真实外网 Origin（最精准，无视反代配置缺失）
+  const referer = request.headers.get('referer');
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      if (refererUrl.protocol.startsWith('http')) {
+        return refererUrl.origin;
+      }
+    } catch {
+      // 忽略解析错误
+    }
+  }
+
+  // 3. 再次尝试从反代头获取
+  const proto = request.headers.get('x-forwarded-proto') || 'http';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  // 4. 兜底
+  return request.nextUrl.origin;
+}
+
+// 处理m3u8内容，按模式改写资源地址
+//   full  —— 统一改写为经服务器中转的路径（/api/video-proxy/<绝对地址>）
+//   smart —— 仅当「本服务 HTTPS 且资源 HTTP」时中转（否则浏览器按 Mixed Content 拦截），
+//            其余改写为绝对地址，由客户端直接向源站 CDN 拉取，服务器下行带宽 ≈ 0
+function processM3u8Content(
+  content: string,
+  baseUrl: string,
+  proxyOrigin: string,
+  mode: 'smart' | 'full'
+): string {
   const lines = content.split('\n');
   const base = new URL(baseUrl);
+  const isHttpsProxy = proxyOrigin.startsWith('https:');
 
-  // 辅助函数：解析并代理URL
-  const resolveAndProxy = (urlString: string): string => {
+  // 将相对路径解析为绝对 URL
+  const resolveUrl = (urlString: string): string => {
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+      return urlString;
+    }
+    return new URL(urlString, base.href).href;
+  };
+
+  // 决定单个资源是「服务器中转」还是「客户端直连」
+  const rewrite = (urlString: string): string => {
     try {
-      let url: URL;
-      if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
-        url = new URL(urlString);
-      } else {
-        url = new URL(urlString, base.href);
-      }
-      return `/api/video-proxy/${encodeURIComponent(url.href)}`;
+      const absolute = resolveUrl(urlString);
+      const mustProxy =
+        mode === 'full' || (isHttpsProxy && absolute.startsWith('http:'));
+      return mustProxy
+        ? `/api/video-proxy/${encodeURIComponent(absolute)}`
+        : absolute;
     } catch (e) {
       console.error(`❌ URL解析失败: "${urlString}"`, e);
       return urlString;
@@ -362,15 +421,11 @@ function processM3u8Content(content: string, baseUrl: string): string {
   };
 
   const processedLines = lines.map(line => {
-    // 处理 #EXT-X-KEY 标签中的 URI（加密密钥）
-    if (line.startsWith('#EXT-X-KEY:')) {
-      const uriMatch = line.match(/URI=["']?([^"',]+)["']?/);
-      if (uriMatch && uriMatch[1]) {
-        const originalUri = uriMatch[1];
-        const proxiedUri = resolveAndProxy(originalUri);
-        return line.replace(/URI=["']?[^"',]+["']?/, `URI="${proxiedUri}"`);
-      }
-      return line;
+    // 通用处理所有带 URI 属性的标签：#EXT-X-KEY / #EXT-X-MEDIA / #EXT-X-MAP 等
+    if (line.startsWith('#') && line.includes('URI=')) {
+      return line.replace(/URI=["']?([^"',]+)["']?/g, (_match, uri: string) => {
+        return `URI="${rewrite(uri)}"`;
+      });
     }
 
     // 跳过其他注释行和空行
@@ -378,10 +433,8 @@ function processM3u8Content(content: string, baseUrl: string): string {
       return line;
     }
 
-    // 处理片段URL
-    const trimmedLine = line.trim();
-    const proxiedUrl = resolveAndProxy(trimmedLine);
-    return proxiedUrl;
+    // 处理片段资源 URL（.ts / .m4s 等）
+    return rewrite(line.trim());
   });
 
   return processedLines.join('\n');

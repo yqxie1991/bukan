@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Calendar, ChevronLeft, ChevronRight, Globe, Play, Star } from 'lucide-react';
 import { getCalendar, type CalendarDay, type CalendarEntry, type CalendarResponse } from '@/lib/douban-service';
 import { Toast } from '@/components/Toast';
-import { getImageUrl } from '@/lib/utils/image-utils';
+import SmartImage from '@/components/SmartImage';
 
 // Hooks
 import { useScrollState } from '@/hooks/useScrollState';
@@ -58,8 +58,8 @@ function CalendarCard({
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 使用统一的图片处理工具
-  const imageUrl = getImageUrl(entry.poster || '');
+  // 图片加载链（weserv 直连 → 服务端代理 → 占位图）由 SmartImage 负责；
+  // 三级全部失败才触发 onGiveUp，届时回落到下方的日历图标
 
   const displayName = entry.show_name_cn || entry.show_name;
   const episodeInfo = entry.season_number > 0 
@@ -74,8 +74,8 @@ function CalendarCard({
       {/* 海报图片 */}
       <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-gray-800">
         {!imageError ? (
-          <img
-            src={imageUrl}
+          <SmartImage
+            src={entry.poster || ''}
             alt={displayName}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
@@ -84,7 +84,7 @@ function CalendarCard({
               isLoading ? 'opacity-0' : 'opacity-100'
             }`}
             onLoad={() => setIsLoading(false)}
-            onError={() => {
+            onGiveUp={() => {
               setImageError(true);
               setIsLoading(false);
             }}

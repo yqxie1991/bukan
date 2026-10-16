@@ -1,4 +1,4 @@
-***REMOVED*** Vercel ignore file
+# Vercel ignore file
 node_modules
 .git
 .next

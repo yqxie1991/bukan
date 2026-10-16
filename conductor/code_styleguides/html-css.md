@@ -1,15 +1,15 @@
-***REMOVED*** Google HTML/CSS Style Guide Summary
+# Google HTML/CSS Style Guide Summary
 
 This document summarizes key rules and best practices from the Google HTML/CSS Style Guide.
 
-***REMOVED******REMOVED*** 1. General Rules
+## 1. General Rules
 - **Protocol:** Use HTTPS for all embedded resources.
 - **Indentation:** Indent by 2 spaces. Do not use tabs.
 - **Capitalization:** Use only lowercase for all code (element names, attributes, selectors, properties).
 - **Trailing Whitespace:** Remove all trailing whitespace.
 - **Encoding:** Use UTF-8 (without a BOM). Specify `<meta charset="utf-8">` in HTML.
 
-***REMOVED******REMOVED*** 2. HTML Style Rules
+## 2. HTML Style Rules
 - **Document Type:** Use `<!doctype html>`.
 - **HTML Validity:** Use valid HTML.
 - **Semantics:** Use HTML elements according to their intended purpose (e.g., use `<p>` for paragraphs, not for spacing).
@@ -17,11 +17,11 @@ This document summarizes key rules and best practices from the Google HTML/CSS S
 - **Separation of Concerns:** Strictly separate structure (HTML), presentation (CSS), and behavior (JavaScript). Link to CSS and JS from external files.
 - **`type` Attributes:** Omit `type` attributes for stylesheets (`<link>`) and scripts (`<script>`).
 
-***REMOVED******REMOVED*** 3. HTML Formatting Rules
+## 3. HTML Formatting Rules
 - **General:** Use a new line for every block, list, or table element, and indent its children.
 - **Quotation Marks:** Use double quotation marks (`""`) for attribute values.
 
-***REMOVED******REMOVED*** 4. CSS Style Rules
+## 4. CSS Style Rules
 - **CSS Validity:** Use valid CSS.
 - **Class Naming:** Use meaningful, generic names. Separate words with a hyphen (`-`).
   - **Good:** `.video-player`, `.site-navigation`
@@ -30,10 +30,10 @@ This document summarizes key rules and best practices from the Google HTML/CSS S
 - **Shorthand Properties:** Use shorthand properties where possible (e.g., `padding`, `font`).
 - **`0` and Units:** Omit units for `0` values (e.g., `margin: 0;`).
 - **Leading `0`s:** Always include leading `0`s for decimal values (e.g., `font-size: 0.8em;`).
-- **Hexadecimal Notation:** Use 3-character hex notation where possible (e.g., `***REMOVED***fff`).
+- **Hexadecimal Notation:** Use 3-character hex notation where possible (e.g., `#fff`).
 - **`!important`:** Avoid using `!important`.
 
-***REMOVED******REMOVED*** 5. CSS Formatting Rules
+## 5. CSS Formatting Rules
 - **Declaration Order:** Alphabetize declarations within a rule.
 - **Indentation:** Indent all block content.
 - **Semicolons:** Use a semicolon after every declaration.

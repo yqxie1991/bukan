@@ -1,34 +1,34 @@
-***REMOVED*** 🎬 不看 (bukan) - 界面设计与工程规范
+# 🎬 不看 (bukan) - 界面设计与工程规范
 
-***REMOVED******REMOVED*** 1. 视觉设计语言 (Visual Design)
+## 1. 视觉设计语言 (Visual Design)
 
-***REMOVED******REMOVED******REMOVED*** 1.1 经典黑红配置 (Color Theme)
-* **基准底色**：采用纯黑及深灰黑底色（如 `***REMOVED***000000`, `***REMOVED***0A0A0A`, `***REMOVED***121212`），模仿暗室影院效果，最大化突出影片海报色彩。
-* **强调色**：使用具有视觉冲击力的“猩红”（如 `***REMOVED***E50914` 或自适应红色）作为按钮、选中状态和高亮的唯一强调色。
+### 1.1 经典黑红配置 (Color Theme)
+* **基准底色**：采用纯黑及深灰黑底色（如 `#000000`, `#0A0A0A`, `#121212`），模仿暗室影院效果，最大化突出影片海报色彩。
+* **强调色**：使用具有视觉冲击力的“猩红”（如 `#E50914` 或自适应红色）作为按钮、选中状态和高亮的唯一强调色。
 * **辅助色**：文字主要采用冷白和中性灰，确保极高对比度的易读性。
 
-***REMOVED******REMOVED******REMOVED*** 1.2 动态沉浸式氛围 (Dynamic Immersion)
+### 1.2 动态沉浸式氛围 (Dynamic Immersion)
 * **海报渐变氛围**：在视频详情页与主页顶部，背景色应根据当前高亮或正在播放影片的海报主色调，进行平滑的、超大半径的径向高斯模糊渐变，营造极致包裹的沉浸式体验。
 
 ---
 
-***REMOVED******REMOVED*** 2. 交互与动效原则 (Interaction & Motion)
+## 2. 交互与动效原则 (Interaction & Motion)
 
-***REMOVED******REMOVED******REMOVED*** 2.1 丝滑微动效 (Micro-animations)
+### 2.1 丝滑微动效 (Micro-animations)
 * **元素过渡**：影片卡片在 Hover 状态下，应保持轻微的等比放大（1.02 ~ 1.05x），伴随阴影扩散与平滑过渡（`transition-all duration-300 ease-out`）。
 * **交互缩放**：关键点击按钮（如播放、搜索）应有轻微的按压物理回弹感（Active 缩放至 0.95x）。
 
-***REMOVED******REMOVED******REMOVED*** 2.2 移动端第一 (Mobile First)
+### 2.2 移动端第一 (Mobile First)
 * **手势适配**：所有核心板块（如 IPTV 选台、分类滑块）必须全面支持手势横向轻扫（Swipe），在触控设备上提供零阻尼的弹性滚动。
 * **自适应排版**：对于播放控制面板、选集栏，在移动端需自动转化为大按钮或抽屉式触控布局。
 
 ---
 
-***REMOVED******REMOVED*** 3. 工程与开发规范 (Engineering Guidelines)
+## 3. 工程与开发规范 (Engineering Guidelines)
 
-***REMOVED******REMOVED******REMOVED*** 3.1 极致渲染性能 (Performance)
+### 3.1 极致渲染性能 (Performance)
 * **服务端渲染优先**：在编写新页面（如 IPTV）时，尽可能多地依靠 Next.js React Server Components (RSC) 来抓取并渲染首屏，以减少客户端的初次网络请求，彻底消除首开页面的白屏和抖动。
 * **精简化打包**：引入第三方包时必须评估其体积，避免阻塞主线程加载。
 
-***REMOVED******REMOVED******REMOVED*** 3.2 组件高度解耦 (Modularization)
+### 3.2 组件高度解耦 (Modularization)
 * **逻辑与 UI 分离**：列表、卡片和播放器组件只负责数据呈现，严禁在 UI 组件内部耦合复杂的直接 API 请求或全局状态写操作，确保拼装复用性。

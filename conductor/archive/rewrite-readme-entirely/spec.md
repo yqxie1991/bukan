@@ -1,9 +1,9 @@
-***REMOVED*** Specification: 全量删除并重写项目 README.md 说明文档
+# Specification: 全量删除并重写项目 README.md 说明文档
 
-***REMOVED******REMOVED*** 1. 业务需求 (Requirements)
+## 1. 业务需求 (Requirements)
 现有的 `README.md` 包含较多陈旧的格式和琐碎的修改痕迹。为了以极其高端（Premium）且技术重点突出的方式向访问者呈现，需要将现有内容完全清除，并重新规划和编写一份全新的 `README.md`。
 
-***REMOVED******REMOVED*** 2. 设计与框架大纲 (Structure Design)
+## 2. 设计与框架大纲 (Structure Design)
 重写后的 `README.md` 应遵循现代开源项目的顶尖排版，主要包含以下六大板块：
 
 1. **品名徽章与一句话定位**：

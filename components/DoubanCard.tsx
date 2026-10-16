@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Play, Star } from 'lucide-react';
 import { DoubanMovie } from '@/types/douban';
-import { getImageUrl } from '@/lib/utils/image-utils';
+import SmartImage from '@/components/SmartImage';
 
 interface DoubanCardProps {
   movie: DoubanMovie;
@@ -16,8 +16,8 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
  
-  // 豆瓣图片使用代理
-  const imageUrl = getImageUrl(movie.cover);
+  // 图片加载链（weserv 直连 → 服务端代理 → 占位图）由 SmartImage 负责
+  // 三级全部失败才触发 onGiveUp，届时回落到下方的 SVG 图标
 
   return (
     <div
@@ -27,15 +27,15 @@ export default function DoubanCard({ movie, onSelect, priority = false }: Douban
       {/* 海报图片 */}
       <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-foreground/5 dark:bg-surface border border-black/5 dark:border-white/5 transition-colors duration-300">
         {!imageError ? (
-          <img
-            src={imageUrl}
+          <SmartImage
+            src={movie.cover}
             alt={movie.title}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
             decoding="async"
-            className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 opacity-100`}
+            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 opacity-100"
             onLoad={() => setIsLoading(false)}
-            onError={() => {
+            onGiveUp={() => {
               setImageError(true);
               setIsLoading(false);
             }}

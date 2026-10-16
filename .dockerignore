@@ -1,53 +1,53 @@
-***REMOVED*** Dependencies
+# Dependencies
 node_modules
 npm-debug.log
 yarn-error.log
 .pnpm-debug.log
 
-***REMOVED*** Next.js
+# Next.js
 .next
 out
 *.tsbuildinfo
 
-***REMOVED*** Testing
+# Testing
 coverage
 .nyc_output
 
-***REMOVED*** Environment
+# Environment
 .env
 .env*.local
 
-***REMOVED*** Git
+# Git
 .git
 .gitignore
 .gitattributes
 
-***REMOVED*** IDE
+# IDE
 .vscode
 .idea
 *.swp
 *.swo
 *~
 
-***REMOVED*** OS
+# OS
 .DS_Store
 Thumbs.db
 
-***REMOVED*** Documentation
+# Documentation
 README.md
 DOCKER_GUIDE.md
 DEPLOY_GUIDE.md
 FEATURES.md
 LICENSE
 
-***REMOVED*** Scripts
+# Scripts
 scripts/
 
-***REMOVED*** Docker
+# Docker
 Dockerfile*
 docker-compose*.yml
 .dockerignore
 
-***REMOVED*** Misc
+# Misc
 *.log
 .vercel

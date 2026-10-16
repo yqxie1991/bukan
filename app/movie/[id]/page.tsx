@@ -18,7 +18,7 @@ import {
   Film,
 } from "lucide-react";
 import Link from "next/link";
-import { getImageUrl } from "@/lib/utils/image-utils";
+import SmartImage from "@/components/SmartImage";
 import { cleanTitleForSearch } from "@/lib/utils/title-utils";
 import { loadMovieCache } from "@/hooks/useMovieMatch";
 
@@ -382,8 +382,8 @@ export default function MovieDetailPage() {
       {/* 沉浸式背景 - 调整透明度以保持整体暗黑风格一致性 */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-background z-0 transition-colors duration-300" />
-        <img
-          src={getImageUrl(cover)}
+        <SmartImage
+          src={cover}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-110"
         />
@@ -492,8 +492,8 @@ export default function MovieDetailPage() {
             {/* 左侧海报 */}
             <div className="w-full max-w-[300px] mx-auto lg:w-[360px] shrink-0 animate-fade-in">
               <div className="aspect-2/3 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 border border-white/10 relative group">
-                <img
-                  src={getImageUrl(cover)}
+                <SmartImage
+                  src={cover}
                   alt={title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -613,8 +613,8 @@ export default function MovieDetailPage() {
                           rel="noopener noreferrer"
                           className="aspect-video rounded-lg overflow-hidden bg-foreground/5 hover:opacity-80 transition-opacity"
                         >
-                          <img
-                            src={getImageUrl(photo.thumb || photo.image)}
+                          <SmartImage
+                            src={photo.thumb || photo.image}
                             alt="剧照"
                             className="w-full h-full object-cover"
                           />
@@ -824,8 +824,8 @@ export default function MovieDetailPage() {
                       style={{ animationDelay: `${Math.min(index, 12) * 25}ms`, animationFillMode: 'both' }}
                     >
                       <div className="aspect-2/3 rounded-xl overflow-hidden bg-foreground/5 mb-2 border border-black/5 dark:border-white/5 group-hover:border-red-500/50 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(229,9,20,0.15)] group-hover:scale-105 transition-all duration-300">
-                        <img
-                          src={getImageUrl(rec.cover)}
+                        <SmartImage
+                          src={rec.cover}
                           alt={rec.title}
                           className="w-full h-full object-cover"
                         />

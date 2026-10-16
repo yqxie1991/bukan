@@ -1,6 +1,6 @@
-***REMOVED*** Specification: 移除 Logo 并配置子集化霞鹜文楷与得意黑字体
+# Specification: 移除 Logo 并配置子集化霞鹜文楷与得意黑字体
 
-***REMOVED******REMOVED*** 1. 业务需求 (Requirements)
+## 1. 业务需求 (Requirements)
 为了简化视觉设计并实现极致的首屏资源优化，项目需要：
 1. **移除 Logo**：全面剥离 Navbar 顶栏及移动端侧边栏的图片 Logo 渲染，让头部导航更加平整极简。
 2. **高端中文字体替换**：
@@ -8,19 +8,19 @@
    - Navbar 导航栏的所有其他文字、以及 Footer 底栏的所有文字修改为“霞鹜文楷 (LXGWWenKaiGB)”字体。
 3. **本地化子集化（Font Subsetting）**：为了避免引用多达 10MB+ 的完整中文字体包，利用本地裁剪工具（字蛛 Font-Spider）智能扣取相关页面中实际用到的所有汉字、字母和符号，生成最终仅约几 KB 的高性能本地 `.woff2` 文件，实现超高速的首屏加载。
 
-***REMOVED******REMOVED*** 2. 技术设计方案 (Technical Design)
+## 2. 技术设计方案 (Technical Design)
 
-***REMOVED******REMOVED******REMOVED*** 2.1 Logo 移除
+### 2.1 Logo 移除
 - 在 `components/home/Navbar.tsx` 中定位并删除所有的 `<img>` Logo 标签（分别在桌面端布局及移动端 Drawer 布局中）。
 
-***REMOVED******REMOVED******REMOVED*** 2.2 字体获取与本地路径
+### 2.2 字体获取与本地路径
 - 创建目录：`public/fonts/` 存放压缩子集化后的字体。
 - 创建临时目录：`public/fonts/src/` 存放下载的完整源字体 `.ttf` 文件。
 - 字体文件下载来源：
   - 得意黑：`https://cdn.jsdelivr.net/gh/atelier-anchor/smiley-sans@main/font-ttf/SmileySans-Oblique.ttf` (约 3.7MB)
   - 霞鹜文楷：`https://cdn.jsdelivr.net/gh/chawyehsu/lxgw-wenkai-webfont@v1.3.0/LXGWWenKai-Regular.ttf` (约 11MB)
 
-***REMOVED******REMOVED******REMOVED*** 2.3 字蛛子集化裁剪工作流 (Font-Spider Workflow)
+### 2.3 字蛛子集化裁剪工作流 (Font-Spider Workflow)
 1. **构建临时静态 HTML (`font-build.html`)**：
    在项目根目录下创建一个包含所有在 Navbar、Footer 以及“不看”中要出现的全部字符的 HTML 页面：
    - 得意黑测试区：“不看”。

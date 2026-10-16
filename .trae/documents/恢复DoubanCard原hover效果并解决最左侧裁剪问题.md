@@ -1,19 +1,19 @@
-***REMOVED*** 恢复并增强 DoubanCard hover 效果，解决最左侧裁剪问题
+# 恢复并增强 DoubanCard hover 效果，解决最左侧裁剪问题
 
-***REMOVED******REMOVED*** 摘要
+## 摘要
 
 将 `DoubanCard` 的 hover 效果从「海报内部 img 放大 + 海报 div 阴影」恢复为「根 div scale + 阴影」方案，并**适当增强** hover 视觉反馈（scale-105 → scale-110 + brightness-105），通过加大 `CategoryRow` 滚动容器内层水平 padding 到 24-32px，彻底容纳 scale 外溢（11.2px）和 shadow 扩散（24-32px），从根本上解决最左/最右卡片 hover 时被 `overflow-x-auto` 裁剪的问题。
 
-***REMOVED******REMOVED*** 当前状态分析
+## 当前状态分析
 
-***REMOVED******REMOVED******REMOVED*** DoubanCard 当前实现（`components/DoubanCard.tsx`）
+### DoubanCard 当前实现（`components/DoubanCard.tsx`）
 
 经过上一轮修改后：
 - 根 div：仅 `group relative cursor-pointer rounded-lg`，**无 hover 变换**
 - 海报 div：`group-hover:shadow-[var(--card-shadow-hover)] group-hover:border-primary/30`
 - 海报 img：`group-hover:scale-[1.05]`（内部放大，被 `overflow-hidden` 限制）
 
-***REMOVED******REMOVED******REMOVED*** 问题
+### 问题
 
 用户反馈「改回原本的 hover 效果，并适当增大」——指恢复根 div 的 scale + shadow 方案，并适度增强视觉反馈：
 - 根 div：`hover:scale-110 hover:z-10 hover:shadow-[var(--card-shadow-hover)] hover:brightness-105`（从原 scale-105 增强到 scale-110 + brightness 提亮）
@@ -22,7 +22,7 @@
 
 根 div 的 `hover:scale-110` 会让卡片整体从 transform-origin 向四周外溢约 11.2px，配合阴影扩散 24-32px，需要滚动容器提供足够缓冲空间。
 
-***REMOVED******REMOVED******REMOVED*** 之前 3 次尝试失败的根因
+### 之前 3 次尝试失败的根因
 
 | 尝试 | padding | 缓冲量 | scale 外溢 | shadow 扩散 | 结果 |
 |------|---------|--------|------------|-------------|------|
@@ -32,7 +32,7 @@
 
 **根本原因**：缓冲量不足 24-32px（shadow 扩散范围），需达到 `px-6`（24px）以上。本次增强为 scale-110 后外溢 11.2px，仍在 `px-6`（24px）缓冲范围内。
 
-***REMOVED******REMOVED******REMOVED*** CategoryRow 当前实现（`components/home/CategoryRow.tsx***REMOVED***L87`）
+### CategoryRow 当前实现（`components/home/CategoryRow.tsx#L87`）
 
 ```tsx
 <div className="flex overflow-x-auto space-x-3 md:space-x-4 px-2 py-4 -my-4 scrollbar-hide scroll-smooth snap-x snap-mandatory">
@@ -42,14 +42,14 @@
 - 垂直方向 `py-4 -my-4` 已处理（16px 缓冲 + 负 margin 抵消）
 - 父级容器 `px-4 md:px-12`
 
-***REMOVED******REMOVED******REMOVED*** `--card-shadow-hover` 设计令牌（`app/globals.css`）
+### `--card-shadow-hover` 设计令牌（`app/globals.css`）
 
 - 浅色模式（L23）：`0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)` → 扩散 24px
 - 深色模式（L36）：`0 12px 32px rgba(0,0,0,0.6), 0 4px 8px rgba(229,9,20,0.12)` → 扩散 32px
 
-***REMOVED******REMOVED*** 提议修改
+## 提议修改
 
-***REMOVED******REMOVED******REMOVED*** 修改 1：恢复 DoubanCard 根 div 的 hover 效果
+### 修改 1：恢复 DoubanCard 根 div 的 hover 效果
 
 **文件**：`components/DoubanCard.tsx`
 
@@ -99,7 +99,7 @@ className={`w-full h-full object-cover transition-opacity duration-300 ${
 }`}
 ```
 
-***REMOVED******REMOVED******REMOVED*** 修改 2：加大 CategoryRow 滚动容器内层 padding
+### 修改 2：加大 CategoryRow 滚动容器内层 padding
 
 **文件**：`components/home/CategoryRow.tsx`（L87）
 
@@ -122,22 +122,22 @@ className={`w-full h-full object-cover transition-opacity duration-300 ${
 - 与父级 `px-4 md:px-12` 叠加后，总缩进 40-44px（移动端）/ 44-48px（桌面端）
 - 在合理范围内，不贴近浏览器边缘
 
-***REMOVED******REMOVED*** 假设与决策
+## 假设与决策
 
-***REMOVED******REMOVED******REMOVED*** 假设
-1. 「原本的 hover 效果」指最初设计——根 div `hover:scale-105 hover:z-10 hover:shadow-[var(--card-shadow-hover)]`，海报内部无 hover 变换。依据：`docs/UI品质提升修改记录.md***REMOVED***L77` 明确记录 DoubanCard 原本就是 `hover:shadow-[var(--card-shadow-hover)]`。
+### 假设
+1. 「原本的 hover 效果」指最初设计——根 div `hover:scale-105 hover:z-10 hover:shadow-[var(--card-shadow-hover)]`，海报内部无 hover 变换。依据：`docs/UI品质提升修改记录.md#L77` 明确记录 DoubanCard 原本就是 `hover:shadow-[var(--card-shadow-hover)]`。
 2. 「适当增大」指在原 scale-105 基础上提升到 scale-110，并加 brightness-105 让卡片更"高亮"，而非激进增大到 scale-125（会破坏布局节奏）。
 3. `--card-shadow-hover` 的 box-shadow 扩散范围（24-32px）是裁剪问题的主要外溢源，scale-110（11.2px）是次要源。
 4. 用户接受滚动列表视觉缩进 24-32px（用户原话「只适当放大父容器大小满足hover即可」）。
 
-***REMOVED******REMOVED******REMOVED*** 决策
+### 决策
 1. **不使用 transform-origin 方向控制**：会让首尾卡片放大方向与中间卡片不一致，视觉不协调。
 2. **不使用 spacer 占位元素**：spacer 会在滚动时显示为空白，视觉割裂。
 3. **不使用负 margin trick**：用户在上一轮明确否决（「取消这次修改。只适当放大父容器大小满足hover即可，而不是把父容器直接贴近浏览器边缘」）。
 4. **不修改 `--card-shadow-hover` 设计令牌**：该令牌在 `Modal.tsx`、`login/page.tsx` 等多处复用，修改会影响全局视觉一致性。
 5. **保留 `py-4 -my-4` 垂直方向处理**：已验证有效，不需改动。
 
-***REMOVED******REMOVED*** 验证步骤
+## 验证步骤
 
 1. **类型检查**：运行 `npx tsc --noEmit` 确保无类型错误。
 
