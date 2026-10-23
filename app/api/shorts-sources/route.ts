@@ -25,11 +25,15 @@ export async function GET(request: NextRequest) {
           { status: 401 }
         );
       }
+      // 契约：data 恒为 { sources, selected }，与下方公开分支保持同一形状。
+      // 与 /api/vod-sources 同源的问题：此前返回裸数组，而消费方按 data.sources
+      // 取值，导致后台短剧源列表渲染为空（数据其实已保存）。
       const allSources = await getAllShortsSourcesFromDB();
+      const selectedSource = await getSelectedShortsSourceFromDB();
       return NextResponse.json({
         code: 200,
         message: '获取成功',
-        data: allSources,
+        data: { sources: allSources, selected: selectedSource },
       });
     }
     

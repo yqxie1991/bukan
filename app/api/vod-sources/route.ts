@@ -25,11 +25,18 @@ export async function GET(request: NextRequest) {
           { status: 401 }
         );
       }
+      // 契约：data 恒为 { sources, selected }，与下方公开分支保持同一形状。
+      // 此前这里直接返回裸数组，而后台的两个消费方（admin/settings/page.tsx
+      // 与 VodSourcesTab 的统一导入合并逻辑）都按 data.sources / data.selected
+      // 取值，于是接口明明返回了全部源，后台列表却渲染为空——数据已保存、
+      // 界面显示为空正是由此而来。
+      // 鉴权分支返回完整对象（含 api 等敏感字段），供后台编辑使用。
       const allSources = await getAllVodSourcesFromDB();
+      const selectedSource = await getSelectedVodSourceFromDB();
       return NextResponse.json({
         code: 200,
         message: '获取成功',
-        data: allSources,
+        data: { sources: allSources, selected: selectedSource },
       });
     }
     
