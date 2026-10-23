@@ -323,7 +323,7 @@ function Install-ViaMsi {
   }
 }
 
-$script:TotalStages = 5
+$script:TotalStages = 6
 
 Write-Banner -Title "GitHub CLI (gh) install" -Lines @(
   'This wizard installs the GitHub CLI on this Windows machine, verifies it,',
@@ -442,7 +442,69 @@ if (-not $script:GhExe) {
 }
 Wait-Continue
 
-# ── Stage 5: finish ───────────────────────────────────────────────────────
+# ── Stage 5: set the repository default branch (optional) ─────────────────
+Start-Stage "Default branch (optional)"
+# Both are overridable so the wizard is not hard-wired to one repository.
+$repoSlug   = if ($env:BUKAN_REPO)           { $env:BUKAN_REPO }           else { 'yqxie1991/bukan' }
+$wantBranch = if ($env:BUKAN_DEFAULT_BRANCH) { $env:BUKAN_DEFAULT_BRANCH } else { 'lightweight' }
+
+# Re-check auth here rather than reusing the Stage 4 variable: that one was
+# sampled *before* the login prompt, so it is stale when the human just signed in.
+$authenticated = $false
+if ($script:GhExe) {
+  try {
+    & $script:GhExe auth status 2>&1 | Out-Null
+    $authenticated = ($LASTEXITCODE -eq 0)
+  } catch { $authenticated = $false }
+}
+
+if (-not $script:GhExe) {
+  Write-Warn "gh is unavailable - skipping. Switch the default branch in the web UI instead."
+  Write-Note "https://github.com/$repoSlug/settings  (Default branch section)"
+  $script:Skipped.Add("switch default branch to '$wantBranch' on $repoSlug (needs gh)")
+} elseif (-not $authenticated) {
+  Write-Warn "not signed in yet, so repository settings cannot be changed."
+  Write-Note "Run 'gh auth login' (or re-run this wizard), or do it in the web UI:"
+  Write-Note "https://github.com/$repoSlug/settings  (Default branch section)"
+  $script:Skipped.Add("switch default branch to '$wantBranch' on $repoSlug")
+} else {
+  # Read the current default first so a second run is a no-op instead of a prompt.
+  $currentBranch = $null
+  try {
+    $out = & $script:GhExe repo view $repoSlug --json defaultBranchRef --jq '.defaultBranchRef.name' 2>&1
+    if ($LASTEXITCODE -eq 0 -and $out) { $currentBranch = ("$out").Trim() }
+  } catch { $currentBranch = $null }
+
+  Write-Note "repository : $repoSlug"
+  if ($currentBranch) { Write-Note "default now: $currentBranch" }
+  Write-Note "target     : $wantBranch"
+
+  if ($currentBranch -eq $wantBranch) {
+    Write-Ok "already '$wantBranch' - nothing to change."
+  } elseif (-not $currentBranch) {
+    Write-Warn "could not read the current default branch (insufficient scope?)."
+    Write-Note "Do it in the web UI: https://github.com/$repoSlug/settings"
+    $script:Skipped.Add("switch default branch to '$wantBranch' on $repoSlug")
+  } elseif (Confirm-Gate "Switch the default branch of $repoSlug from '$currentBranch' to '$wantBranch'?") {
+    Write-Host ""
+    & $script:GhExe repo edit $repoSlug --default-branch $wantBranch 2>&1 |
+      ForEach-Object { Write-Note "    $_" }
+    if ($LASTEXITCODE -eq 0) {
+      Write-Ok "default branch is now '$wantBranch'"
+      $script:Done.Add("default branch -> $wantBranch on $repoSlug")
+    } else {
+      Write-Warn "gh repo edit exited $LASTEXITCODE - likely missing admin rights."
+      Write-Note "Do it in the web UI: https://github.com/$repoSlug/settings"
+      $script:Skipped.Add("switch default branch to '$wantBranch' on $repoSlug")
+    }
+  } else {
+    Write-Note "skipped."
+    $script:Skipped.Add("switch default branch to '$wantBranch' on $repoSlug")
+  }
+}
+Wait-Continue
+
+# ── Stage 6: finish ───────────────────────────────────────────────────────
 Start-Stage "Summary"
 if ($script:GhExe) {
   Clear-HostFrame

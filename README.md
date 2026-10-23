@@ -201,6 +201,18 @@ npm run dev
 
 > 提示：本地 HTTP 开发时请保持 `SECURE_COOKIE=false`。
 
+### 可选：安装 GitHub CLI（`gh`）
+
+需要 `gh` 时（切换默认分支、发布 Release、仓库管理等），用仓库内的向导安装即可，不必手查命令：
+
+```powershell
+pwsh -NoProfile -File scripts/install-gh.ps1
+```
+
+向导共 6 步：探测环境 → 尝试 winget（失败会自动修复 App Installer 并重试一次）→ 回退到官方 MSI（用发布方的 checksums 校验 SHA256）→ 验证 → 可选登录 → 可选把仓库默认分支切到 `lightweight`。
+
+全程**不会**产生需要写入 `.env` 或 CI secret 的值——`gh` 自己把令牌存进系统凭据管理器。目标仓库与目标分支可用 `BUKAN_REPO` / `BUKAN_DEFAULT_BRANCH` 覆盖（默认 `yqxie1991/bukan` 与 `lightweight`）。
+
 ---
 
 ## 📁 核心项目结构
